@@ -1,0 +1,102 @@
+{
+  "name": "required · 显式 null 值",
+  "description": "数据模型中 /form/nickname 显式为 null。required(null) → false，按钮禁用；formatString 展示当前值（null 渲染为空）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-required-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-required-4",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "hint",
+              "current",
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "数据模型：{ \"form\": { \"nickname\": null } }。当值为 null 时 required 返回 false，按钮禁用。",
+            "variant": "caption"
+          },
+          {
+            "id": "current",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "当前值：\"${/form/nickname}\""
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "在此输入以覆盖 null 值",
+            "value": {
+              "path": "/form/nickname"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "required",
+                  "args": {
+                    "value": {
+                      "path": "/form/nickname"
+                    }
+                  }
+                },
+                "message": "昵称不能为 null"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "提交（值不能为 null）"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-required-4",
+        "value": {
+          "form": {
+            "nickname": null
+          }
+        }
+      }
+    }
+  ]
+}

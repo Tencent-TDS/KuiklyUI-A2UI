@@ -1,0 +1,45 @@
+{
+  "name": "formatString · 多路径与嵌套函数",
+  "description": "一个模板同时混合 ${/path}、${func(arg:${/path})}、字面量字符。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-si-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-si-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "line"] },
+          { "id": "title", "component": "Text", "text": "多路径 + 嵌套函数", "variant": "caption" },
+          {
+            "id": "line",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "尊敬的 ${/user/name}，您的账户余额为 ${formatCurrency(value:${/user/balance}, currency:'USD')}（截至 ${formatDate(value:${/asOf}, format:'yyyy-MM-dd')}）"
+              },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-si-1",
+        "value": {
+          "user": { "name": "Alice", "balance": 12345.67 },
+          "asOf": "2026-07-08T00:00:00Z"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "formatCurrency · 动态币种切换",
+  "description": "覆盖 catalog schema 明确定义但既有用例遗漏的能力：currency 参数支持 DynamicString（可来自数据绑定）。用户在 TextField 中修改币种代码（USD/EUR/JPY/CNY 等 ISO 4217），下方金额行会自动重渲染为对应符号。同时 decimals 也来自绑定值。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fc-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fc-5",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "input", "amount", "hint"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "动态币种：修改下方 ISO 4217 代码看金额变化",
+            "variant": "h5"
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "币种代码（USD / EUR / JPY / CNY / GBP …）",
+            "value": { "path": "/currency" }
+          },
+          {
+            "id": "amount",
+            "component": "Text",
+            "text": {
+              "call": "formatCurrency",
+              "args": {
+                "value": { "path": "/price" },
+                "currency": { "path": "/currency" },
+                "decimals": { "path": "/decimals" }
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "price = 12345.678，decimals = 2。切换 currency：\n · USD → $12,345.68\n · EUR → €12,345.68 (locale 相关)\n · JPY → ¥12,346（日元通常无小数）\n · CNY → CN¥12,345.68 或 ¥12,345.68",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fc-5",
+        "value": {
+          "price": 12345.678,
+          "currency": "USD",
+          "decimals": 2
+        }
+      }
+    }
+  ]
+}

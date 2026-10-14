@@ -1,0 +1,80 @@
+{
+  "name": "Tabs - complex column children",
+  "description": "Each tab hosts a Column with multiple Text children",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tabs-complex",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tabs-complex",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "tabs"
+          },
+          {
+            "id": "tabs",
+            "component": "Tabs",
+            "tabs": [
+              {
+                "title": "Profile",
+                "child": "tab1col"
+              },
+              {
+                "title": "Settings",
+                "child": "tab2col"
+              }
+            ]
+          },
+          {
+            "id": "tab1col",
+            "component": "Column",
+            "children": [
+              "t1a",
+              "t1b"
+            ]
+          },
+          {
+            "id": "t1a",
+            "component": "Text",
+            "text": "Name: Alex Chen",
+            "variant": "h5"
+          },
+          {
+            "id": "t1b",
+            "component": "Text",
+            "text": "Role: Senior Engineer",
+            "variant": "caption"
+          },
+          {
+            "id": "tab2col",
+            "component": "Column",
+            "children": [
+              "t2a",
+              "t2b"
+            ]
+          },
+          {
+            "id": "t2a",
+            "component": "Text",
+            "text": "Theme: Dark",
+            "variant": "h5"
+          },
+          {
+            "id": "t2b",
+            "component": "Text",
+            "text": "Language: English",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

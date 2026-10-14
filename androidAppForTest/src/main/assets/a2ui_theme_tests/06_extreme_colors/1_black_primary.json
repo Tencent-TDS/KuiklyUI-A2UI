@@ -1,0 +1,53 @@
+{
+  "name": "极端色 · 纯黑 primaryColor 可读性",
+  "description": "theme.primaryColor='#000000' 纯黑。用于目视验证 Primary Button 白色文字在黑底上仍可读，Slider 进度色不与轨道混淆。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-ext-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#000000"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-ext-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn", "slider"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor=#000000（纯黑）。目视验证：Primary Button 背景黑、文字仍可读；Slider progressColor 黑色，与浅色轨道对比清晰。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（黑底白字应可读）" },
+          {
+            "id": "slider",
+            "component": "Slider",
+            "label": "Slider 进度色应为纯黑",
+            "min": 0,
+            "max": 100,
+            "value": { "path": "/level" }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-ext-1",
+        "value": { "level": 60 }
+      }
+    }
+  ]
+}

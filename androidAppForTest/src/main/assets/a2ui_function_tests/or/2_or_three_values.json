@@ -1,0 +1,110 @@
+{
+  "name": "or · 三选一支付方式",
+  "description": "至少选择一种支付方式。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-or-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-or-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "c1",
+              "c2",
+              "c3",
+              "btn"
+            ]
+          },
+          {
+            "id": "c1",
+            "component": "CheckBox",
+            "label": "微信支付",
+            "value": {
+              "path": "/pay/wechat"
+            }
+          },
+          {
+            "id": "c2",
+            "component": "CheckBox",
+            "label": "支付宝",
+            "value": {
+              "path": "/pay/alipay"
+            }
+          },
+          {
+            "id": "c3",
+            "component": "CheckBox",
+            "label": "银行卡",
+            "value": {
+              "path": "/pay/card"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "or",
+                  "args": {
+                    "values": [
+                      {
+                        "path": "/pay/wechat"
+                      },
+                      {
+                        "path": "/pay/alipay"
+                      },
+                      {
+                        "path": "/pay/card"
+                      }
+                    ]
+                  }
+                },
+                "message": "请至少选择一种支付方式"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "支付"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-or-2",
+        "value": {
+          "pay": {
+            "wechat": false,
+            "alipay": false,
+            "card": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "name": "and · 字面量 boolean 与 not(true)/not(false)",
+  "description": "既有 and/or/not 用例的 values 全部通过 { path } 或嵌套 FunctionCall 提供。DynamicBoolean 允许 literal true/false —— 本用例展示这种最基础但被遗漏的姿势：and/or 的 values 数组直接夹字面量；not 的 value 直接给 true/false。这在真实场景里常用于 A/B feature flag 与临时禁用某分支。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-and-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-and-4",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "input",
+              "btn1",
+              "btn2",
+              "btn3",
+              "hint"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "字面量 boolean 组合",
+            "variant": "h5"
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "邮箱（前两个按钮的启用条件之一）",
+            "value": {
+              "path": "/email"
+            }
+          },
+          {
+            "id": "btn1",
+            "component": "Button",
+            "child": "btn1_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit1"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      true,
+                      {
+                        "call": "email",
+                        "args": {
+                          "value": {
+                            "path": "/email"
+                          }
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "and 中 literal true 不影响结果 —— 邮箱合法即通过"
+              }
+            ]
+          },
+          {
+            "id": "btn2",
+            "component": "Button",
+            "child": "btn2_lbl",
+            "action": {
+              "event": {
+                "name": "submit2"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      false,
+                      {
+                        "call": "email",
+                        "args": {
+                          "value": {
+                            "path": "/email"
+                          }
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "and 中 literal false 使整体永远为 false（feature flag 关闭）"
+              }
+            ]
+          },
+          {
+            "id": "btn3",
+            "component": "Button",
+            "child": "btn3_lbl",
+            "action": {
+              "event": {
+                "name": "submit3"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "or",
+                  "args": {
+                    "values": [
+                      false,
+                      {
+                        "call": "not",
+                        "args": {
+                          "value": false
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "not(false) == true → or 恒真"
+              }
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "预期：\n · 按钮1：邮箱合法时启用（and 中 true 是恒真项）\n · 按钮2：无论邮箱如何都禁用（and 中 false 使整体为 false）\n · 按钮3：始终启用（or 中 not(false)=true）",
+            "variant": "caption"
+          },
+          {
+            "id": "btn1_lbl",
+            "component": "Text",
+            "text": "and(true, email(...))"
+          },
+          {
+            "id": "btn2_lbl",
+            "component": "Text",
+            "text": "and(false, email(...))  → 永远禁用"
+          },
+          {
+            "id": "btn3_lbl",
+            "component": "Text",
+            "text": "or(false, not(false))  → 永远启用"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-and-4",
+        "value": {
+          "email": ""
+        }
+      }
+    }
+  ]
+}

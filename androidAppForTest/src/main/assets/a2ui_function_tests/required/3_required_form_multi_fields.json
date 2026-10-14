@@ -1,0 +1,109 @@
+{
+  "name": "required · 多字段表单校验",
+  "description": "姓名与邮箱两个字段均需 required 通过，Button 组合 and(required, required) 才启用。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-required-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-required-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "nameField",
+              "emailField",
+              "btn"
+            ]
+          },
+          {
+            "id": "nameField",
+            "component": "TextField",
+            "label": "姓名",
+            "value": {
+              "path": "/form/name"
+            }
+          },
+          {
+            "id": "emailField",
+            "component": "TextField",
+            "label": "邮箱",
+            "value": {
+              "path": "/form/email"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      {
+                        "call": "required",
+                        "args": {
+                          "value": {
+                            "path": "/form/name"
+                          }
+                        },
+                        "returnType": "boolean"
+                      },
+                      {
+                        "call": "required",
+                        "args": {
+                          "value": {
+                            "path": "/form/email"
+                          }
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "姓名和邮箱均不能为空"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "提交"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-required-3",
+        "value": {
+          "form": {
+            "name": "",
+            "email": ""
+          }
+        }
+      }
+    }
+  ]
+}

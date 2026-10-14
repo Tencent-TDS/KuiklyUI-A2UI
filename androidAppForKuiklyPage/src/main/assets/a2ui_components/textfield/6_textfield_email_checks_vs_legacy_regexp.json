@@ -1,0 +1,70 @@
+{
+  "name": "TextField - email validation (checks preferred, validationRegexp legacy)",
+  "description": "Demonstrates two approaches: 'checks' is the preferred validation mechanism in A2UI v0.9+; 'validationRegexp' is kept only for backward compatibility with older A2UI protocol versions.",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tf-regexp",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tf-regexp",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["tf_checks", "tf"]
+          },
+          {
+            "id": "tf_checks",
+            "component": "TextField",
+            "label": "Email (checks - preferred)",
+            "value": {
+              "path": "/email"
+            },
+            "variant": "shortText",
+            "checks": [
+              {
+                "condition": {
+                  "call": "email",
+                  "args": {
+                    "value": { "path": "/email" }
+                  },
+                  "returnType": "boolean"
+                },
+                "message": "Please enter a valid email address"
+              }
+            ]
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "Email (validationRegexp - legacy)",
+            "value": "",
+            "variant": "shortText",
+            "validationRegexp": "^[^@]+@[^@]+\\.[^@]+$"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-tf-regexp",
+        "value": {
+          "email": ""
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "name": "length · min-only（≥6）",
+  "description": "密码长度 ≥ 6 才允许提交。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-length-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-length-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "密码（≥6）",
+            "value": {
+              "path": "/form/password"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "length",
+                  "args": {
+                    "value": {
+                      "path": "/form/password"
+                    },
+                    "min": 6
+                  }
+                },
+                "message": "密码至少 6 位"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "登录"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-length-1",
+        "value": {
+          "form": {
+            "password": ""
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "name": "pluralize · 只提供 other 时的 CLDR fallback",
+  "description": "根据 CLDR plural rules，当调用方仅提供 'other' 分类时，任意 value（含 1 触发 one、0 触发 zero）都应回退到 'other'。用例展示 value=1/5/0 三种输入统一显示 '1 items' / '5 items' / '0 items'。参照 basic_catalog_implementation_guide.md §pluralize fallback contract。期望渲染结果：t_one → '1 items'（fallback，正常应触发 one 但没提供）；t_many → '5 items'；t_zero → '0 items'（fallback，正常应触发 zero 但没提供）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-pl-6",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-pl-6",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "t_one", "t_many", "t_zero", "hint"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "只提供 other 时，CLDR 会回退",
+            "variant": "h5"
+          },
+          {
+            "id": "t_one",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 1,
+                "other": "%d items"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "t_many",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 5,
+                "other": "%d items"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "t_zero",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 0,
+                "other": "%d items"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "三行都应显示 '%d items' 模板输出（fallback 生效）",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

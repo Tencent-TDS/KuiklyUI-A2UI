@@ -1,0 +1,70 @@
+{
+  "name": "Row - justify=end",
+  "description": "Row justify=end: children packed at the right",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-row-justify-end",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-row-justify-end",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "row"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "a",
+              "b",
+              "c"
+            ],
+            "justify": "end",
+            "align": "stretch"
+          },
+          {
+            "id": "a",
+            "component": "Card",
+            "child": "a_t"
+          },
+          {
+            "id": "a_t",
+            "component": "Text",
+            "text": "A",
+            "variant": "caption"
+          },
+          {
+            "id": "b",
+            "component": "Card",
+            "child": "b_t"
+          },
+          {
+            "id": "b_t",
+            "component": "Text",
+            "text": "B",
+            "variant": "caption"
+          },
+          {
+            "id": "c",
+            "component": "Card",
+            "child": "c_t"
+          },
+          {
+            "id": "c_t",
+            "component": "Text",
+            "text": "C",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

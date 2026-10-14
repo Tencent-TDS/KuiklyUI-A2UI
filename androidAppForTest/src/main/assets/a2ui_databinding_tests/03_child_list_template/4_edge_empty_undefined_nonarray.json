@@ -1,0 +1,97 @@
+{
+  "name": "ChildList 模板 · 数据边界（空 / undefined / 非数组）",
+  "description": "验证 ChildList 模板（children:{componentId,path}）在遭遇非常规数据时的容错。规范定义（common_types.json ChildList schema）path 应指向 array of objects；实际数据可能出现三种边界：(1) 空数组 [] —— 期望 0 实例；(2) path 未定义 —— 期望 0 实例（progressive rendering 语义）；(3) path 值非数组（如 string / number / object）—— 规范未明说，但按 graceful-handling 原则应不 crash 且 0 实例。用例创建三个并列的 Column，各绑定一个独立 path；updateDataModel 分别提供空数组 / 缺席 key / 字符串值。期望：三个 Column 都渲染为空（除标题外无子项），Card 保持可见，无红屏。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-cl-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-cl-4",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "label_empty", "list_empty",
+              "label_missing", "list_missing",
+              "label_nonarray", "list_nonarray",
+              "footer"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "ChildList 模板 · 数据边界",
+            "variant": "h5"
+          },
+          {
+            "id": "label_empty",
+            "component": "Text",
+            "text": "① 空数组 /items_empty = []（期望 0 实例）",
+            "variant": "caption"
+          },
+          {
+            "id": "list_empty",
+            "component": "Column",
+            "children": { "componentId": "tpl", "path": "/items_empty" }
+          },
+          {
+            "id": "label_missing",
+            "component": "Text",
+            "text": "② 未定义 path /items_missing（期望 0 实例）",
+            "variant": "caption"
+          },
+          {
+            "id": "list_missing",
+            "component": "Column",
+            "children": { "componentId": "tpl", "path": "/items_missing" }
+          },
+          {
+            "id": "label_nonarray",
+            "component": "Text",
+            "text": "③ 非数组值 /items_nonarray = 'not_a_list'（期望 0 实例，不 crash）",
+            "variant": "caption"
+          },
+          {
+            "id": "list_nonarray",
+            "component": "Column",
+            "children": { "componentId": "tpl", "path": "/items_nonarray" }
+          },
+          {
+            "id": "tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "should_not_render: ${name}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "footer",
+            "component": "Text",
+            "text": "三行 Column 都应为空。任何 'should_not_render' 出现即失败。",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-cl-4",
+        "value": {
+          "items_empty": [],
+          "items_nonarray": "not_a_list"
+        }
+      }
+    }
+  ]
+}

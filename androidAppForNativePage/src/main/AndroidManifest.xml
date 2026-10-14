@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".A2UIDemoApplication"
+        android:allowBackup="true"
+        android:label="A2UI NativePage"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity
+            android:name=".A2UIDemoActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".NativeCardDemoActivity" />
+        <activity android:name=".ComponentDemoActivity" />
+        <activity android:name=".A2UIComponentTestActivity" />
+        <activity android:name=".CustomFunctionDemoActivity" />
+        <activity android:name=".CustomComponentDemoActivity" />
+        <activity android:name=".CustomIconDemoActivity" />
+    </application>
+
+</manifest>

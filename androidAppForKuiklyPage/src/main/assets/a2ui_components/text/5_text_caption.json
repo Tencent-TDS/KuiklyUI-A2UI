@@ -1,0 +1,49 @@
+{
+  "name": "Text - variant caption",
+  "description": "Text component with variant=caption (13dp / muted color #666666)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-caption",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-caption",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "main-column"
+          },
+          {
+            "id": "main-column",
+            "component": "Column",
+            "children": ["t-label", "t-value", "t-caption"]
+          },
+          {
+            "id": "t-label",
+            "component": "Text",
+            "text": "POSTED",
+            "variant": "caption"
+          },
+          {
+            "id": "t-value",
+            "component": "Text",
+            "text": "Article Title",
+            "variant": "h4"
+          },
+          {
+            "id": "t-caption",
+            "component": "Text",
+            "text": "by John Doe • 5 min read",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "name": "非法值 · 缺失 # 前缀应被拒绝",
+  "description": "theme.primaryColor='E91E63'（缺少 # 前缀）不匹配 ^#[0-9a-fA-F]{6}$，应被拒绝并回退默认 #00BFFF。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-inv-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "E91E63"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-inv-4",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor='E91E63' 缺少 # 前缀，规范要求以 # 开头。引擎应回退默认 #00BFFF（浅蓝），下方按钮应为浅蓝而非品红。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（应显示默认浅蓝 #00BFFF）" }
+        ]
+      }
+    }
+  ]
+}

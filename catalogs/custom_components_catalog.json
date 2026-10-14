@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "custom_components_catalog.json",
+  "title": "A2UI Custom Components Catalog",
+  "description": "Extended catalog that includes A2UI basic components plus custom components: A2UIWeb (WebView) and MyA2UIView (simple text view).",
+  "catalogId": "custom_components_catalog.json",
+  "components": {
+    "A2UIWeb": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "description": "A custom WebView component that loads and displays web content from a URL. Registered via registerCustomRenderView on the client side.",
+          "properties": {
+            "component": {
+              "const": "A2UIWeb"
+            },
+            "source": {
+              "type": "string",
+              "format": "uri",
+              "description": "The URL of the web page to load and display in the WebView."
+            }
+          },
+          "required": [
+            "component",
+            "source"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "MyA2UIView": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "description": "A simple custom view that displays text with a configurable color. Registered via registerCustomRenderView on the client side.",
+          "properties": {
+            "component": {
+              "const": "MyA2UIView"
+            },
+            "text": {
+              "type": "string",
+              "description": "The text content to display in the custom view."
+            },
+            "textColor": {
+              "type": "string",
+              "description": "The color of the text. Format: CSS hex color code (e.g., '#6200EE', '#333333').",
+              "pattern": "^#[0-9a-fA-F]{3,8}$",
+              "default": "#333333"
+            }
+          },
+          "required": [
+            "component",
+            "text"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  },
+  "functions": {},
+  "$defs": {
+    "CatalogComponentCommon": {
+      "type": "object",
+      "properties": {
+        "weight": {
+          "type": "number",
+          "description": "The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column."
+        }
+      }
+    },
+    "anyComponent": {
+      "oneOf": [
+        {
+          "$ref": "#/components/A2UIWeb"
+        },
+        {
+          "$ref": "#/components/MyA2UIView"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "component"
+      }
+    }
+  },
+  "extends": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+}

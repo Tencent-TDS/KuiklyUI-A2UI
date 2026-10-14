@@ -1,0 +1,42 @@
+{
+  "name": "Button variant 隔离 · 仅 primary 应被染色",
+  "description": "同一主题下同时渲染 3 种 Button variant（primary / default / borderless），验证 primaryColor 仅作用于 variant=primary 的背景，default / borderless 不应被主题色错误染色。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-vari-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#E91E63"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-vari-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn_primary", "btn_default", "btn_borderless"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor=#E91E63。仅 variant=primary 的按钮背景应为品红，default 与 borderless 应保持中性外观，不被主题色误染。",
+            "variant": "caption"
+          },
+          { "id": "btn_primary", "component": "Button", "child": "btn_primary_lbl", "variant": "primary" },
+          { "id": "btn_primary_lbl", "component": "Text", "text": "primary（背景应为品红）" },
+          { "id": "btn_default", "component": "Button", "child": "btn_default_lbl", "variant": "default" },
+          { "id": "btn_default_lbl", "component": "Text", "text": "default（不应被主题色染背景）" },
+          { "id": "btn_borderless", "component": "Button", "child": "btn_borderless_lbl", "variant": "borderless" },
+          { "id": "btn_borderless_lbl", "component": "Text", "text": "borderless（不应被主题色染背景）" }
+        ]
+      }
+    }
+  ]
+}

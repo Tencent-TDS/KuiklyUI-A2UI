@@ -1,0 +1,55 @@
+{
+  "name": "Action.event.context · 携带输入回传",
+  "description": "点击提交按钮时把 /form 数据整体作为 context 一起下发（可在 onAction 对话框中查看 params）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ac-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ac-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["tf", "sl", "btn", "btn_lbl"] },
+          { "id": "tf", "component": "TextField", "label": "备注", "value": { "path": "/form/note" } },
+          {
+            "id": "sl",
+            "component": "Slider",
+            "label": "满意度",
+            "min": 0,
+            "max": 5,
+            "value": { "path": "/form/score" }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit_feedback",
+                "context": {
+                  "note": { "path": "/form/note" },
+                  "score": { "path": "/form/score" }
+                }
+              }
+            }
+          },
+          { "id": "btn_lbl", "component": "Text", "text": "提交反馈" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ac-1",
+        "value": { "form": { "note": "", "score": 3 } }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "AudioPlayer - literal URL",
+  "description": "AudioPlayer with literal URL and description",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-audio-literal",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-audio-literal",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "a"
+          },
+          {
+            "id": "a",
+            "component": "AudioPlayer",
+            "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            "description": "Sample audio track"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "name": "required · 数据缺失时按钮禁用",
+  "description": "input.username 未填写 → required(check) 失败 → 提交按钮禁用。请在输入框填入内容试试。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-required-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-required-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "hint",
+              "input",
+              "current",
+              "btn"
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "在下方输入框填入内容后，按钮才会启用",
+            "variant": "caption"
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "用户名",
+            "value": {
+              "path": "/formData/username"
+            }
+          },
+          {
+            "id": "current",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "当前值：\"${/formData/username}\""
+              },
+              "returnType": "string"
+            },
+            "variant": "caption"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "required",
+                  "args": {
+                    "value": {
+                      "path": "/formData/username"
+                    }
+                  }
+                },
+                "message": "用户名不能为空"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "提交（需填写）"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-required-2",
+        "value": {
+          "formData": {
+            "username": ""
+          }
+        }
+      }
+    }
+  ]
+}

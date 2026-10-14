@@ -1,0 +1,38 @@
+{
+  "name": "非法值 · primaryColor 应回退默认",
+  "description": "theme.primaryColor='invalid-color' 不匹配 ^#[0-9a-fA-F]{6}$，应被引擎拒绝并回退到默认 #00BFFF。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-inv-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "invalid-color"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-inv-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor='invalid-color' 属非法值，应回退默认 #00BFFF（浅蓝）。下方 Primary Button 背景应为浅蓝，而不是奇怪的颜色/黑色。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（应显示默认浅蓝 #00BFFF）" }
+        ]
+      }
+    }
+  ]
+}

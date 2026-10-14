@@ -1,0 +1,89 @@
+{
+  "name": "formatCurrency · EUR / JPY 对比",
+  "description": "同一金额三种货币展示。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fc-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fc-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "t2",
+              "t3"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatCurrency",
+              "args": {
+                "value": {
+                  "path": "/price"
+                },
+                "currency": "USD"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "formatCurrency",
+              "args": {
+                "value": {
+                  "path": "/price"
+                },
+                "currency": "EUR"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "t3",
+            "component": "Text",
+            "text": {
+              "call": "formatCurrency",
+              "args": {
+                "value": {
+                  "path": "/price"
+                },
+                "currency": "JPY"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fc-2",
+        "value": {
+          "price": 1299.5
+        }
+      }
+    }
+  ]
+}

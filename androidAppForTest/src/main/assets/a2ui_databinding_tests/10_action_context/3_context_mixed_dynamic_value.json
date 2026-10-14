@@ -1,0 +1,93 @@
+{
+  "name": "Action.event.context · DynamicValue 全形态多态",
+  "description": "同一 event.context 里同时携带 6 种 DynamicValue 形态：literal string / number / boolean / array + DataBinding({path}) + FunctionCall（formatCurrency 返回 string）。点击按钮后 onAction 弹窗中的 params 应能观察到所有键值。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ac-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ac-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["tip", "tf_name", "sl_amount", "cb_agree", "btn", "btn_lbl"]
+          },
+          {
+            "id": "tip",
+            "component": "Text",
+            "text": "点击「提交」后，onAction 会展示混合类型的 context 值",
+            "variant": "caption"
+          },
+          {
+            "id": "tf_name",
+            "component": "TextField",
+            "label": "姓名",
+            "value": { "path": "/form/name" }
+          },
+          {
+            "id": "sl_amount",
+            "component": "Slider",
+            "label": "金额",
+            "min": 0,
+            "max": 1000,
+            "value": { "path": "/form/amount" }
+          },
+          {
+            "id": "cb_agree",
+            "component": "CheckBox",
+            "label": "同意条款",
+            "value": { "path": "/form/agree" }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit_mixed_context",
+                "context": {
+                  "literalStr": "hello",
+                  "literalNum": 42,
+                  "literalBool": true,
+                  "literalArr": ["a", "b", "c"],
+                  "boundName": { "path": "/form/name" },
+                  "formattedAmount": {
+                    "call": "formatCurrency",
+                    "args": {
+                      "value": { "path": "/form/amount" },
+                      "currency": "USD"
+                    },
+                    "returnType": "string"
+                  }
+                }
+              }
+            }
+          },
+          { "id": "btn_lbl", "component": "Text", "text": "提交" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ac-3",
+        "value": {
+          "form": {
+            "name": "Alice",
+            "amount": 199.5,
+            "agree": true
+          }
+        }
+      }
+    }
+  ]
+}

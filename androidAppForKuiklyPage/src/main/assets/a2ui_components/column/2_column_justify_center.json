@@ -1,0 +1,55 @@
+{
+  "name": "Column - justify=center",
+  "description": "Column items vertically centered (note: needs height)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-col-just-center",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-col-just-center",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "a",
+              "b",
+              "c"
+            ],
+            "justify": "center",
+            "align": "stretch"
+          },
+          {
+            "id": "a",
+            "component": "Text",
+            "text": "A — first item",
+            "variant": "body"
+          },
+          {
+            "id": "b",
+            "component": "Text",
+            "text": "B — second item",
+            "variant": "body"
+          },
+          {
+            "id": "c",
+            "component": "Text",
+            "text": "C — third item",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

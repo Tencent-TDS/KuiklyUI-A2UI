@@ -1,0 +1,102 @@
+{
+  "name": "pluralize · CLDR 分类边界（0/1/2）",
+  "description": "既有 pluralize/3 提供了 zero/one/two/few/many/other 六个字符串但只用 n=5（走 other）；本用例针对 CLDR 边界值 0 / 1 / 2 分别给出三行文本，可清晰观察 renderer 对 zero/one/two 三个分类的分派实现。规范：CLDR 分类由 renderer 侧根据 locale 决定；英语/中文一般不区分 zero、two，会 fallback 到 other/one。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-pl-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-pl-5",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "t0", "t1", "t2", "t100", "hint"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "CLDR 边界：0 / 1 / 2 / 100",
+            "variant": "h5"
+          },
+          {
+            "id": "t0",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 0,
+                "zero": "n=0 → CLDR 'zero'（若语言支持）",
+                "one": "n=0 → CLDR 'one'",
+                "two": "n=0 → CLDR 'two'",
+                "other": "n=0 → CLDR 'other'（英语默认）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 1,
+                "zero": "n=1 → 'zero'",
+                "one": "n=1 → CLDR 'one'（英/中都命中）",
+                "two": "n=1 → 'two'",
+                "other": "n=1 → 'other'"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 2,
+                "zero": "n=2 → 'zero'",
+                "one": "n=2 → 'one'",
+                "two": "n=2 → CLDR 'two'（阿拉伯语/威尔士语命中；英语 fallback other）",
+                "other": "n=2 → 'other'（英语默认）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t100",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 100,
+                "one": "n=100 → 'one'",
+                "many": "n=100 → CLDR 'many'（部分语言命中）",
+                "other": "n=100 → 'other'（英语默认）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "对英语 renderer：t0 应走 other；t1 应走 one；t2/t100 应走 other。若 renderer 未严格遵循 CLDR 而用简化规则（如 n==1 → one，其余 → other），t0/t2/t100 都会走 other，符合预期。若某 renderer 抛错，说明分类实现不完整。",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

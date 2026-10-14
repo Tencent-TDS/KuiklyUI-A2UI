@@ -1,0 +1,93 @@
+{
+  "name": "email · required + email 组合",
+  "description": "必须先非空且格式正确才能提交。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-email-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-email-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "邮箱",
+            "value": {
+              "path": "/form/email"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "required",
+                  "args": {
+                    "value": {
+                      "path": "/form/email"
+                    }
+                  }
+                },
+                "message": "邮箱不能为空"
+              },
+              {
+                "condition": {
+                  "call": "email",
+                  "args": {
+                    "value": {
+                      "path": "/form/email"
+                    }
+                  }
+                },
+                "message": "邮箱格式不正确"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "订阅"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-email-2",
+        "value": {
+          "form": {
+            "email": ""
+          }
+        }
+      }
+    }
+  ]
+}

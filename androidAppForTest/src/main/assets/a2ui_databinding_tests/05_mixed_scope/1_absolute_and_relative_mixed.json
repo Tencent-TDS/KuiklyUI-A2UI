@@ -1,0 +1,59 @@
+{
+  "name": "混合作用域 · 绝对 + 相对同存",
+  "description": "模板子树内 Text 引用 /header/title（绝对） 与 name（相对），同时展示公共标题与迭代项字段。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ms-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ms-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["headline", "list"] },
+          {
+            "id": "headline",
+            "component": "Text",
+            "text": { "path": "/header/title" },
+            "variant": "h5"
+          },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "row-tpl", "path": "/rows" }
+          },
+          {
+            "id": "row-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "[${/header/tag}] ${name} 加入于 ${joinedYear}"
+              },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ms-1",
+        "value": {
+          "header": { "title": "团队成员", "tag": "Core" },
+          "rows": [
+            { "name": "Alice", "joinedYear": 2019 },
+            { "name": "Bob", "joinedYear": 2021 },
+            { "name": "Carol", "joinedYear": 2024 }
+          ]
+        }
+      }
+    }
+  ]
+}

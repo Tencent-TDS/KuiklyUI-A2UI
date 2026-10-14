@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kuikly_a2ui_catalog.json",
+  "title": "Kuikly Extended A2UI Basic Catalog (v0.9)",
+  "description": "Superset of the A2UI v0.9 basic catalog. Every standard component gains an optional `styles` field that exposes Kuikly's native style attributes. Standard-A2UI JSON without `styles` remains valid — this catalog only adds an opt-in property bag.",
+  "catalogId": "kuikly_a2ui_catalog.json",
+  "extends": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+
+  "components": {
+    "Text": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Text" },
+        { "$ref": "#/$defs/KuiklyTextStylesHolder" }
+      ]
+    },
+    "Image": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Image" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Icon": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Icon" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Video": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Video" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "AudioPlayer": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/AudioPlayer" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Row": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Row" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Column": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Column" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "List": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/List" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Card": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Card" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Tabs": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Tabs" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Modal": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Modal" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Divider": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Divider" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Button": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Button" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "TextField": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/TextField" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "CheckBox": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/CheckBox" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "ChoicePicker": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/ChoicePicker" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "Slider": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Slider" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    },
+    "DateTimeInput": {
+      "allOf": [
+        { "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/DateTimeInput" },
+        { "$ref": "#/$defs/KuiklyCommonStylesHolder" }
+      ]
+    }
+  },
+
+  "functions": {},
+
+  "$defs": {
+    "KuiklyCommonStylesHolder": {
+      "type": "object",
+      "description": "Container fragment that adds an optional `styles` field carrying Kuikly common style attributes.",
+      "properties": {
+        "styles": { "$ref": "#/$defs/KuiklyCommonStyles" }
+      }
+    },
+    "KuiklyTextStylesHolder": {
+      "type": "object",
+      "description": "Container fragment that adds an optional `styles` field carrying Kuikly common + text style attributes. Applied to `Text` only.",
+      "properties": {
+        "styles": { "$ref": "#/$defs/KuiklyTextStyles" }
+      }
+    },
+
+    "KuiklyCommonStyles": {
+      "type": "object",
+      "description": "Kuikly common style attributes. Fields whose semantics belong to the A2UI protocol layer (id, action, accessibility, touchEnable) are intentionally excluded to avoid ambiguity with the standard protocol.",
+      "properties": {
+        "width": { "type": "number", "minimum": 0, "description": "Fixed width in dp/pt." },
+        "height": { "type": "number", "minimum": 0, "description": "Fixed height in dp/pt." },
+        "minWidth": { "type": "number", "minimum": 0 },
+        "minHeight": { "type": "number", "minimum": 0 },
+        "maxWidth": { "type": "number", "minimum": 0 },
+        "maxHeight": { "type": "number", "minimum": 0 },
+
+        "flex": { "type": "number", "minimum": 0, "description": "Flex grow factor." },
+        "flexGrow": { "type": "number", "minimum": 0 },
+        "flexShrink": { "type": "number", "minimum": 0 },
+        "flexBasis": { "type": "number", "minimum": 0 },
+        "alignSelf": {
+          "type": "string",
+          "enum": ["auto", "flex-start", "flex-end", "center", "stretch", "baseline"]
+        },
+
+        "margin": { "type": "number" },
+        "marginTop": { "type": "number" },
+        "marginBottom": { "type": "number" },
+        "marginLeft": { "type": "number" },
+        "marginRight": { "type": "number" },
+
+        "padding": { "type": "number" },
+        "paddingTop": { "type": "number" },
+        "paddingBottom": { "type": "number" },
+        "paddingLeft": { "type": "number" },
+        "paddingRight": { "type": "number" },
+
+        "backgroundColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{3,8}$",
+          "description": "Background color. Format: CSS hex color code."
+        },
+        "backgroundLinearGradient": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Kuikly-native shorthand accepted verbatim, e.g. 'linear-gradient(1, #3A6DF0 0.0, #7A3FD8 1.0)'. Direction is an integer: 0=to-top, 1=to-bottom, 2=to-left, 3=to-right."
+            },
+            {
+              "type": "object",
+              "description": "Structured form. Converted to the shorthand above by A2UIComponentMapper.gradientMapToCssString(). Overrides backgroundColor when set.",
+              "properties": {
+                "direction": {
+                  "type": "string",
+                  "enum": ["to-top", "to-bottom", "to-left", "to-right"]
+                },
+                "colorStops": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "color": { "type": "string" },
+                      "stop": { "type": "number", "minimum": 0, "maximum": 1 }
+                    },
+                    "required": ["color", "stop"]
+                  }
+                }
+              },
+              "required": ["direction", "colorStops"]
+            }
+          ]
+        },
+
+        "borderRadius": { "type": "number", "minimum": 0 },
+
+        "borderWidth": { "type": "number", "minimum": 0 },
+        "borderColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" },
+        "borderStyle": { "type": "string", "enum": ["solid", "dotted", "dashed"], "default": "solid" },
+
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "visibility": { "type": "boolean", "default": true },
+        "overflow": { "type": "string", "enum": ["visible", "hidden"], "default": "visible" },
+        "zIndex": { "type": "integer" },
+        "boxShadow": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "KR-native shorthand: 'offsetX offsetY radius color [fill]', e.g. '0 2 8 #33000000 0'. All values in dp; fill=1 produces an inner shadow."
+            },
+            {
+              "type": "object",
+              "description": "Structured form. Converted to the shorthand above by A2UIComponentMapper.boxShadowMapToCssString().",
+              "properties": {
+                "offsetX": { "type": "number", "default": 0 },
+                "offsetY": { "type": "number", "default": 0 },
+                "radius": { "type": "number", "minimum": 0, "default": 0 },
+                "color": { "type": "string", "description": "CSS hex (#RRGGBB / #AARRGGBB) or decimal ARGB." },
+                "fill": { "type": "boolean", "default": false, "description": "true => inner shadow, false => outer drop shadow." }
+              },
+              "required": ["color"]
+            }
+          ]
+        },
+
+        "transform": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "KR-native pipe-separated shorthand parsed positionally: 'rotate|scaleX scaleY|translateX translateY|pivotX pivotY[|skewX skewY][|rotateX rotateY]'. translate/pivot are fractions of the view's frame, not dp."
+            },
+            {
+              "type": "object",
+              "description": "Structured form. Converted to the shorthand above by A2UIComponentMapper.transformMapToCssString(). Missing fields fall back to the identity (rotate=0, scale=1, translate=0, anchor=0.5).",
+              "properties": {
+                "rotate": {
+                  "type": "number",
+                  "description": "Z-axis rotation in degrees."
+                },
+                "scale": {
+                  "oneOf": [
+                    { "type": "number", "minimum": 0, "description": "Uniform scale factor." },
+                    {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "number", "minimum": 0 },
+                      "description": "[scaleX, scaleY]."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "x": { "type": "number", "minimum": 0 },
+                        "y": { "type": "number", "minimum": 0 }
+                      }
+                    }
+                  ]
+                },
+                "translate": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "number" },
+                      "description": "[fractionX, fractionY] — fraction of the view's own frame, e.g. [0.5, 0] moves right by half width."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "x": { "type": "number" },
+                        "y": { "type": "number" }
+                      }
+                    }
+                  ]
+                },
+                "anchor": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "description": "[anchorX, anchorY] — pivot point as fractions in [0, 1]. Defaults to [0.5, 0.5] (center)."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "y": { "type": "number", "minimum": 0, "maximum": 1 }
+                      }
+                    }
+                  ]
+                },
+                "skew": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "number" },
+                      "description": "[skewX, skewY] in degrees."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "x": { "type": "number" },
+                        "y": { "type": "number" }
+                      }
+                    }
+                  ]
+                },
+                "rotateXY": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "number" },
+                      "description": "[rotateX, rotateY] — 3D rotations around X/Y axes in degrees. Requires newer KR versions."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "x": { "type": "number" },
+                        "y": { "type": "number" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+
+        "positionType": { "type": "string", "enum": ["relative", "absolute"], "default": "relative" },
+        "top": { "type": "number" },
+        "left": { "type": "number" },
+        "bottom": { "type": "number" },
+        "right": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+
+    "KuiklyTextStyles": {
+      "type": "object",
+      "description": "Kuikly text style attributes: KuiklyCommonStyles plus font/text-specific fields. Only applies to `Text` components.",
+      "allOf": [
+        { "$ref": "#/$defs/KuiklyCommonStyles" }
+      ],
+      "properties": {
+        "fontSize": { "type": "number", "minimum": 1, "description": "Font size in dp/pt." },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{3,8}$",
+          "description": "Text color. Format: CSS hex color code."
+        },
+        "fontWeight": {
+          "type": "string",
+          "enum": ["normal", "light", "medium", "semibold", "bold", "300", "400", "500", "600", "700", "800", "900"]
+        },
+        "fontStyle": { "type": "string", "enum": ["normal", "italic"] },
+        "fontFamily": { "type": "string" },
+        "textAlign": { "type": "string", "enum": ["left", "center", "right"] },
+        "textDecoration": { "type": "string", "enum": ["none", "underline", "line-through"] },
+        "lineHeight": { "type": "number", "minimum": 0 },
+        "lineSpacing": { "type": "number", "minimum": 0 },
+        "letterSpacing": { "type": "number" },
+        "numberOfLines": { "type": "integer", "minimum": 1 },
+        "firstLineHeadIndent": { "type": "number", "minimum": 0 },
+        "textShadow": {
+          "type": "object",
+          "properties": {
+            "offsetX": { "type": "number" },
+            "offsetY": { "type": "number" },
+            "radius": { "type": "number", "minimum": 0 },
+            "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" }
+          },
+          "required": ["offsetX", "offsetY", "radius", "color"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "name": "openUrl · 图标按钮",
+  "description": "按钮 icon-only 触发 openUrl。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-url-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-url-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "btn"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "点击图标打开链接",
+            "variant": "caption"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "iconLeading": "openInNew",
+            "variant": "borderless",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "https://a2ui.org/"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "外链"
+          }
+        ]
+      }
+    }
+  ]
+}

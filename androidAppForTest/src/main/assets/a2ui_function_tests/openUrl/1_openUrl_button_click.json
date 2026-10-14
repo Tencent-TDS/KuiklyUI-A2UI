@@ -1,0 +1,53 @@
+{
+  "name": "openUrl · 按钮点击打开链接",
+  "description": "点击按钮触发 openUrl（Action.functionCall）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-url-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-url-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "btn"
+            ]
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "https://a2ui.org/"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "打开 A2UI 官网"
+          }
+        ]
+      }
+    }
+  ]
+}

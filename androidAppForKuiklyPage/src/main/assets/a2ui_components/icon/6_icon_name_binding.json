@@ -1,0 +1,69 @@
+{
+  "name": "Icon - name data binding",
+  "description": "Icon name property bound to data model paths",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-icon-binding",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-icon-binding",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "row"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "icon1",
+              "icon2",
+              "icon3"
+            ],
+            "justify": "spaceEvenly"
+          },
+          {
+            "id": "icon1",
+            "component": "Icon",
+            "name": {
+              "path": "/icon1"
+            }
+          },
+          {
+            "id": "icon2",
+            "component": "Icon",
+            "name": {
+              "path": "/icon2"
+            }
+          },
+          {
+            "id": "icon3",
+            "component": "Icon",
+            "name": {
+              "path": "/icon3"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-icon-binding",
+        "value": {
+          "icon1": "lockOpen",
+          "icon2": "visibility",
+          "icon3": "favorite"
+        }
+      }
+    }
+  ]
+}

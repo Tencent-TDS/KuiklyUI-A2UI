@@ -1,0 +1,12 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "A2UI Demo Module"
+    },
+    {
+      "name": "entry_label",
+      "value": "A2UI KuiklyPage"
+    }
+  ]
+}

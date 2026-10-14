@@ -1,0 +1,83 @@
+{
+  "name": "Modal - basic",
+  "description": "Modal triggered by a Button, content is a Column",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-modal-basic",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-modal-basic",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "modal"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Click 'Open' to show the modal",
+            "variant": "body"
+          },
+          {
+            "id": "modal",
+            "component": "Modal",
+            "trigger": "openBtn",
+            "content": "modalContent"
+          },
+          {
+            "id": "openBtn",
+            "component": "Button",
+            "child": "openTxt",
+            "action": {
+              "event": {
+                "name": "openModal"
+              }
+            },
+            "variant": "primary"
+          },
+          {
+            "id": "openTxt",
+            "component": "Text",
+            "text": "Open",
+            "variant": "body"
+          },
+          {
+            "id": "modalContent",
+            "component": "Column",
+            "children": [
+              "mt",
+              "md"
+            ]
+          },
+          {
+            "id": "mt",
+            "component": "Text",
+            "text": "Modal Dialog",
+            "variant": "h4"
+          },
+          {
+            "id": "md",
+            "component": "Text",
+            "text": "This is the modal content. Tap outside or back to dismiss.",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

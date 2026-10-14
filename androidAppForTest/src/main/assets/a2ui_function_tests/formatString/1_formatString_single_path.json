@@ -1,0 +1,54 @@
+{
+  "name": "formatString · 单路径插值",
+  "description": "${/name} 展示单个字段。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t"
+            ]
+          },
+          {
+            "id": "t",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Hello, ${/name}!"
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-1",
+        "value": {
+          "name": "Alex"
+        }
+      }
+    }
+  ]
+}

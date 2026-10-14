@@ -1,0 +1,64 @@
+{
+  "name": "primaryColor · 品牌绿 CheckBox / ChoicePicker 也应染色",
+  "description": "theme.primaryColor=#2ECC71 应作用于 CheckBox 选中勾、ChoicePicker 选中项、Button variant=primary 背景。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-pc-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#2ECC71"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-pc-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "cb", "cp", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "本页面 theme.primaryColor = #2ECC71（品牌绿），下列选中态与主按钮应统一为绿色。",
+            "variant": "caption"
+          },
+          {
+            "id": "cb",
+            "component": "CheckBox",
+            "label": "我同意条款（勾应为绿色）",
+            "value": { "path": "/agree" }
+          },
+          {
+            "id": "cp",
+            "component": "ChoicePicker",
+            "label": "选择套餐（选中项应为绿色）",
+            "value": { "path": "/plan" },
+            "children": ["plan1", "plan2", "plan3"]
+          },
+          { "id": "plan1", "component": "Choice", "title": "基础版", "value": "basic" },
+          { "id": "plan2", "component": "Choice", "title": "专业版", "value": "pro" },
+          { "id": "plan3", "component": "Choice", "title": "企业版", "value": "enterprise" },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "确认购买（背景应为绿色）" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-pc-2",
+        "value": {
+          "agree": true,
+          "plan": "pro"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "Text - variant h1",
+  "description": "Text component with variant=h1 (40dp / bold / dark color #1A1A1A)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-h1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-h1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "title"
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Heading 1 - Largest Title",
+            "variant": "h1"
+          }
+        ]
+      }
+    }
+  ]
+}

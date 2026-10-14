@@ -1,0 +1,53 @@
+name: A2UIDemoApp
+options:
+  bundleIdPrefix: com.tencent.kuikly.a2ui
+  deploymentTarget:
+    iOS: "14.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  A2UIDemoApp:
+    type: application
+    platform: iOS
+    sources:
+      # App-specific sources (AppDelegate, main list, Kuikly-Page-only VCs).
+      - path: Sources
+        type: group
+      # Shared sources across all iosAppFor* targets.
+      - path: ../iosShared/Sources
+        type: group
+      # Kuikly-Page path currently reuses the same component / custom /
+      # icon JSON assets as NativePage. The demo pages that host A2UI
+      # inside a Kuikly Pager (`A2UISurfaceDSLDemo`, `ComposePageDemo`)
+      # are shipped as stubs in this milestone — the corresponding assets
+      # will land alongside Phase 2 of the KuiklyPage integration work.
+      - path: Resources/a2ui_components
+        type: folder
+        buildPhase: resources
+      - path: Resources/a2ui_custom_components
+        type: folder
+        buildPhase: resources
+      - path: Resources/a2ui_custom_functions
+        type: folder
+        buildPhase: resources
+      - path: Resources/a2ui_icons
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        INFOPLIST_FILE: Resources/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.tencent.kuikly.a2ui.demo.kuikly
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_OBJC_BRIDGING_HEADER: ../iosShared/Sources/A2UIDemo-Bridging-Header.h
+        CODE_SIGN_STYLE: Automatic
+        CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES: "$(inherited) YES"
+    dependencies:
+      - sdk: AVFoundation.framework
+      - sdk: CoreMedia.framework

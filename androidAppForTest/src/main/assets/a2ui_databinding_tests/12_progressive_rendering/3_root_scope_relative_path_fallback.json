@@ -1,0 +1,99 @@
+{
+  "name": "progressive rendering · Root Scope 相对路径的实现容错",
+  "description": "验证 Root Scope 下使用非 '/' 开头的路径（规范未定义行为）时，renderer 必须优雅容错。规范原文（a2ui_protocol.md §Path resolution & scope）只在 Collection/Child Scope（ChildList 模板实例化后）定义了相对路径语义 —— 'any path that does not start with a forward slash / is treated as a Relative Path'。Root Scope 下的相对路径不在规范定义范围内，属未定义行为，但根据 progressive rendering 原则（'clients should handle this gracefully'），renderer 必须至少满足：(1) 不 crash；(2) 不显示 'undefined' 字面量或抛出的异常文本。规范未强制期望值，因此本用例列出两种合理实现选择供人工目视比对。本引擎（A2UIProtocolAdapter）当前把 Root Scope 下的相对路径 fallback 到根 dataModel 同名 key（见 resolveValue L2781），因此 Text 会显示 dataModel 中 name 的值。若换用其它严格实现，Text 显示为空串也合规。用例包含三种绑定形态：t_direct 直接 PathBinding；t_interp formatString 插值 ${name}；t_fn FunctionCall 参数携带相对 PathBinding。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-pr-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-pr-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "hint", "label_direct", "t_direct", "label_interp", "t_interp", "label_fn", "t_fn", "footer"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Root Scope 相对路径：规范未定义行为，容错基线",
+            "variant": "h5"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "规范只在 ChildList 模板 Child Scope 里定义相对路径。Root Scope 下使用相对路径属未定义行为，实现可选择：(a) fallback 到根同名 key；(b) 返回空串。两者皆合规，但绝不能 crash。",
+            "variant": "caption"
+          },
+          {
+            "id": "label_direct",
+            "component": "Text",
+            "text": "① 直接 PathBinding {path:'name'}：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_direct",
+            "component": "Text",
+            "text": { "path": "name" }
+          },
+          {
+            "id": "label_interp",
+            "component": "Text",
+            "text": "② formatString 插值 ${name}：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_interp",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "value=[${name}]"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "label_fn",
+            "component": "Text",
+            "text": "③ FunctionCall 参数携带相对 PathBinding：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_fn",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": { "path": "name" }
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "footer",
+            "component": "Text",
+            "text": "本引擎期望三行都显示 'Root-Scope Fallback OK'（fallback 到 dataModel 顶层 name）；严格实现下应显示空串或 [] 占位。",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-pr-3",
+        "value": {
+          "name": "Root-Scope Fallback OK"
+        }
+      }
+    }
+  ]
+}

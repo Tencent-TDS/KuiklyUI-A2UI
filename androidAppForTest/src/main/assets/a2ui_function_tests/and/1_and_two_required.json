@@ -1,0 +1,109 @@
+{
+  "name": "and · 两个 required 组合",
+  "description": "姓 & 名两个字段都非空才启用按钮。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-and-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-and-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "f1",
+              "f2",
+              "btn"
+            ]
+          },
+          {
+            "id": "f1",
+            "component": "TextField",
+            "label": "姓",
+            "value": {
+              "path": "/f/last"
+            }
+          },
+          {
+            "id": "f2",
+            "component": "TextField",
+            "label": "名",
+            "value": {
+              "path": "/f/first"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      {
+                        "call": "required",
+                        "args": {
+                          "value": {
+                            "path": "/f/last"
+                          }
+                        },
+                        "returnType": "boolean"
+                      },
+                      {
+                        "call": "required",
+                        "args": {
+                          "value": {
+                            "path": "/f/first"
+                          }
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "姓和名都不能为空"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "登记"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-and-1",
+        "value": {
+          "f": {
+            "last": "",
+            "first": ""
+          }
+        }
+      }
+    }
+  ]
+}

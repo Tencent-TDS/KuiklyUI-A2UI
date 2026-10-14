@@ -1,0 +1,38 @@
+name: A2UIDemoApp
+options:
+  bundleIdPrefix: com.tencent.kuikly.a2ui
+  deploymentTarget:
+    iOS: "14.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  A2UIDemoApp:
+    type: application
+    platform: iOS
+    sources:
+      # App-specific sources (AppDelegate, main list, KuiklyPageCard/NativePageCard VCs).
+      - path: Sources
+        type: group
+      # Shared sources across all iosAppFor* targets.
+      - path: ../iosShared/Sources
+        type: group
+      # BothPages parity with androidAppForBothPages: no JSON assets shipped.
+      # The two showcase cards use inline JSON strings.
+    settings:
+      base:
+        INFOPLIST_FILE: Resources/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.tencent.kuikly.a2ui.demo.both
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_OBJC_BRIDGING_HEADER: ../iosShared/Sources/A2UIDemo-Bridging-Header.h
+        CODE_SIGN_STYLE: Automatic
+        CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES: "$(inherited) YES"
+    dependencies:
+      - sdk: AVFoundation.framework
+      - sdk: CoreMedia.framework

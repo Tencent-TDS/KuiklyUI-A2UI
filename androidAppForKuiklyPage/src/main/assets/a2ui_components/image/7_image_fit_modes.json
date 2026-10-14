@@ -1,0 +1,107 @@
+{
+  "name": "Image - fit modes",
+  "description": "Image fit enum: contain / cover / fill (default) / none / scaleDown",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-image-fit",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-image-fit",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "lbl_contain",
+              "img_contain",
+              "lbl_cover",
+              "img_cover",
+              "lbl_fill",
+              "img_fill",
+              "lbl_none",
+              "img_none",
+              "lbl_sd",
+              "img_sd"
+            ]
+          },
+          {
+            "id": "lbl_contain",
+            "component": "Text",
+            "text": "fit=contain",
+            "variant": "caption"
+          },
+          {
+            "id": "img_contain",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+            "fit": "contain",
+            "variant": "smallFeature"
+          },
+          {
+            "id": "lbl_cover",
+            "component": "Text",
+            "text": "fit=cover",
+            "variant": "caption"
+          },
+          {
+            "id": "img_cover",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+            "fit": "cover",
+            "variant": "smallFeature"
+          },
+          {
+            "id": "lbl_fill",
+            "component": "Text",
+            "text": "fit=fill (default)",
+            "variant": "caption"
+          },
+          {
+            "id": "img_fill",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+            "fit": "fill",
+            "variant": "smallFeature"
+          },
+          {
+            "id": "lbl_none",
+            "component": "Text",
+            "text": "fit=none",
+            "variant": "caption"
+          },
+          {
+            "id": "img_none",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+            "fit": "none",
+            "variant": "smallFeature"
+          },
+          {
+            "id": "lbl_sd",
+            "component": "Text",
+            "text": "fit=scaleDown",
+            "variant": "caption"
+          },
+          {
+            "id": "img_sd",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+            "fit": "scaleDown",
+            "variant": "smallFeature"
+          }
+        ]
+      }
+    }
+  ]
+}

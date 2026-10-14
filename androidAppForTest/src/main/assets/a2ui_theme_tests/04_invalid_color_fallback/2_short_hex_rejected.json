@@ -1,0 +1,38 @@
+{
+  "name": "非法值 · 3 位缩写 hex 应被拒绝",
+  "description": "theme.primaryColor='#F0F' 是 3 位缩写 hex，规范强制 6 位（^#[0-9a-fA-F]{6}$）。应回退默认 #00BFFF。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-inv-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#F0F"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-inv-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor='#F0F' 是 3 位缩写 hex，规范要求 6 位。引擎应回退默认 #00BFFF（浅蓝），下方按钮应为浅蓝而非品红。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（应显示默认浅蓝 #00BFFF）" }
+        ]
+      }
+    }
+  ]
+}

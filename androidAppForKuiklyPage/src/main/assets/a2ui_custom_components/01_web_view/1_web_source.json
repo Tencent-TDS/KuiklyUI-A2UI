@@ -1,0 +1,30 @@
+{
+  "name": "A2UIWeb 自定义组件",
+  "description": "自定义 A2UIWeb 组件，支持 source 属性加载网页。演示通过 registerCustomRenderView 注册自定义 WebView 组件。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "cc-web-1",
+        "catalogId": "custom_components_catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "cc-web-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "main-column" },
+          { "id": "main-column", "component": "Column", "children": ["title", "desc", "webContainer"], "align": "stretch" },
+          { "id": "title", "component": "Text", "text": "A2UIWeb 组件", "variant": "h3" },
+          { "id": "desc", "component": "Text", "text": "通过 source 属性加载网页内容", "variant": "caption" },
+          {
+            "id": "webContainer",
+            "component": "A2UIWeb",
+            "source": "https://framework.tds.qq.com/"
+          }
+        ]
+      }
+    }
+  ]
+}

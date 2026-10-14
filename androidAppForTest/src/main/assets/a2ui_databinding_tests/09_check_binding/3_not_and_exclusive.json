@@ -1,0 +1,61 @@
+{
+  "name": "checks · not(or(...)) 多字段冲突",
+  "description": "不允许同时勾选 A 与 B（互斥）：条件 = not(and(A,B))。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-cb-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-cb-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["cb1", "cb2", "btn", "btn_lbl"] },
+          { "id": "cb1", "component": "CheckBox", "label": "同意 A 协议", "value": { "path": "/f/a" } },
+          { "id": "cb2", "component": "CheckBox", "label": "同意 B 协议（与 A 互斥）", "value": { "path": "/f/b" } },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": { "event": { "name": "continue" } },
+            "checks": [
+              {
+                "condition": {
+                  "call": "not",
+                  "args": {
+                    "value": {
+                      "call": "and",
+                      "args": {
+                        "values": [
+                          { "path": "/f/a" },
+                          { "path": "/f/b" }
+                        ]
+                      },
+                      "returnType": "boolean"
+                    }
+                  },
+                  "returnType": "boolean"
+                },
+                "message": "A 与 B 不能同时勾选"
+              }
+            ]
+          },
+          { "id": "btn_lbl", "component": "Text", "text": "继续" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-cb-3",
+        "value": { "f": { "a": false, "b": false } }
+      }
+    }
+  ]
+}

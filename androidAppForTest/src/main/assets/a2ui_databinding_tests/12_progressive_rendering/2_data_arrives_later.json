@@ -1,0 +1,96 @@
+{
+  "name": "渐进渲染 · dataModel 后到达（组件先出，数据后填）",
+  "description": "先发 createSurface + updateComponents 组装组件树（此时所有 {path:...} 解析为 undefined，UI 应先渲染骨架），再发 updateDataModel 补齐数据。规范要求：数据到达后，绑定该 path 的组件应自动重渲染并显示正确值。核心验证点：初始骨架期间不 crash、无 'undefined' 字面量；数据到达后 Text 显示 'Alice / score=88'，TextField/Slider/CheckBox 反映到最终数据。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-pr-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-pr-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "t_name", "t_interp", "tf", "sl", "cb", "list"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "渐进渲染：dataModel 后到达",
+            "variant": "h5"
+          },
+          {
+            "id": "t_name",
+            "component": "Text",
+            "text": { "path": "/user/name" }
+          },
+          {
+            "id": "t_interp",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "Hello ${/user/name}, score=${/user/score}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "备注",
+            "value": { "path": "/form/note" }
+          },
+          {
+            "id": "sl",
+            "component": "Slider",
+            "label": "分值",
+            "min": 0,
+            "max": 100,
+            "value": { "path": "/form/score" }
+          },
+          {
+            "id": "cb",
+            "component": "CheckBox",
+            "label": "同意条款",
+            "value": { "path": "/form/agree" }
+          },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "row-tpl", "path": "/items" }
+          },
+          {
+            "id": "row-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "${index}. ${name}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-pr-2",
+        "value": {
+          "user": { "name": "Alice", "score": 88 },
+          "form": { "note": "已备注", "score": 42, "agree": true },
+          "items": [
+            { "index": 1, "name": "First" },
+            { "index": 2, "name": "Second" },
+            { "index": 3, "name": "Third" }
+          ]
+        }
+      }
+    }
+  ]
+}

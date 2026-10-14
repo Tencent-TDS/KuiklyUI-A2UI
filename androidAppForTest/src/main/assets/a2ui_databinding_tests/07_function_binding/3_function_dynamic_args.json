@@ -1,0 +1,58 @@
+{
+  "name": "FunctionCall 参数动态化",
+  "description": "formatCurrency.currency 也是 DynamicString（绑定 /region/currency），从 USD 切换到 CNY 时格式自动更新。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-fb-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-fb-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "usd", "cny"] },
+          { "id": "title", "component": "Text", "text": "FunctionCall 参数本身也是 Dynamic*", "variant": "caption" },
+          {
+            "id": "usd",
+            "component": "Text",
+            "text": {
+              "call": "formatCurrency",
+              "args": {
+                "value": { "path": "/price" },
+                "currency": "USD"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "cny",
+            "component": "Text",
+            "text": {
+              "call": "formatCurrency",
+              "args": {
+                "value": { "path": "/price" },
+                "currency": { "path": "/region/currency" }
+              },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-fb-3",
+        "value": {
+          "price": 88.88,
+          "region": { "currency": "CNY" }
+        }
+      }
+    }
+  ]
+}

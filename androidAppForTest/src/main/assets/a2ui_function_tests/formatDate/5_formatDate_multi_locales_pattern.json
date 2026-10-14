@@ -1,0 +1,139 @@
+{
+  "name": "formatDate · 多种 pattern 组合",
+  "description": "常用中英日期格式对比。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fd-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fd-5",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "t2",
+              "t3",
+              "t4",
+              "t5",
+              "t6"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at"
+                },
+                "format": "yyyy/MM/dd"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at"
+                },
+                "format": "dd/MM/yyyy"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t3",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at"
+                },
+                "format": "MMMM d, yyyy"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t4",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at"
+                },
+                "format": "yy-M-d"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t5",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at2"
+                },
+                "format": "E MMM d, YYYY h:mm a"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t6",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at3"
+                },
+                "format": "E MMM d, YYYY-'W'ww (yyyy)"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fd-5",
+        "value": {
+          "at": "2025-12-15T17:30:00Z",
+          "at2": "2026-02-02T15:17:00Z",
+          "at3": "2027-01-01T10:00:00Z"
+        }
+      }
+    }
+  ]
+}

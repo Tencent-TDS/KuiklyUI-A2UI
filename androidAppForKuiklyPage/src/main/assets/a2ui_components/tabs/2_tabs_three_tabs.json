@@ -1,0 +1,61 @@
+{
+  "name": "Tabs - three tabs (mixed media)",
+  "description": "Tabs hosting Image / Video / AudioPlayer",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tabs-three",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tabs-three",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "tabs"
+          },
+          {
+            "id": "tabs",
+            "component": "Tabs",
+            "tabs": [
+              {
+                "title": "Photos",
+                "child": "p1"
+              },
+              {
+                "title": "Videos",
+                "child": "p2"
+              },
+              {
+                "title": "Audio",
+                "child": "p3"
+              }
+            ]
+          },
+          {
+            "id": "p1",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+            "variant": "mediumFeature"
+          },
+          {
+            "id": "p2",
+            "component": "Video",
+            "url": "https://www.w3schools.com/html/mov_bbb.mp4"
+          },
+          {
+            "id": "p3",
+            "component": "AudioPlayer",
+            "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            "description": "Audio tab"
+          }
+        ]
+      }
+    }
+  ]
+}

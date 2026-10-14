@@ -1,0 +1,38 @@
+{
+  "name": "正向对照 · 大写 hex 应被接受",
+  "description": "theme.primaryColor='#E91E63' 全部大写 hex，符合 ^#[0-9a-fA-F]{6}$。作为 04 目录的正向对照，验证正则大小写均可接受。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-inv-7",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#E91E63"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-inv-7",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor='#E91E63' 是合法 6 位大写 hex，应被接受。下方 Primary Button 背景应为品红 #E91E63，而不是默认浅蓝。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（背景应为品红 #E91E63）" }
+        ]
+      }
+    }
+  ]
+}

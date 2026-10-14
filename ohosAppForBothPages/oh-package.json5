@@ -1,0 +1,13 @@
+{
+  "name": "a2ui-ohos-demo",
+  "version": "1.0.0",
+  "description": "A2UI HarmonyOS Demo Application",
+  "main": "",
+  "author": "Kuikly Team",
+  "license": "KuiklyUI License",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.16"
+  },
+  "modelVersion": "5.0.0"
+}

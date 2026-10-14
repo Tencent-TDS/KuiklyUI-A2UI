@@ -1,0 +1,76 @@
+{
+  "name": "Text - function formatDate",
+  "description": "Text rendered via formatDate function (ISO 8601 → MMM d, yyyy)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-format-date",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-format-date",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "main-column"
+          },
+          {
+            "id": "main-column",
+            "component": "Column",
+            "children": ["label", "date-long", "date-short"]
+          },
+          {
+            "id": "label",
+            "component": "Text",
+            "text": "PUBLISHED",
+            "variant": "caption"
+          },
+          {
+            "id": "date-long",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/publishedAt"
+                },
+                "format": "MMM d, yyyy"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "date-short",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/publishedAt"
+                },
+                "format": "yyyy/MM/dd"
+              },
+              "returnType": "string"
+            },
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-text-format-date",
+        "value": {
+          "publishedAt": "2025-12-15T17:30:00Z"
+        }
+      }
+    }
+  ]
+}

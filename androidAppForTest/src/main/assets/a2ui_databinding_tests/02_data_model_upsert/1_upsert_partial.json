@@ -1,0 +1,57 @@
+{
+  "name": "updateDataModel · 增量 upsert",
+  "description": "初始化后再发送一次带 path 的 updateDataModel，只覆盖指定节点。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-du-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-du-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "name", "city"] },
+          { "id": "title", "component": "Text", "text": "upsert：只更新 /user/city", "variant": "caption" },
+          {
+            "id": "name",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "姓名：${/user/name}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "city",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "城市：${/user/city}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-du-1",
+        "value": { "user": { "name": "Alice", "city": "深圳" } }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-du-1",
+        "path": "/user/city",
+        "value": "上海"
+      }
+    }
+  ]
+}

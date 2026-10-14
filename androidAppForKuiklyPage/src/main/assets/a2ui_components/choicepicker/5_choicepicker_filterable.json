@@ -1,0 +1,71 @@
+{
+  "name": "ChoicePicker - filterable",
+  "description": "ChoicePicker with filterable=true (search input shown)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cp-filterable",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cp-filterable",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "cp"
+          },
+          {
+            "id": "cp",
+            "component": "ChoicePicker",
+            "label": "Country",
+            "variant": "mutuallyExclusive",
+            "displayStyle": "checkbox",
+            "filterable": true,
+            "options": [
+              {
+                "label": "China",
+                "value": "china"
+              },
+              {
+                "label": "United States",
+                "value": "united states"
+              },
+              {
+                "label": "Japan",
+                "value": "japan"
+              },
+              {
+                "label": "France",
+                "value": "france"
+              },
+              {
+                "label": "Germany",
+                "value": "germany"
+              },
+              {
+                "label": "India",
+                "value": "india"
+              },
+              {
+                "label": "Brazil",
+                "value": "brazil"
+              },
+              {
+                "label": "Australia",
+                "value": "australia"
+              }
+            ],
+            "value": [
+              "china"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "name": "formatString · 绝对路径 + 相对路径混用（Mixing scopes）",
+  "description": "List 迭代 /users，模板内混用相对路径 ${name}/${role} 与绝对路径 ${/company}。规范 §Mixing scopes：Child Scope 内允许通过绝对路径回到 Root Scope。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-6",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-6",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "hint",
+              "list"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "${/company} · 员工名录"
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "下方每行的公司名来自绝对路径，姓名/岗位来自相对路径",
+            "variant": "caption"
+          },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": {
+              "path": "/users",
+              "componentId": "user-tpl"
+            }
+          },
+          {
+            "id": "user-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "• [${/company}] ${name} — ${role}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-6",
+        "value": {
+          "company": "Tencent",
+          "users": [
+            { "name": "Alex Chen", "role": "Engineer" },
+            { "name": "Jamie Wu", "role": "Designer" },
+            { "name": "Robin Li", "role": "PM" }
+          ]
+        }
+      }
+    }
+  ]
+}

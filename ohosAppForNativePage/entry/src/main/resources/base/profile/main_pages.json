@@ -1,0 +1,11 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/ComponentDemoPage",
+    "pages/ComponentTestPage",
+    "pages/CustomComponentDemoPage",
+    "pages/CustomFunctionDemoPage",
+    "pages/CustomIconDemoPage",
+    "pages/NativeCardDemoPage"
+  ]
+}

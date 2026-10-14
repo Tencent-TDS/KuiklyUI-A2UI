@@ -1,0 +1,84 @@
+{
+  "name": "Button - icon-only buttons",
+  "description": "Three buttons with Icon children, one per variant",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-btn-icon",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-btn-icon",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "row"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "b1",
+              "b2",
+              "b3"
+            ],
+            "justify": "spaceEvenly"
+          },
+          {
+            "id": "b1",
+            "component": "Button",
+            "child": "i1",
+            "action": {
+              "event": {
+                "name": "shareClicked"
+              }
+            },
+            "variant": "borderless"
+          },
+          {
+            "id": "i1",
+            "component": "Icon",
+            "name": "share"
+          },
+          {
+            "id": "b2",
+            "component": "Button",
+            "child": "i2",
+            "action": {
+              "event": {
+                "name": "favClicked"
+              }
+            },
+            "variant": "default"
+          },
+          {
+            "id": "i2",
+            "component": "Icon",
+            "name": "favorite"
+          },
+          {
+            "id": "b3",
+            "component": "Button",
+            "child": "i3",
+            "action": {
+              "event": {
+                "name": "deleteClicked"
+              }
+            },
+            "variant": "primary"
+          },
+          {
+            "id": "i3",
+            "component": "Icon",
+            "name": "delete"
+          }
+        ]
+      }
+    }
+  ]
+}

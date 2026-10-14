@@ -1,0 +1,88 @@
+{
+  "name": "formatString · 嵌套 ${...} 表达式（Nested Expressions）",
+  "description": "验证 A2UI v0.9 规范明文支持的 formatString 嵌套 ${...} 语法三种形态：(1) Explicit Binding —— ${formatDate(value:${/at}, format:'yyyy-MM-dd')} 用 ${...} 显式标注 value 参数是 path；(2) Nested Functions（跨类型嵌套，number 类）—— ${formatCurrency(value:${formatNumber(value:${/price}, decimals:2)}, currency:'USD')} 一个函数结果作为另一个函数的 number 参数（引擎会剥离千分位后再 parse）；(3) Nested Functions（同类型嵌套，string 类）—— ${formatString(value:'...')} 一个 formatString 作为另一个 formatString 的参数。参照 a2ui_protocol.md §formatString nested interpolation。期望渲染结果：t_explicit → 'Explicit binding: date = 2025-12-15'；t_nested_func → 'Nested functions: price = $1,234.50'；t_nested_string → 'Nested string: greeting = hi Alice!'；t_combined → 'Combined: Alice paid $1,234.50 on Dec 15, 2025'。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-9",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-9",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "t_explicit", "t_nested_func", "t_nested_string", "t_combined"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "formatString 嵌套 ${...} 表达式",
+            "variant": "h5"
+          },
+          {
+            "id": "t_explicit",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Explicit binding: date = ${formatDate(value:${/at}, format:'yyyy-MM-dd')}"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "t_nested_func",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Nested functions: price = ${formatCurrency(value:${formatNumber(value:${/price}, decimals:2)}, currency:'USD')}"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "t_nested_string",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Nested string: greeting = ${formatString(value:'hi ${/user/name}!')}"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "t_combined",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Combined: ${/user/name} paid ${formatCurrency(value:${/price}, currency:'USD')} on ${formatDate(value:${/at}, format:'MMM d, yyyy')}"
+              },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-9",
+        "value": {
+          "user": { "name": "Alice" },
+          "price": 1234.5,
+          "at": "2025-12-15T17:30:00Z"
+        }
+      }
+    }
+  ]
+}

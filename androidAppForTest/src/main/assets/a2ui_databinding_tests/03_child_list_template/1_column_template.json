@@ -1,0 +1,56 @@
+{
+  "name": "ChildList 模板 · Column 迭代数组",
+  "description": "Column.children:{componentId,path} 遍历 /todos，模板复制生成多个 Text。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-cl-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-cl-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "list"]
+          },
+          { "id": "title", "component": "Text", "text": "今日 TODO", "variant": "h5" },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "todo-tpl", "path": "/todos" }
+          },
+          {
+            "id": "todo-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "• ${title}" },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-cl-1",
+        "value": {
+          "todos": [
+            { "title": "阅读 A2UI 协议规范", "done": true },
+            { "title": "补齐数据绑定测试用例", "done": false },
+            { "title": "跑通 Android / iOS 双端", "done": false }
+          ]
+        }
+      }
+    }
+  ]
+}

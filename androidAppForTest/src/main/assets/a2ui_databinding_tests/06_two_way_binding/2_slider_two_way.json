@@ -1,0 +1,50 @@
+{
+  "name": "Slider 双向绑定 · 数值实时联动",
+  "description": "Slider.value 绑定 /form/rating；拖动 Slider 时 formatNumber 展示的数字同步变化。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-tw-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-tw-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["slider", "echo"] },
+          {
+            "id": "slider",
+            "component": "Slider",
+            "label": "评分",
+            "min": 0,
+            "max": 10,
+            "value": { "path": "/form/rating" }
+          },
+          {
+            "id": "echo",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "当前评分：${formatNumber(value:${/form/rating}, decimals:1)} / 10"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-tw-2",
+        "value": { "form": { "rating": 5 } }
+      }
+    }
+  ]
+}

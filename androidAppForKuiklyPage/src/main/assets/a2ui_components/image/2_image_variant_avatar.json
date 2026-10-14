@@ -1,0 +1,32 @@
+{
+  "name": "Image - variant avatar",
+  "description": "Image with variant=avatar (40dp circular avatar)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-image-avatar",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-image-avatar",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "img"
+          },
+          {
+            "id": "img",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
+            "variant": "avatar"
+          }
+        ]
+      }
+    }
+  ]
+}

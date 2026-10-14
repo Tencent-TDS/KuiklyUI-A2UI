@@ -1,0 +1,85 @@
+{
+  "name": "formatDate · 秒 token 与时区差异",
+  "description": "同时覆盖两个 catalog schema 明确定义但既有用例未覆盖的点：(1) 秒 token 'ss' —— catalog.json 的 formatDate.args.format token 表列出 'ss' (00-59)。(2) 输入时间戳带 UTC 'Z' vs 带偏移 '+08:00' 时的渲染差异 —— DynamicValue 允许多种 ISO-8601 表示，客户端负责解析成本地时间后再套 pattern。三行文本便于一屏比对。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fd-7",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fd-7",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "t1", "t2", "t3", "hint"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "秒 token & 时区差异",
+            "variant": "h5"
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "含秒（HH:mm:ss）: ${formatDate(value:${/utc}, format:'HH:mm:ss')}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "UTC 输入 → 本地: ${formatDate(value:${/utc}, format:'yyyy-MM-dd HH:mm:ss')}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t3",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "+08:00 输入 → 本地: ${formatDate(value:${/plus8}, format:'yyyy-MM-dd HH:mm:ss')}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "两条时间戳表示的是同一 UTC 瞬间（15:17:42Z ≡ 23:17:42+08:00）。若客户端时区一致，t2 与 t3 应渲染出相同的本地时间字符串；若不一致则可观察到 renderer 时区解析实现差异。",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fd-7",
+        "value": {
+          "utc": "2026-02-02T15:17:42Z",
+          "plus8": "2026-02-02T23:17:42+08:00"
+        }
+      }
+    }
+  ]
+}

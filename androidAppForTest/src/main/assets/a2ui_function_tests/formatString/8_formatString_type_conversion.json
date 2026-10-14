@@ -1,0 +1,132 @@
+{
+  "name": "formatString · 非字符串值的类型转换",
+  "description": "规范 §formatString type conversion：Numbers/Booleans → 标准字符串；Null/Undefined → 空串 \"\"；Objects/Arrays → JSON 字符串。本用例并列展示 5 种非字符串值插值的表现。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-8",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-8",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "num",
+              "boolean",
+              "nullVal",
+              "undef",
+              "arr",
+              "obj"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "非字符串值插值 → 类型转换规则",
+            "variant": "h5"
+          },
+          {
+            "id": "num",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Number → \"${/values/n}\"（期望：42.5）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "boolean",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Boolean → \"${/values/flag}\"（期望：true）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "nullVal",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Null → \"${/values/nothing}\"（期望：空串）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "undef",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Undefined（路径不存在）→ \"${/values/missingKey}\"（期望：空串）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "arr",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Array → ${/values/list}（期望：JSON 字符串）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "obj",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Object → ${/values/point}（期望：JSON 字符串）"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-8",
+        "value": {
+          "values": {
+            "n": 42.5,
+            "flag": true,
+            "nothing": null,
+            "list": [1, 2, 3],
+            "point": { "x": 10, "y": 20 }
+          }
+        }
+      }
+    }
+  ]
+}

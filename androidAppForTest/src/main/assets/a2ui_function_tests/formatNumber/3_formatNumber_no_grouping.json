@@ -1,0 +1,67 @@
+{
+  "name": "formatNumber · grouping=false",
+  "description": "不使用千位分隔，输出原始数字字符串。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fn-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fn-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "t2"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "默认（grouping=true）: ${formatNumber(value:${/n})}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "grouping=false: ${formatNumber(value:${/n}, grouping:false)}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fn-3",
+        "value": {
+          "n": 1234567
+        }
+      }
+    }
+  ]
+}

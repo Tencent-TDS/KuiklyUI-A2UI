@@ -1,0 +1,115 @@
+{
+  "name": "not · not(and(...)) 德摩根反例",
+  "description": "not(and(A,B)) = or(not A, not B)。演示按钮：任意一个字段为空即启用。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-not-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-not-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "f1",
+              "f2",
+              "btn"
+            ]
+          },
+          {
+            "id": "f1",
+            "component": "TextField",
+            "label": "字段A",
+            "value": {
+              "path": "/f/a"
+            }
+          },
+          {
+            "id": "f2",
+            "component": "TextField",
+            "label": "字段B",
+            "value": {
+              "path": "/f/b"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "not",
+                  "args": {
+                    "value": {
+                      "call": "and",
+                      "args": {
+                        "values": [
+                          {
+                            "call": "required",
+                            "args": {
+                              "value": {
+                                "path": "/f/a"
+                              }
+                            },
+                            "returnType": "boolean"
+                          },
+                          {
+                            "call": "required",
+                            "args": {
+                              "value": {
+                                "path": "/f/b"
+                              }
+                            },
+                            "returnType": "boolean"
+                          }
+                        ]
+                      },
+                      "returnType": "boolean"
+                    }
+                  }
+                },
+                "message": "两个字段都已填写"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "任一为空则可点"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-not-3",
+        "value": {
+          "f": {
+            "a": "",
+            "b": ""
+          }
+        }
+      }
+    }
+  ]
+}

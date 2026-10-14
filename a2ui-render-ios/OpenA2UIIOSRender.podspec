@@ -1,0 +1,58 @@
+Pod::Spec.new do |spec|
+  spec.name             = "OpenA2UIIOSRender"
+  # KuiklyUI-A2UI standalone project — version resolution order
+  # (mirrors A2uiVersion.getSemantic() in buildSrc/):
+  #   1. env `A2UI_VERSION`
+  #   2. default '0.9.0-SNAPSHOT'
+  #
+  # CocoaPods enforces strict SemVer, so we deliberately keep the plain
+  # semantic form (no Kotlin suffix). The Kotlin toolchain is instead
+  # pinned by whichever build the shipped XCFramework was produced from.
+  #
+  # NOTE: this repository does not ship an automated iOS pod publish
+  # script (aligned with the upstream Kuikly project). To publish, run
+  # `pod trunk push OpenA2UIIOSRender.podspec --allow-warnings` manually
+  # from this directory (optionally with `A2UI_VERSION=x.y.z` prefixed).
+  # The default value above should be kept in sync with
+  # `DEFAULT_A2UI_SEMANTIC` in buildSrc/src/main/java/A2uiVersion.kt.
+  spec.version          = ENV['A2UI_VERSION'] || '0.9.0-SNAPSHOT'
+  spec.summary          = "A2UI iOS Render Module"
+  spec.description      = <<-DESC
+                        A2UI iOS platform render implementation.
+                        Bridges A2UI message stream to Kuikly's native render pipeline
+                        using KuiklyRenderLayerHandler with proper threading model.
+                        DESC
+  spec.homepage         = "https://github.com/Tencent-TDS/KuiklyUI-A2UI"
+  # `:file => "../LICENSE"` resolves to the standalone project's root LICENSE
+  # (KuiklyUI license text) since this podspec lives under `a2ui-render-ios/`.
+  spec.license          = { :type => "KuiklyUI", :file => "../LICENSE" }
+  spec.author           = "Kuikly Team"
+  spec.ios.deployment_target = '14.0'
+  spec.source           = { :git => "https://github.com/Tencent-TDS/KuiklyUI-A2UI.git", :tag => "#{spec.version}" }
+  spec.user_target_xcconfig = { 'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES' }
+  spec.requires_arc     = true
+
+  spec.source_files     = 'Sources/**/*.{h,m,mm,swift}'
+  spec.public_header_files = 'Sources/**/*.h'
+
+  spec.dependency 'OpenKuiklyIOSRender'
+  # NOTE: We intentionally do NOT declare `spec.dependency 'a2ui'` here.
+  #
+  # This render pod bridges to Kotlin/Native purely through runtime
+  # reflection (`NSClassFromString(\"A2UICoreEntry\")` and
+  # `NSClassFromString(\"A2UICustomViewRegistryBridge\")`), so it works
+  # against *either*:
+  #   - `A2UICore.framework`  (Native-page scenario, `pod 'a2ui'`)
+  #   - `A2UIDemo.framework`  (Kuikly-page scenario, `pod 'a2ui_demo'`)
+  # whichever the host app happens to ship. The host app's Podfile is
+  # responsible for including exactly one of those pods — declaring the
+  # dependency here would force both to be linked into apps that only
+  # need one, which then triggers Kotlin stdlib duplicate-symbol errors.
+
+  spec.ios.frameworks = [
+    'UIKit',
+    'QuartzCore',
+    'CoreGraphics',
+    'Foundation'
+  ]
+end

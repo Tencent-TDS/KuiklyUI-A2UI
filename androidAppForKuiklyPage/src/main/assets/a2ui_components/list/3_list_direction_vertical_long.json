@@ -1,0 +1,187 @@
+{
+  "name": "List - direction=vertical (default) - very long",
+  "description": "Vertical scrollable list",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-list-vertical",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-list-vertical",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "list"
+          },
+          {
+            "id": "list",
+            "component": "List",
+            "children": [
+              "li1",
+              "li2",
+              "li3",
+              "li4",
+              "li5",
+              "li6",
+              "li7",
+              "li8",
+              "li9",
+              "li10",
+              "li11",
+              "li12",
+              "li13",
+              "li14",
+              "li15",
+              "li16",
+              "li17",
+              "li18",
+              "li19",
+              "li20",
+              "li21",
+              "li22"
+            ],
+            "direction": "vertical"
+          },
+          {
+            "id": "li1",
+            "component": "Text",
+            "text": "Vertical Item 1",
+            "variant": "body"
+          },
+          {
+            "id": "li2",
+            "component": "Text",
+            "text": "Vertical Item 2",
+            "variant": "body"
+          },
+          {
+            "id": "li3",
+            "component": "Text",
+            "text": "Vertical Item 3",
+            "variant": "body"
+          },
+          {
+            "id": "li4",
+            "component": "Text",
+            "text": "Vertical Item 4",
+            "variant": "body"
+          },
+          {
+            "id": "li5",
+            "component": "Text",
+            "text": "Vertical Item 5",
+            "variant": "body"
+          },
+          {
+            "id": "li6",
+            "component": "Text",
+            "text": "Vertical Item 6",
+            "variant": "body"
+          },
+          {
+            "id": "li7",
+            "component": "Text",
+            "text": "Vertical Item 7",
+            "variant": "body"
+          },
+          {
+            "id": "li8",
+            "component": "Text",
+            "text": "Vertical Item 8",
+            "variant": "body"
+          },
+          {
+            "id": "li9",
+            "component": "Text",
+            "text": "Vertical Item 9",
+            "variant": "body"
+          },
+          {
+            "id": "li10",
+            "component": "Text",
+            "text": "Vertical Item 10",
+            "variant": "body"
+          },
+          {
+            "id": "li11",
+            "component": "Text",
+            "text": "Vertical Item 11",
+            "variant": "body"
+          },
+          {
+            "id": "li12",
+            "component": "Text",
+            "text": "Vertical Item 12",
+            "variant": "body"
+          },
+          {
+            "id": "li13",
+            "component": "Text",
+            "text": "Vertical Item 13",
+            "variant": "body"
+          },
+          {
+            "id": "li14",
+            "component": "Text",
+            "text": "Vertical Item 14",
+            "variant": "body"
+          },
+          {
+            "id": "li15",
+            "component": "Text",
+            "text": "Vertical Item 15",
+            "variant": "body"
+          },
+          {
+            "id": "li16",
+            "component": "Text",
+            "text": "Vertical Item 16",
+            "variant": "body"
+          },
+          {
+            "id": "li17",
+            "component": "Text",
+            "text": "Vertical Item 17",
+            "variant": "body"
+          },
+          {
+            "id": "li18",
+            "component": "Text",  
+            "text": "Vertical Item 18",
+            "variant": "body"
+          },
+          {
+            "id": "li19",
+            "component": "Text",
+            "text": "Vertical Item 19",
+            "variant": "body"
+          },
+          {
+            "id": "li20",
+            "component": "Text",
+            "text": "Vertical Item 20",
+            "variant": "body"
+          },
+          {
+            "id": "li21",
+            "component": "Text",
+            "text": "Vertical Item 21",
+            "variant": "body"
+          },
+          {
+            "id": "li22",
+            "component": "Text",
+            "text": "Vertical Item 22",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Video - URL data binding",
+  "description": "Video url bound to /videoUrl",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-video-binding",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-video-binding",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "v"
+          },
+          {
+            "id": "v",
+            "component": "Video",
+            "url": {
+              "path": "/videoUrl"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-video-binding",
+        "value": {
+          "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+        }
+      }
+    }
+  ]
+}

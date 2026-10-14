@@ -1,0 +1,36 @@
+require_relative '../scripts/lib/kuikly_path'
+kuikly_root = A2UI::KuiklyPath.resolve!(__dir__)
+
+platform :ios, '14.0'
+
+target 'A2UIDemoApp' do
+  use_modular_headers!
+
+  # A2UI DSL demo pages (KMP business module) — provides the `@Page("A2UISurfaceDemo")`
+  # and `@Page("ComposeSampleWithA2UI")` Pager classes that this app hosts through
+  # KuiklyRenderViewController. Mirrors the `:demo` gradle dep used by
+  # androidAppForKuiklyPage.
+  #
+  # Why we do NOT also `pod 'a2ui'` here: A2UIDemo.framework already embeds
+  # every Kotlin symbol from `:a2ui` (via `implementation(project(":a2ui"))`
+  # in demo/build.2.1.21.gradle.kts), so linking both pods would produce two
+  # Kotlin/Native static frameworks with duplicate stdlib-cache symbols. The
+  # render pod (`OpenA2UIIOSRender`) resolves `A2UICoreEntry` at runtime via
+  # `NSClassFromString`, so it works fine against either framework alone.
+  pod 'a2ui_demo', :path => '../demo'
+
+  # Kuikly iOS Render (core-render-ios) — resolved from the external
+  # KuiklyUI checkout (single source of truth: `kuikly.projectDir`).
+  pod 'OpenKuiklyIOSRender', :path => kuikly_root
+
+  # A2UI iOS Render - local podspec
+  pod 'OpenA2UIIOSRender', :path => '../a2ui-render-ios/'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
+  end
+end

@@ -1,0 +1,48 @@
+{
+  "name": "绝对路径 · DynamicNumber（Slider.value）",
+  "description": "Slider.value 通过 {path:\"/settings/volume\"} 绑定数字。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ap-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ap-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["label", "slider", "echo"] },
+          { "id": "label", "component": "Text", "text": "音量（绑定 /settings/volume，number）", "variant": "caption" },
+          {
+            "id": "slider",
+            "component": "Slider",
+            "label": "音量",
+            "min": 0,
+            "max": 100,
+            "value": { "path": "/settings/volume" }
+          },
+          {
+            "id": "echo",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "当前音量：${/settings/volume}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ap-2",
+        "value": { "settings": { "volume": 65 } }
+      }
+    }
+  ]
+}

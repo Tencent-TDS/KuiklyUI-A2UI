@@ -1,0 +1,43 @@
+{
+  "name": "Button - variant=default",
+  "description": "Default outlined button",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-btn-default",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-btn-default",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "btn"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "lbl",
+            "action": {
+              "event": {
+                "name": "defaultClicked"
+              }
+            },
+            "variant": "default"
+          },
+          {
+            "id": "lbl",
+            "component": "Text",
+            "text": "Default Button",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

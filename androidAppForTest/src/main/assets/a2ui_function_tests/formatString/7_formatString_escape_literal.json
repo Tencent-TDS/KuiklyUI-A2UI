@@ -1,0 +1,87 @@
+{
+  "name": "formatString · 转义 \\${ 输出字面量",
+  "description": "使用 \\${ 转义序列输出字面量 ${...}，与实际的路径插值 ${/user/name} 并列展示。规范 §formatString syntax：'To include a literal ${ in a string, it must be escaped as \\${'。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-7",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-7",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "line1",
+              "line2",
+              "line3"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "formatString 转义规则演示",
+            "variant": "h5"
+          },
+          {
+            "id": "line1",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "1) 未转义（会被插值）: hello, ${/user/name}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "line2",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "2) 已转义（输出字面量）: 模板语法为 \\${/user/name}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "line3",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "3) 混合: \\${...} 表示 ${/user/name} 的引用；实际值 = ${/user/name}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-7",
+        "value": {
+          "user": { "name": "Alex" }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "Agent identity 边界 · iconUrl 使用 data URI",
+  "description": "theme.iconUrl 使用 data URI（内联 base64 PNG，1×1 蓝色像素）。引擎未内置消费 iconUrl，通过 Data Model 镜像到 Image 组件验证：Image 应能加载 data URI 且不崩溃。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-agent-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#009688",
+          "iconUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+          "agentDisplayName": "Data URI Icon Agent"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-agent-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "avatar", "name", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.iconUrl 使用 data:image/png;base64,... 内联图片（1×1 蓝色像素）。Image 组件应能渲染，且不因非 http(s) URL 崩溃。",
+            "variant": "caption"
+          },
+          {
+            "id": "avatar",
+            "component": "Image",
+            "url": { "path": "/mirror/iconUrl" },
+            "width": 32,
+            "height": 32
+          },
+          {
+            "id": "name",
+            "component": "Text",
+            "text": { "path": "/mirror/agentDisplayName" }
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（背景应为青 #009688）" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-agent-3",
+        "value": {
+          "mirror": {
+            "iconUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+            "agentDisplayName": "Data URI Icon Agent"
+          }
+        }
+      }
+    }
+  ]
+}

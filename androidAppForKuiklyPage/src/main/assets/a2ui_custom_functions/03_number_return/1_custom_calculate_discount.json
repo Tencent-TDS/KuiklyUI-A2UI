@@ -1,0 +1,45 @@
+{
+  "name": "自定义函数返回 Number",
+  "description": "自定义函数 calculateDiscount 接收 price 和 rate 参数，返回折后价格（number）。Demo 注册实现为 price * rate。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "cf-num-1",
+"catalogId": "custom_functions_catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "cf-num-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "row"] },
+          { "id": "title", "component": "Text", "text": "calculateDiscount(price, rate) → Number", "variant": "caption" },
+          { "id": "row", "component": "Row", "children": ["label", "price"] },
+          { "id": "label", "component": "Text", "text": "折后价: ¥", "variant": "body" },
+          {
+            "id": "price",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "${calculateDiscount(price:${/originalPrice}, rate:${/discountRate})}"
+              },
+              "returnType": "string"
+            },
+            "variant": "h3"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "cf-num-1",
+        "value": { "originalPrice": 199.0, "discountRate": 0.7 }
+      }
+    }
+  ]
+}

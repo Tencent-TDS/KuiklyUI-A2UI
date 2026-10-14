@@ -1,0 +1,96 @@
+{
+  "name": "numeric · 年龄 ≥ 18",
+  "description": "Slider 值绑定 /form/age，Button 校验 numeric.min=18。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-numeric-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-numeric-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "hint",
+              "slider",
+              "btn"
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "当前年龄：${/form/age}"
+              },
+              "returnType": "string"
+            },
+            "variant": "caption"
+          },
+          {
+            "id": "slider",
+            "component": "Slider",
+            "value": {
+              "path": "/form/age"
+            },
+            "max": 60
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "numeric",
+                  "args": {
+                    "value": {
+                      "path": "/form/age"
+                    },
+                    "min": 18
+                  }
+                },
+                "message": "年龄必须 ≥ 18"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "提交"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-numeric-1",
+        "value": {
+          "form": {
+            "age": 15
+          }
+        }
+      }
+    }
+  ]
+}

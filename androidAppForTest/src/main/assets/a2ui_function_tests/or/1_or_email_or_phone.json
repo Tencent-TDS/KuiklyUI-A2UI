@@ -1,0 +1,109 @@
+{
+  "name": "or · 邮箱或手机号（至少一个）",
+  "description": "邮箱与手机号只需填一个。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-or-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-or-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "fe",
+              "fm",
+              "btn"
+            ]
+          },
+          {
+            "id": "fe",
+            "component": "TextField",
+            "label": "邮箱",
+            "value": {
+              "path": "/f/email"
+            }
+          },
+          {
+            "id": "fm",
+            "component": "TextField",
+            "label": "手机号",
+            "value": {
+              "path": "/f/phone"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "or",
+                  "args": {
+                    "values": [
+                      {
+                        "call": "required",
+                        "args": {
+                          "value": {
+                            "path": "/f/email"
+                          }
+                        },
+                        "returnType": "boolean"
+                      },
+                      {
+                        "call": "required",
+                        "args": {
+                          "value": {
+                            "path": "/f/phone"
+                          }
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "至少填写邮箱或手机号"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "找回密码"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-or-1",
+        "value": {
+          "f": {
+            "email": "",
+            "phone": ""
+          }
+        }
+      }
+    }
+  ]
+}

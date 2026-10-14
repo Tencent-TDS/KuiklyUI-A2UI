@@ -1,0 +1,10 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/OfficialExamplePage",
+    "pages/ComponentTestPage",
+    "pages/FunctionDemoPage",
+    "pages/DataBindingDemoPage",
+    "pages/ThemeDemoPage"
+  ]
+}

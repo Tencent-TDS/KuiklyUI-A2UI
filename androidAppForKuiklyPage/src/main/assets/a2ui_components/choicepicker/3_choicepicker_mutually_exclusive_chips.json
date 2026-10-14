@@ -1,0 +1,50 @@
+{
+  "name": "ChoicePicker - mutuallyExclusive + chips",
+  "description": "Single-selection chip-style picker",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cp-mut-chips",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cp-mut-chips",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "cp"
+          },
+          {
+            "id": "cp",
+            "component": "ChoicePicker",
+            "label": "Plan",
+            "variant": "mutuallyExclusive",
+            "displayStyle": "chips",
+            "options": [
+              {
+                "label": "Free",
+                "value": "free"
+              },
+              {
+                "label": "Pro",
+                "value": "pro"
+              },
+              {
+                "label": "Team",
+                "value": "team"
+              }
+            ],
+            "value": [
+              "pro"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

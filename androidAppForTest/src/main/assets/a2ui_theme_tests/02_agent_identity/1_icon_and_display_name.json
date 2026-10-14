@@ -1,0 +1,74 @@
+{
+  "name": "身份归因 · iconUrl + agentDisplayName",
+  "description": "theme 携带 iconUrl / agentDisplayName（身份归因）。当前引擎未内置消费，本用例通过 Data Model 镜像同值渲染，供人工核对协议字段。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-id-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#6C5CE7",
+          "iconUrl": "https://a2ui.org/logo.png",
+          "agentDisplayName": "Weather Bot"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-id-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "id_row", "primary_btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.iconUrl / agentDisplayName 属规范身份归因字段。下列图标+名称的值来自 Data Model 镜像，用于人工核对。",
+            "variant": "caption"
+          },
+          {
+            "id": "id_row",
+            "component": "Row",
+            "children": ["id_icon", "id_name"]
+          },
+          {
+            "id": "id_icon",
+            "component": "Image",
+            "url": { "path": "/mirror/iconUrl" },
+            "width": 32,
+            "height": 32
+          },
+          {
+            "id": "id_name",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "  ${/mirror/agentDisplayName}" },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          { "id": "primary_btn", "component": "Button", "child": "primary_btn_lbl", "variant": "primary" },
+          { "id": "primary_btn_lbl", "component": "Text", "text": "primaryColor=#6C5CE7 主按钮" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-id-1",
+        "value": {
+          "mirror": {
+            "iconUrl": "https://a2ui.org/logo.png",
+            "agentDisplayName": "Weather Bot"
+          }
+        }
+      }
+    }
+  ]
+}

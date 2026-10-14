@@ -1,0 +1,97 @@
+{
+  "name": "numeric · 温度范围 [16,30]",
+  "description": "空调温度必须在 16~30 之间。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-numeric-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-numeric-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "hint",
+              "slider",
+              "btn"
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "当前温度：${/form/temp}°C"
+              },
+              "returnType": "string"
+            },
+            "variant": "caption"
+          },
+          {
+            "id": "slider",
+            "component": "Slider",
+            "value": {
+              "path": "/form/temp"
+            },
+            "max": 40
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "numeric",
+                  "args": {
+                    "value": {
+                      "path": "/form/temp"
+                    },
+                    "min": 16,
+                    "max": 30
+                  }
+                },
+                "message": "温度必须在 16~30 之间"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "确认"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-numeric-3",
+        "value": {
+          "form": {
+            "temp": 10
+          }
+        }
+      }
+    }
+  ]
+}

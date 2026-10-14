@@ -1,0 +1,63 @@
+{
+  "name": "ChildList 模板 · 追加/更新触发重展开",
+  "description": "初始 2 条，随后通过 updateDataModel 覆盖 /list 追加到 4 条，模板自动重新展开。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-cl-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-cl-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "list"] },
+          { "id": "title", "component": "Text", "text": "追加数据触发模板重展开", "variant": "h5" },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "row-tpl", "path": "/list" }
+          },
+          {
+            "id": "row-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "${index}. ${name}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-cl-3",
+        "value": {
+          "list": [
+            { "index": 1, "name": "First" },
+            { "index": 2, "name": "Second" }
+          ]
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-cl-3",
+        "path": "/list",
+        "value": [
+          { "index": 1, "name": "First" },
+          { "index": 2, "name": "Second" },
+          { "index": 3, "name": "Third（新增）" },
+          { "index": 4, "name": "Fourth（新增）" }
+        ]
+      }
+    }
+  ]
+}

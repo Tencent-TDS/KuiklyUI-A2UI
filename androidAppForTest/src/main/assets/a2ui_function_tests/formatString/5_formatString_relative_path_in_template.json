@@ -1,0 +1,83 @@
+{
+  "name": "formatString · 模板迭代 + 相对路径",
+  "description": "Row 迭代 /items，模板内使用相对路径 ${name}。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-5",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "row"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "商品清单",
+            "variant": "h5"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": {
+              "path": "/items",
+              "componentId": "item-tpl"
+            },
+            "justify": "spaceAround"
+          },
+          {
+            "id": "item-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "${name} × ${qty}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-5",
+        "value": {
+          "items": [
+            {
+              "name": "苹果",
+              "qty": 3
+            },
+            {
+              "name": "香蕉",
+              "qty": 5
+            },
+            {
+              "name": "橙子",
+              "qty": 2
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

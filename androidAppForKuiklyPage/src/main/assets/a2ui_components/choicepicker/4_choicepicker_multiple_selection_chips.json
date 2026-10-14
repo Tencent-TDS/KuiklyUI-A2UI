@@ -1,0 +1,59 @@
+{
+  "name": "ChoicePicker - multipleSelection + chips",
+  "description": "Multi-selection chip-style picker",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cp-multi-chips",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cp-multi-chips",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "cp"
+          },
+          {
+            "id": "cp",
+            "component": "ChoicePicker",
+            "label": "Tags",
+            "variant": "multipleSelection",
+            "displayStyle": "chips",
+            "options": [
+              {
+                "label": "Kotlin",
+                "value": "kotlin"
+              },
+              {
+                "label": "Swift",
+                "value": "swift"
+              },
+              {
+                "label": "ArkTS",
+                "value": "arkts"
+              },
+              {
+                "label": "JS",
+                "value": "js"
+              },
+              {
+                "label": "Compose",
+                "value": "compose"
+              }
+            ],
+            "value": [
+              "kotlin",
+              "compose"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "name": "List - direction=horizontal",
+  "description": "Horizontally scrollable list",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-list-horizontal",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-list-horizontal",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "list"
+          },
+          {
+            "id": "list",
+            "component": "List",
+            "children": [
+              "li1",
+              "li2",
+              "li3",
+              "li4",
+              "li5",
+              "li6",
+              "li7",
+              "li8"
+            ],
+            "direction": "horizontal"
+          },
+          {
+            "id": "li1",
+            "component": "Text",
+            "text": "#1",
+            "variant": "body"
+          },
+          {
+            "id": "li2",
+            "component": "Text",
+            "text": "#2",
+            "variant": "body"
+          },
+          {
+            "id": "li3",
+            "component": "Text",
+            "text": "#3",
+            "variant": "body"
+          },
+          {
+            "id": "li4",
+            "component": "Text",
+            "text": "#4",
+            "variant": "body"
+          },
+          {
+            "id": "li5",
+            "component": "Text",
+            "text": "#5",
+            "variant": "body"
+          },
+          {
+            "id": "li6",
+            "component": "Text",
+            "text": "#6",
+            "variant": "body"
+          },
+          {
+            "id": "li7",
+            "component": "Text",
+            "text": "#7",
+            "variant": "body"
+          },
+          {
+            "id": "li8",
+            "component": "Text",
+            "text": "#8",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

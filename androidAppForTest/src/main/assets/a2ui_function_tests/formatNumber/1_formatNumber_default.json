@@ -1,0 +1,56 @@
+{
+  "name": "formatNumber · 默认（自动小数、千位分隔）",
+  "description": "value=1234567.89 默认格式化。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fn-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fn-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatNumber",
+              "args": {
+                "value": {
+                  "path": "/n"
+                }
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fn-1",
+        "value": {
+          "n": 1234567.89
+        }
+      }
+    }
+  ]
+}

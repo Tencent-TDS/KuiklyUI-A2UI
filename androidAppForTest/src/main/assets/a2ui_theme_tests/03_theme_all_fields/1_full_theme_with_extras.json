@@ -1,0 +1,66 @@
+{
+  "name": "全字段 + 自定义扩展 · additionalProperties=true",
+  "description": "theme 同时提供 primaryColor / iconUrl / agentDisplayName，并附加规范未定义的自定义键（catalog 声明 additionalProperties=true 允许扩展）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-all-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#F39C12",
+          "iconUrl": "https://a2ui.org/agents/finance.png",
+          "agentDisplayName": "Finance Assistant",
+          "brandName": "Kuikly A2UI",
+          "cornerRadius": 12
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-all-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "info", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "本用例的 theme 同时携带三项标准字段 + 两项自定义字段（brandName/cornerRadius）。自定义字段被 basic catalog 忽略但通过 schema 校验。",
+            "variant": "caption"
+          },
+          {
+            "id": "info",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "Agent: ${/mirror/agentDisplayName}\n主题色: ${/mirror/primaryColor}\n扩展 brandName: ${/mirror/brandName}\n扩展 cornerRadius: ${/mirror/cornerRadius}" },
+              "returnType": "string"
+            }
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary 按钮（背景应为橙 #F39C12）" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-all-1",
+        "value": {
+          "mirror": {
+            "primaryColor": "#F39C12",
+            "iconUrl": "https://a2ui.org/agents/finance.png",
+            "agentDisplayName": "Finance Assistant",
+            "brandName": "Kuikly A2UI",
+            "cornerRadius": 12
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "Card - wrapping Row",
+  "description": "Card with Row layout: avatar + info",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-card-row",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-card-row",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "row"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "img",
+              "col"
+            ],
+            "align": "center"
+          },
+          {
+            "id": "img",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
+            "variant": "avatar"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "nm",
+              "sub"
+            ]
+          },
+          {
+            "id": "nm",
+            "component": "Text",
+            "text": "John Doe",
+            "variant": "h5"
+          },
+          {
+            "id": "sub",
+            "component": "Text",
+            "text": "Software Engineer",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

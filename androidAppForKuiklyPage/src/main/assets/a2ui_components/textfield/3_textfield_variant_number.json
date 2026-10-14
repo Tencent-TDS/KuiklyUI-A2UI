@@ -1,0 +1,33 @@
+{
+  "name": "TextField - variant=number",
+  "description": "Numeric keyboard text input",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tf-number",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tf-number",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "tf"
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "Age",
+            "value": "",
+            "variant": "number"
+          }
+        ]
+      }
+    }
+  ]
+}

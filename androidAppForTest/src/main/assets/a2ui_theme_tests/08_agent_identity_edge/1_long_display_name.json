@@ -1,0 +1,57 @@
+{
+  "name": "Agent identity 边界 · 超长 displayName 与 emoji",
+  "description": "theme.agentDisplayName 使用超长中英混排 + emoji。当前引擎未内置消费该字段，通过 Data Model 镜像到 Text 目视：验证渲染不截断异常、不崩溃、emoji 不被替换成 tofu 方块。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-agent-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#673AB7",
+          "iconUrl": "https://a2ui.org/agents/assistant.png",
+          "agentDisplayName": "🤖 Kuikly Long-Name Assistant · 长名助手 · very-long-display-name-for-edge-case-🚀🌟✨"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-agent-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "name", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "Agent 名称包含 emoji + 中英混排 + 超长文本。引擎未内置消费 agentDisplayName，此处通过 Data Model 镜像到 Text 显示，用于目视验证。",
+            "variant": "caption"
+          },
+          {
+            "id": "name",
+            "component": "Text",
+            "text": { "path": "/mirror/agentDisplayName" },
+            "variant": "title"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（背景应为紫 #673AB7）" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-agent-2",
+        "value": {
+          "mirror": {
+            "agentDisplayName": "🤖 Kuikly Long-Name Assistant · 长名助手 · very-long-display-name-for-edge-case-🚀🌟✨"
+          }
+        }
+      }
+    }
+  ]
+}

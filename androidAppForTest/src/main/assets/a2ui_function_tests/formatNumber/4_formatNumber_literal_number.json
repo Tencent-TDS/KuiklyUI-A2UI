@@ -1,0 +1,46 @@
+{
+  "name": "formatNumber · 字面量数字 + decimals=0",
+  "description": "value=42.987, decimals=0 → '43'（四舍五入）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fn-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fn-4",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatNumber",
+              "args": {
+                "value": 42.987,
+                "decimals": 0
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          }
+        ]
+      }
+    }
+  ]
+}

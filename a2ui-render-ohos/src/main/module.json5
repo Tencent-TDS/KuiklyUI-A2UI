@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "a2ui_render",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

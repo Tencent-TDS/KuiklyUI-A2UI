@@ -1,0 +1,51 @@
+{
+  "name": "自定义函数带多参数 + 数据绑定",
+  "description": "自定义函数 buildSummary 接收多个参数（name, count, status），返回拼接的摘要字符串。参数来自 dataModel 路径绑定。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "cf-args-1",
+"catalogId": "custom_functions_catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "cf-args-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "summary"] },
+          { "id": "title", "component": "Text", "text": "buildSummary(name, count, status) → String", "variant": "caption" },
+          {
+            "id": "summary",
+            "component": "Text",
+            "text": {
+              "call": "buildSummary",
+              "args": {
+                "name": { "path": "/project/name" },
+                "count": { "path": "/project/taskCount" },
+                "status": { "path": "/project/status" }
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "cf-args-1",
+        "value": {
+          "project": {
+            "name": "KuiklyUI",
+            "taskCount": 42,
+            "status": "active"
+          }
+        }
+      }
+    }
+  ]
+}

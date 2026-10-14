@@ -1,0 +1,32 @@
+{
+  "name": "CheckBox - value=true",
+  "description": "CheckBox initialized as checked",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cb-true",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cb-true",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "cb"
+          },
+          {
+            "id": "cb",
+            "component": "CheckBox",
+            "label": "I agree (initially checked)",
+            "value": true
+          }
+        ]
+      }
+    }
+  ]
+}

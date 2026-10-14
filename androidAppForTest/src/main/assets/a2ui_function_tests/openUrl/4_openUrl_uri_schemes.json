@@ -1,0 +1,127 @@
+{
+  "name": "openUrl · 非 http scheme（规范 Mandatory 要求拒绝）",
+  "description": "规范条款（basic_catalog_implementation_guide.md §openUrl 'Security Constraints & Implementation Requirements (Mandatory)'）明文要求：'Strictly validate that the resolved URL protocol/scheme is either https: or http:. Throw an execution or runtime error and abort the action if any other scheme is used.' 因此 mailto/tel/sms/自定义深链都是 non-HTTP scheme，规范级实现应拒绝。用例保留 4 个非 http scheme 按钮用于观察当前 host 实现的行为：本项目 demo host（A2UIComponentTestActivity.openUrl）直接派发 Intent.ACTION_VIEW，无 allowlist，因此点击后系统会尝试打开对应 handler —— 这是与规范的差距。要覆盖 https/http 白名单的正例，见 openUrl/1_openUrl_button_click.json。要看规范期望的拒绝行为对照，见 openUrl/5_scheme_allowlist_reject.json。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-url-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-url-4",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "hint", "row1", "row2"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "多 URI scheme",
+            "variant": "h5"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "点击按钮触发系统对应 handler：邮件、拨号、短信、深链。若某 scheme 未注册则可能被吞掉，属于宿主行为。",
+            "variant": "caption"
+          },
+          {
+            "id": "row1",
+            "component": "Row",
+            "children": ["btnMail", "btnTel"],
+            "justify": "spaceAround"
+          },
+          {
+            "id": "row2",
+            "component": "Row",
+            "children": ["btnSms", "btnDeep"],
+            "justify": "spaceAround"
+          },
+          {
+            "id": "btnMail",
+            "component": "Button",
+            "child": "btnMail_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "mailto:hello@a2ui.org?subject=Hi&body=Test%20from%20A2UI"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "btnMail_lbl",
+            "component": "Text",
+            "text": "📧 mailto"
+          },
+          {
+            "id": "btnTel",
+            "component": "Button",
+            "child": "btnTel_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "tel:+861008611"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "btnTel_lbl",
+            "component": "Text",
+            "text": "📞 tel"
+          },
+          {
+            "id": "btnSms",
+            "component": "Button",
+            "child": "btnSms_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "sms:+861008611?body=Hello%20A2UI"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "btnSms_lbl",
+            "component": "Text",
+            "text": "💬 sms"
+          },
+          {
+            "id": "btnDeep",
+            "component": "Button",
+            "child": "btnDeep_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "a2ui-demo://sample/path?x=1"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "btnDeep_lbl",
+            "component": "Text",
+            "text": "🔗 深链"
+          }
+        ]
+      }
+    }
+  ]
+}

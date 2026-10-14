@@ -1,0 +1,163 @@
+{
+  "name": "and · and(or, or) 双分支汇合",
+  "description": "身份 = or(邮箱, 手机)；验证 = or(短信码, 邮箱码)。两组都要通过。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-and-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-and-5",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "email",
+              "phone",
+              "smsCode",
+              "emailCode",
+              "btn"
+            ]
+          },
+          {
+            "id": "email",
+            "component": "TextField",
+            "label": "邮箱",
+            "value": {
+              "path": "/f/email"
+            }
+          },
+          {
+            "id": "phone",
+            "component": "TextField",
+            "label": "手机号",
+            "value": {
+              "path": "/f/phone"
+            }
+          },
+          {
+            "id": "smsCode",
+            "component": "TextField",
+            "label": "短信验证码",
+            "value": {
+              "path": "/f/smsCode"
+            }
+          },
+          {
+            "id": "emailCode",
+            "component": "TextField",
+            "label": "邮箱验证码",
+            "value": {
+              "path": "/f/emailCode"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      {
+                        "call": "or",
+                        "args": {
+                          "values": [
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/email"
+                                }
+                              },
+                              "returnType": "boolean"
+                            },
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/phone"
+                                }
+                              },
+                              "returnType": "boolean"
+                            }
+                          ]
+                        },
+                        "returnType": "boolean"
+                      },
+                      {
+                        "call": "or",
+                        "args": {
+                          "values": [
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/smsCode"
+                                }
+                              },
+                              "returnType": "boolean"
+                            },
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/emailCode"
+                                }
+                              },
+                              "returnType": "boolean"
+                            }
+                          ]
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "身份与验证码各需填一项"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "登录"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-and-5",
+        "value": {
+          "f": {
+            "email": "",
+            "phone": "",
+            "smsCode": "",
+            "emailCode": ""
+          }
+        }
+      }
+    }
+  ]
+}

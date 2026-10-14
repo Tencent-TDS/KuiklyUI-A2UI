@@ -1,0 +1,59 @@
+{
+  "name": "ChoicePicker - multipleSelection + checkbox",
+  "description": "Multi-selection picker with checkbox display",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cp-multi-cb",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cp-multi-cb",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "cp"
+          },
+          {
+            "id": "cp",
+            "component": "ChoicePicker",
+            "label": "Languages I speak",
+            "variant": "multipleSelection",
+            "displayStyle": "checkbox",
+            "options": [
+              {
+                "label": "English",
+                "value": "en"
+              },
+              {
+                "label": "中文",
+                "value": "zh"
+              },
+              {
+                "label": "Français",
+                "value": "fr"
+              },
+              {
+                "label": "Deutsch",
+                "value": "de"
+              },
+              {
+                "label": "Español",
+                "value": "es"
+              }
+            ],
+            "value": [
+              "en",
+              "zh"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

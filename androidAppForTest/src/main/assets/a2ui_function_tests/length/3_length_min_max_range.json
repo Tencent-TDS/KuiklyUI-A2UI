@@ -1,0 +1,84 @@
+{
+  "name": "length · min+max（4-8）",
+  "description": "用户名长度必须在 4~8 之间。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-length-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-length-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "用户名（4-8）",
+            "value": {
+              "path": "/form/username"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "length",
+                  "args": {
+                    "value": {
+                      "path": "/form/username"
+                    },
+                    "min": 4,
+                    "max": 8
+                  }
+                },
+                "message": "用户名长度必须在 4~8 之间"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "注册"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-length-3",
+        "value": {
+          "form": {
+            "username": ""
+          }
+        }
+      }
+    }
+  ]
+}

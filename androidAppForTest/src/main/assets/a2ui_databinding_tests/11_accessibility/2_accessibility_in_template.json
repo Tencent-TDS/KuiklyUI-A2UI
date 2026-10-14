@@ -1,0 +1,68 @@
+{
+  "name": "accessibility · 模板中每项独立 label",
+  "description": "ChildList 模板中每个 Button 的 accessibility.label 引用相对路径 name，保证屏读器读出对应姓名。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-a11y-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-a11y-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "list"] },
+          { "id": "title", "component": "Text", "text": "每行按钮的 accessibility.label 独立绑定 name", "variant": "caption" },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "row-tpl", "path": "/friends" }
+          },
+          {
+            "id": "row-tpl",
+            "component": "Row",
+            "children": ["name", "btn", "btn_lbl"]
+          },
+          { "id": "name", "component": "Text", "text": { "path": "name" } },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "default",
+            "action": {
+              "event": {
+                "name": "message",
+                "context": { "to": { "path": "name" } }
+              }
+            },
+            "accessibility": {
+              "label": {
+                "call": "formatString",
+                "args": { "value": "给 ${name} 发消息" },
+                "returnType": "string"
+              }
+            }
+          },
+          { "id": "btn_lbl", "component": "Text", "text": "发消息" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-a11y-2",
+        "value": {
+          "friends": [
+            { "name": "Alice" },
+            { "name": "Bob" },
+            { "name": "Carol" }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "components": {
+    "audioplayer": [
+      "1_audioplayer_literal_url.json",
+      "2_audioplayer_url_binding.json",
+      "3_audioplayer_in_column.json"
+    ],
+    "button": [
+      "1_button_variant_default.json",
+      "2_button_variant_primary.json",
+      "3_button_variant_borderless.json",
+      "4_button_icon_only.json",
+      "5_button_action_with_context.json",
+      "6_button_action_function_call.json"
+    ],
+    "card": [
+      "1_card_single_text_child.json",
+      "2_card_with_column.json",
+      "3_card_with_row.json",
+      "4_card_nested_cards.json"
+    ],
+    "checkbox": [
+      "1_checkbox_value_true.json",
+      "2_checkbox_value_false.json",
+      "3_checkbox_value_binding.json",
+      "4_checkbox_multiple.json"
+    ],
+    "choicepicker": [
+      "1_choicepicker_mutually_exclusive_checkbox.json",
+      "2_choicepicker_multiple_selection_checkbox.json",
+      "3_choicepicker_mutually_exclusive_chips.json",
+      "4_choicepicker_multiple_selection_chips.json",
+      "5_choicepicker_filterable.json",
+      "6_choicepicker_value_binding.json"
+    ],
+    "column": [
+      "1_column_justify_start.json",
+      "2_column_justify_center.json",
+      "3_column_justify_end.json",
+      "4_column_justify_spaceBetween.json",
+      "5_column_align_start.json",
+      "6_column_align_center.json",
+      "7_column_align_end.json",
+      "8_column_template_children.json"
+    ],
+    "datetimeinput": [
+      "1_datetimeinput_date_only.json",
+      "2_datetimeinput_time_only.json",
+      "3_datetimeinput_date_time.json",
+      "4_datetimeinput_min_max_constraints.json",
+      "5_datetimeinput_empty_value.json",
+      "6_datetimeinput_value_binding.json"
+    ],
+    "divider": [
+      "1_divider_horizontal_default.json",
+      "2_divider_vertical_in_row.json",
+      "3_divider_multiple_in_column.json"
+    ],
+    "icon": [
+      "1_icon_common_set_1.json",
+      "2_icon_common_set_2.json",
+      "3_icon_media_icons.json",
+      "4_icon_communication_icons.json",
+      "5_icon_svg_path.json",
+      "6_icon_name_binding.json"
+    ],
+    "image": [
+      "1_image_variant_icon.json",
+      "2_image_variant_avatar.json",
+      "3_image_variant_smallFeature.json",
+      "4_image_variant_mediumFeature.json",
+      "5_image_variant_largeFeature.json",
+      "6_image_variant_header.json",
+      "7_image_fit_modes.json",
+      "8_image_url_path_binding.json"
+    ],
+    "list": [
+      "1_list_direction_vertical.json",
+      "2_list_direction_horizontal.json",
+      "3_list_direction_vertical_long.json",
+      "4_list_direction_horizontal_long.json",
+      "5_list_align_start.json",
+      "6_list_align_center.json",
+      "7_list_align_end.json",
+      "8_list_align_stretch.json",
+      "9_list_template_children.json"
+    ],
+    "modal": [
+      "1_modal_basic.json",
+      "2_modal_with_form.json"
+    ],
+    "row": [
+      "1_row_justify_start.json",
+      "2_row_justify_center.json",
+      "3_row_justify_end.json",
+      "4_row_justify_spaceBetween.json",
+      "5_row_justify_spaceAround.json",
+      "6_row_justify_spaceEvenly.json",
+      "7_row_align_start.json",
+      "8_row_align_center.json",
+      "9_row_align_end.json",
+      "10_row_template_children.json"
+    ],
+    "slider": [
+      "1_slider_default_min_max.json",
+      "2_slider_min_omitted.json",
+      "3_slider_negative_range.json",
+      "4_slider_value_binding.json",
+      "5_slider_no_label.json"
+    ],
+    "tabs": [
+      "1_tabs_two_tabs.json",
+      "2_tabs_three_tabs.json",
+      "3_tabs_complex_children.json",
+      "4_tabs_title_binding.json"
+    ],
+    "text": [
+      "1_text_h1.json",
+      "2_text_h2.json",
+      "3_text_h3_h4_h5.json",
+      "4_text_body.json",
+      "5_text_caption.json",
+      "6_text_path_binding.json",
+      "7_text_function_formatString.json",
+      "8_text_function_formatDate.json"
+    ],
+    "textfield": [
+      "1_textfield_variant_shortText.json",
+      "2_textfield_variant_longText.json",
+      "3_textfield_variant_number.json",
+      "4_textfield_variant_obscured.json",
+      "5_textfield_value_binding.json",
+      "6_textfield_email_checks_vs_legacy_regexp.json"
+    ],
+    "video": [
+      "1_video_literal_url.json",
+      "2_video_url_binding.json",
+      "3_video_in_column.json"
+    ]
+  },
+  "custom_functions": {
+    "01_string_return": [
+      "1_custom_greeting.json",
+      "2_custom_format_phone.json"
+    ],
+    "02_boolean_return": [
+      "1_custom_is_vip.json"
+    ],
+    "03_number_return": [
+      "1_custom_calculate_discount.json"
+    ],
+    "04_void_action": [
+      "1_custom_log_event.json"
+    ],
+    "05_args_passing": [
+      "1_custom_build_summary.json"
+    ]
+  },
+  "custom_components": {
+    "01_web_view": [
+      "1_web_source.json"
+    ],
+    "02_my_view": [
+      "1_my_view.json"
+    ]
+  }
+}

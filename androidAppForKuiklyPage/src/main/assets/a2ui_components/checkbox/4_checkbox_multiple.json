@@ -1,0 +1,60 @@
+{
+  "name": "CheckBox - multiple in Column",
+  "description": "A typical preferences group with multiple checkboxes",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cb-multi",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cb-multi",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t",
+              "cb1",
+              "cb2",
+              "cb3"
+            ]
+          },
+          {
+            "id": "t",
+            "component": "Text",
+            "text": "Preferences",
+            "variant": "h5"
+          },
+          {
+            "id": "cb1",
+            "component": "CheckBox",
+            "label": "Receive email",
+            "value": true
+          },
+          {
+            "id": "cb2",
+            "component": "CheckBox",
+            "label": "Receive SMS",
+            "value": false
+          },
+          {
+            "id": "cb3",
+            "component": "CheckBox",
+            "label": "Receive push",
+            "value": true
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "name": "pluralize · 含 zero 分类",
+  "description": "零、单数、多数分别显示。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-pl-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-pl-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "t2",
+              "t3"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 0,
+                "one": "one message",
+                "other": "%d messages",
+                "zero": "No messages"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 1,
+                "one": "1 message",
+                "other": "many messages"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "t3",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": 5,
+                "one": "1 message",
+                "other": "5 messages"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          }
+        ]
+      }
+    }
+  ]
+}

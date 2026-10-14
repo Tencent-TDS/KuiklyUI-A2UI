@@ -1,0 +1,63 @@
+{
+  "name": "Card - nested cards",
+  "description": "Card composition: outer Card → Column → 2 inner Cards",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-card-nested",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-card-nested",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "outerCol"
+          },
+          {
+            "id": "outerCol",
+            "component": "Column",
+            "children": [
+              "title",
+              "innerA",
+              "innerB"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Outer Card",
+            "variant": "h4"
+          },
+          {
+            "id": "innerA",
+            "component": "Card",
+            "child": "innerAText"
+          },
+          {
+            "id": "innerAText",
+            "component": "Text",
+            "text": "Inner Card A",
+            "variant": "body"
+          },
+          {
+            "id": "innerB",
+            "component": "Card",
+            "child": "innerBText"
+          },
+          {
+            "id": "innerBText",
+            "component": "Text",
+            "text": "Inner Card B",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

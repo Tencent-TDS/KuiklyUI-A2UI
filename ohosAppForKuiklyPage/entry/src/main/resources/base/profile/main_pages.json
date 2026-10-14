@@ -1,0 +1,12 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/KuiklyPageCardDemoPage",
+    "pages/KuiklyPageCustomFunctionDemoPage",
+    "pages/KuiklyPageCustomComponentDemoPage",
+    "pages/KuiklyPageCustomIconDemoPage",
+    "pages/KuiklyPageComposeDemoPage",
+    "pages/KuiklyPageComponentDemoPage",
+    "pages/A2UIComponentTestPage"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "accessibility.label · DynamicString 绑定",
+  "description": "Button.accessibility.label 通过 formatString 拼接用户名，屏幕阅读器会读出个性化名称（v0.9 协议层能力演示；渲染端可选透传）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-a11y-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-a11y-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["tip", "btn", "btn_lbl"] },
+          {
+            "id": "tip",
+            "component": "Text",
+            "text": "按钮的 accessibility.label 会随 /user/name 动态更新",
+            "variant": "caption"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": { "event": { "name": "follow" } },
+            "accessibility": {
+              "label": {
+                "call": "formatString",
+                "args": { "value": "关注 ${/user/name}" },
+                "returnType": "string"
+              },
+              "description": "点两下以关注该用户"
+            }
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "关注 ${/user/name}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-a11y-1",
+        "value": { "user": { "name": "Alice" } }
+      }
+    }
+  ]
+}

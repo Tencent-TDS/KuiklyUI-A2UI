@@ -1,0 +1,1100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kuikly_components_catalog.json",
+  "title": "A2UI Kuikly Components Catalog",
+  "description": "Extended catalog that includes A2UI basic components plus all Kuikly DSL native components (KR-series). These components provide direct access to Kuikly's native rendering layer with full layout, styling, scrolling, input, animation, and multimedia control.",
+  "catalogId": "kuikly_components_catalog.json",
+  "components": {
+    "KRView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native container/layout component in Kuikly DSL. Supports flexbox layout with children. Equivalent to a div/View in web/native frameworks. Can be used as a row, column, card, button container, divider, or any generic layout wrapper.",
+          "properties": {
+            "component": { "const": "KRView" },
+            "children": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of child component IDs to render inside this container."
+            },
+            "flexDirection": {
+              "type": "string",
+              "enum": ["row", "column", "row-reverse", "column-reverse"],
+              "description": "The direction of the main axis for laying out children.",
+              "default": "column"
+            },
+            "justifyContent": {
+              "type": "string",
+              "enum": ["flex-start", "flex-end", "center", "space-between", "space-around", "space-evenly"],
+              "description": "Alignment of children along the main axis."
+            },
+            "alignItems": {
+              "type": "string",
+              "enum": ["flex-start", "flex-end", "center", "stretch", "baseline"],
+              "description": "Alignment of children along the cross axis."
+            },
+            "alignContent": {
+              "type": "string",
+              "enum": ["flex-start", "flex-end", "center", "stretch", "space-between", "space-around"],
+              "description": "Alignment of wrapped lines along the cross axis (only effective when flexWrap is enabled)."
+            },
+            "flexWrap": {
+              "type": "string",
+              "enum": ["nowrap", "wrap", "wrap-reverse"],
+              "description": "Whether children should wrap to the next line when they overflow."
+            },
+            "backgroundImage": {
+              "type": "object",
+              "description": "Background image for the container (default resizeMode is cover).",
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "description": "Image source URL. Supports HTTP/HTTPS URL, base64 data URI, assets path (assets://...), or file path (file://...)."
+                },
+                "resizeMode": {
+                  "type": "string",
+                  "enum": ["cover", "contain", "stretch"],
+                  "description": "How the background image should be resized. Default: 'cover'.",
+                  "default": "cover"
+                }
+              },
+              "required": ["src"]
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRRichTextView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native text rendering component in Kuikly DSL. Supports rich text with font styling, alignment, decoration, and simple Markdown formatting (bold, italic, links, code, headings).",
+          "properties": {
+            "component": { "const": "KRRichTextView" },
+            "text": {
+              "type": "string",
+              "description": "The text content to display. Supports simple Markdown: **bold**, *italic*, [link](url), `code`, and # headings."
+            },
+            "fontSize": {
+              "type": "number",
+              "description": "Font size in dp/pt.",
+              "minimum": 1
+            },
+            "color": {
+              "type": "string",
+              "description": "Text color. Format: CSS hex color code (e.g., '#333333', '#FF0000').",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            },
+            "fontWeight": {
+              "type": "string",
+              "enum": ["normal", "light", "medium", "semibold", "bold", "300", "400", "500", "600", "700", "800", "900"],
+              "description": "Font weight for the text."
+            },
+            "fontStyle": {
+              "type": "string",
+              "enum": ["normal", "italic"],
+              "description": "Font style (normal or italic)."
+            },
+            "textAlign": {
+              "type": "string",
+              "enum": ["left", "center", "right"],
+              "description": "Horizontal alignment of the text within its container."
+            },
+            "numberOfLines": {
+              "type": "integer",
+              "description": "Maximum number of lines to display. Text will be truncated with ellipsis if it exceeds this limit.",
+              "minimum": 1
+            },
+            "lineHeight": {
+              "type": "number",
+              "description": "Line height in dp/pt.",
+              "minimum": 0
+            },
+            "lineSpacing": {
+              "type": "number",
+              "description": "Additional spacing between lines in dp/pt.",
+              "minimum": 0
+            },
+            "letterSpacing": {
+              "type": "number",
+              "description": "Spacing between characters in dp/pt."
+            },
+            "textDecoration": {
+              "type": "string",
+              "enum": ["none", "underline", "line-through"],
+              "description": "Text decoration style."
+            },
+            "fontFamily": {
+              "type": "string",
+              "description": "Custom font family name. Requires host-side font registration (Android/HarmonyOS: custom font adapter; iOS: system font registration)."
+            },
+            "textShadow": {
+              "type": "object",
+              "description": "Text shadow effect.",
+              "properties": {
+                "offsetX": {
+                  "type": "number",
+                  "description": "Horizontal shadow offset in dp/pt."
+                },
+                "offsetY": {
+                  "type": "number",
+                  "description": "Vertical shadow offset in dp/pt."
+                },
+                "radius": {
+                  "type": "number",
+                  "description": "Shadow blur radius in dp/pt.",
+                  "minimum": 0
+                },
+                "color": {
+                  "type": "string",
+                  "description": "Shadow color. Format: CSS hex color code.",
+                  "pattern": "^#[0-9a-fA-F]{3,8}$"
+                }
+              },
+              "required": ["offsetX", "offsetY", "radius", "color"]
+            },
+            "firstLineHeadIndent": {
+              "type": "number",
+              "description": "First line head indent distance in dp/pt.",
+              "minimum": 0
+            }
+          },
+          "required": ["component", "text"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRImageView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native image component in Kuikly DSL. Supports loading images from URLs, base64-encoded data URIs (data:image/png;base64,...), assets (assets://), and local files (file://).",
+          "properties": {
+            "component": { "const": "KRImageView" },
+            "src": {
+              "type": "string",
+              "description": "The image source. Can be an HTTP/HTTPS URL, a base64 data URI (e.g., 'data:image/png;base64,...'), an assets path (assets://...), or a file path (file://...)."
+            },
+            "resizeMode": {
+              "type": "string",
+              "enum": ["cover", "contain", "stretch"],
+              "description": "How the image should be resized to fit its container. 'cover': scale to fill maintaining aspect ratio (may crop), 'contain': scale to fit maintaining aspect ratio (may letterbox), 'stretch': stretch to fill exactly (may distort).",
+              "default": "cover"
+            },
+            "placeholderSrc": {
+              "type": "string",
+              "description": "Placeholder image URL displayed while the main image is loading."
+            },
+            "blurRadius": {
+              "type": "number",
+              "description": "Gaussian blur radius applied to the image.",
+              "minimum": 0
+            },
+            "tintColor": {
+              "type": "string",
+              "description": "Color applied to the image as a tint. Non-transparent parts will be covered by this color. Format: CSS hex color code.",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            },
+            "capInsets": {
+              "type": "object",
+              "description": "Defines the stretchable region of the image (9-patch style). Edges outside the insets are not stretched.",
+              "properties": {
+                "top": { "type": "number" },
+                "left": { "type": "number" },
+                "bottom": { "type": "number" },
+                "right": { "type": "number" }
+              }
+            },
+            "maskLinearGradient": {
+              "type": "object",
+              "description": "Linear gradient mask applied to the image. The alpha value of each gradient color is applied to the corresponding pixel of the image, creating fade-in/fade-out effects.",
+              "properties": {
+                "direction": {
+                  "type": "string",
+                  "enum": ["to-top", "to-bottom", "to-left", "to-right"],
+                  "description": "Direction of the gradient mask."
+                },
+                "colorStops": {
+                  "type": "array",
+                  "description": "Array of color stops. The alpha channel of each color determines the mask opacity at that position.",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "color": { "type": "string", "description": "Color whose alpha value is used as the mask. Format: CSS hex color code (use alpha channel, e.g., '#FFFFFFFF' for opaque, '#FFFFFF00' for transparent)." },
+                      "stop": { "type": "number", "description": "Position of this stop (0.0 to 1.0).", "minimum": 0, "maximum": 1 }
+                    },
+                    "required": ["color", "stop"]
+                  },
+                  "minItems": 2
+                }
+              },
+              "required": ["direction", "colorStops"]
+            }
+          },
+          "required": ["component", "src"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRScrollView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native scrollable container component in Kuikly DSL. Used to display content of indeterminate height/width within a fixed-size container. Supports vertical and horizontal scrolling, paging, bounce effects, and nested scrolling.",
+          "properties": {
+            "component": { "const": "KRScrollView" },
+            "children": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of child component IDs to render inside this scroll container."
+            },
+            "flexDirection": {
+              "type": "string",
+              "enum": ["row", "column"],
+              "description": "Scroll direction. 'column' for vertical scrolling (default), 'row' for horizontal scrolling.",
+              "default": "column"
+            },
+            "scrollEnable": {
+              "type": "boolean",
+              "description": "Whether scrolling is allowed. Default: true.",
+              "default": true
+            },
+            "bouncesEnable": {
+              "type": "boolean",
+              "description": "Whether bounce effect is enabled when scrolling beyond content bounds. Default: true.",
+              "default": true
+            },
+            "showScrollerIndicator": {
+              "type": "boolean",
+              "description": "Whether to show the scroll indicator/scrollbar. Default: true.",
+              "default": true
+            },
+            "pagingEnable": {
+              "type": "boolean",
+              "description": "Whether paging is enabled. When true, scrolling stops at multiples of the scroll view's bounds.",
+              "default": false
+            },
+            "flingEnable": {
+              "type": "boolean",
+              "description": "Whether inertial scrolling (fling) is allowed. When false, scrolling stops immediately on finger lift. Default: true.",
+              "default": true
+            },
+            "nestedScroll": {
+              "type": "object",
+              "description": "Nested scrolling configuration for parent-child scroll containers.",
+              "properties": {
+                "forward": {
+                  "type": "string",
+                  "enum": ["self-only", "self-first", "parent-first"],
+                  "description": "Nested scroll mode when scrolling forward (up/left)."
+                },
+                "backward": {
+                  "type": "string",
+                  "enum": ["self-only", "self-first", "parent-first"],
+                  "description": "Nested scroll mode when scrolling backward (down/right)."
+                }
+              }
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRListView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native list/recycler component in Kuikly DSL. Inherits from KRScrollView with additional list-specific optimizations like view recycling and preloading. Used for displaying large collections of items efficiently.",
+          "properties": {
+            "component": { "const": "KRListView" },
+            "children": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of child component IDs (list items) to render."
+            },
+            "flexDirection": {
+              "type": "string",
+              "enum": ["row", "column"],
+              "description": "List direction. 'column' for vertical list (default), 'row' for horizontal list.",
+              "default": "column"
+            },
+            "scrollEnable": {
+              "type": "boolean",
+              "description": "Whether scrolling is allowed. Default: true.",
+              "default": true
+            },
+            "bouncesEnable": {
+              "type": "boolean",
+              "description": "Whether bounce effect is enabled. Default: true.",
+              "default": true
+            },
+            "showScrollerIndicator": {
+              "type": "boolean",
+              "description": "Whether to show the scroll indicator. Default: true.",
+              "default": true
+            },
+            "pagingEnable": {
+              "type": "boolean",
+              "description": "Whether paging is enabled.",
+              "default": false
+            },
+            "flingEnable": {
+              "type": "boolean",
+              "description": "Whether inertial scrolling is allowed. Default: true.",
+              "default": true
+            },
+            "nestedScroll": {
+              "type": "object",
+              "description": "Nested scrolling configuration.",
+              "properties": {
+                "forward": {
+                  "type": "string",
+                  "enum": ["self-only", "self-first", "parent-first"]
+                },
+                "backward": {
+                  "type": "string",
+                  "enum": ["self-only", "self-first", "parent-first"]
+                }
+              }
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRBlurView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native Gaussian blur (frosted glass) component in Kuikly DSL. When placed over other views, it dynamically blurs the content beneath it. Useful for creating frosted glass effects on navigation bars, overlays, etc.",
+          "properties": {
+            "component": { "const": "KRBlurView" },
+            "children": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of child component IDs to render on top of the blur effect."
+            },
+            "blurRadius": {
+              "type": "number",
+              "description": "Gaussian blur radius. Maximum value is 12.5. Default: 10.",
+              "minimum": 0,
+              "maximum": 12.5,
+              "default": 10
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRActivityIndicatorView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native loading indicator (spinning spinner) component in Kuikly DSL. Displays a circular loading animation. Fixed size of 20x20dp (use transform Scale to resize).",
+          "properties": {
+            "component": { "const": "KRActivityIndicatorView" },
+            "isGrayStyle": {
+              "type": "boolean",
+              "description": "Whether to use gray style spinner (default is white). This property cannot be dynamically changed.",
+              "default": false
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRHoverView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native hover/sticky component in Kuikly DSL. Used inside a List or Scroller to create sticky headers that pin to the top when scrolled past. Automatically hovers at the top of the scrollable container.",
+          "properties": {
+            "component": { "const": "KRHoverView" },
+            "children": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of child component IDs to render inside the hover view."
+            },
+            "bringIndex": {
+              "type": "integer",
+              "description": "Z-order priority when multiple HoverViews are in the same list. Higher values appear on top.",
+              "minimum": 0
+            },
+            "hoverMarginTop": {
+              "type": "number",
+              "description": "Distance from the top of the list when hovering/stuck. Default: 0.",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRTextFieldView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native single-line text input component in Kuikly DSL. Supports placeholder text, keyboard types, return key types, text length limits, and focus management.",
+          "properties": {
+            "component": { "const": "KRTextFieldView" },
+            "text": {
+              "type": "string",
+              "description": "The current text content of the input field."
+            },
+            "placeholder": {
+              "type": "string",
+              "description": "Placeholder text displayed when the input is empty."
+            },
+            "placeholderColor": {
+              "type": "string",
+              "description": "Color of the placeholder text. Format: CSS hex color code.",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            },
+            "fontSize": {
+              "type": "number",
+              "description": "Font size of the input text in dp/pt.",
+              "minimum": 1
+            },
+            "color": {
+              "type": "string",
+              "description": "Color of the input text. Format: CSS hex color code.",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            },
+            "fontWeight": {
+              "type": "string",
+              "enum": ["normal", "bold"],
+              "description": "Font weight of the input text."
+            },
+            "textAlign": {
+              "type": "string",
+              "enum": ["left", "center", "right"],
+              "description": "Text alignment within the input field."
+            },
+            "keyboardType": {
+              "type": "string",
+              "enum": ["default", "number", "email", "password"],
+              "description": "The type of keyboard to display.",
+              "default": "default"
+            },
+            "returnKeyType": {
+              "type": "string",
+              "enum": ["done", "search", "send", "next", "go", "continue"],
+              "description": "The type of return key on the keyboard."
+            },
+            "maxTextLength": {
+              "type": "integer",
+              "description": "Maximum number of characters allowed in the input.",
+              "minimum": 1
+            },
+            "autofocus": {
+              "type": "boolean",
+              "description": "Whether the input should automatically gain focus and show keyboard.",
+              "default": false
+            },
+            "editable": {
+              "type": "boolean",
+              "description": "Whether the input is editable.",
+              "default": true
+            },
+            "tintColor": {
+              "type": "string",
+              "description": "Color of the cursor/caret. Format: CSS hex color code.",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRTextAreaView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native multi-line text input component in Kuikly DSL. Similar to KRTextFieldView but supports multiple lines of text input with scrolling. Supports all Input properties except imeNoFullscreen and enablesReturnKeyAutomatically.",
+          "properties": {
+            "component": { "const": "KRTextAreaView" },
+            "text": {
+              "type": "string",
+              "description": "The current text content of the text area."
+            },
+            "placeholder": {
+              "type": "string",
+              "description": "Placeholder text displayed when the text area is empty."
+            },
+            "placeholderColor": {
+              "type": "string",
+              "description": "Color of the placeholder text. Format: CSS hex color code.",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            },
+            "fontSize": {
+              "type": "number",
+              "description": "Font size of the input text in dp/pt.",
+              "minimum": 1
+            },
+            "color": {
+              "type": "string",
+              "description": "Color of the input text. Format: CSS hex color code.",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            },
+            "fontWeight": {
+              "type": "string",
+              "enum": ["normal", "bold"],
+              "description": "Font weight of the input text."
+            },
+            "textAlign": {
+              "type": "string",
+              "enum": ["left", "center", "right"],
+              "description": "Text alignment within the text area."
+            },
+            "lineHeight": {
+              "type": "number",
+              "description": "Line height for multi-line text in dp/pt.",
+              "minimum": 0
+            },
+            "keyboardType": {
+              "type": "string",
+              "enum": ["default", "number", "email", "password"],
+              "description": "The type of keyboard to display.",
+              "default": "default"
+            },
+            "returnKeyType": {
+              "type": "string",
+              "enum": ["done", "search", "send", "next", "go", "continue"],
+              "description": "The type of return key on the keyboard."
+            },
+            "maxTextLength": {
+              "type": "integer",
+              "description": "Maximum number of characters allowed.",
+              "minimum": 1
+            },
+            "autofocus": {
+              "type": "boolean",
+              "description": "Whether the text area should automatically gain focus.",
+              "default": false
+            },
+            "editable": {
+              "type": "boolean",
+              "description": "Whether the text area is editable.",
+              "default": true
+            },
+            "tintColor": {
+              "type": "string",
+              "description": "Color of the cursor/caret. Format: CSS hex color code.",
+              "pattern": "^#[0-9a-fA-F]{3,8}$"
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRVideoView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native video player component in Kuikly DSL. Supports video playback with controls for play/pause/stop, resize modes, muting, and playback rate. Requires host-side adapter implementation.",
+          "properties": {
+            "component": { "const": "KRVideoView" },
+            "src": {
+              "type": "string",
+              "description": "Video source URL."
+            },
+            "playControl": {
+              "type": "string",
+              "enum": ["play", "pause", "stop"],
+              "description": "Playback control state."
+            },
+            "resizeMode": {
+              "type": "string",
+              "enum": ["cover", "contain", "stretch"],
+              "description": "How the video should be resized. 'cover': fill maintaining aspect ratio (may crop), 'contain': fit maintaining aspect ratio (may have black bars), 'stretch': stretch to fill (may distort)."
+            },
+            "muted": {
+              "type": "boolean",
+              "description": "Whether the video is muted.",
+              "default": false
+            },
+            "rate": {
+              "type": "number",
+              "description": "Playback rate. Common values: 1.0, 1.25, 1.5, 2.0.",
+              "minimum": 0.25,
+              "maximum": 4.0,
+              "default": 1.0
+            }
+          },
+          "required": ["component", "src"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRAudioView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native audio player component in Kuikly DSL. Supports audio playback. Requires host-side adapter implementation.",
+          "properties": {
+            "component": { "const": "KRAudioView" },
+            "src": {
+              "type": "string",
+              "description": "Audio source URL."
+            },
+            "playControl": {
+              "type": "string",
+              "enum": ["play", "pause", "stop"],
+              "description": "Playback control state."
+            }
+          },
+          "required": ["component", "src"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRPAGView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native PAG (Portable Animated Graphics) animation component in Kuikly DSL. Similar to Lottie, used for playing vector animations. Requires host-side adapter implementation.",
+          "properties": {
+            "component": { "const": "KRPAGView" },
+            "src": {
+              "type": "string",
+              "description": "PAG animation source file path. Supports URL or local file path."
+            },
+            "repeatCount": {
+              "type": "integer",
+              "description": "Number of times the animation repeats. Default: 1 (plays once). 0 means infinite loop.",
+              "minimum": 0,
+              "default": 1
+            },
+            "scaleMode": {
+              "type": "string",
+              "enum": ["none", "stretch", "letterBox", "zoom"],
+              "description": "How the PAG content scales within the view. 'none': no scaling, 'stretch': stretch to fill (may distort), 'letterBox': fit with black bars (default), 'zoom': fill with cropping.",
+              "default": "letterBox"
+            },
+            "autoPlay": {
+              "type": "boolean",
+              "description": "Whether the animation starts playing automatically. Default: true.",
+              "default": true
+            }
+          },
+          "required": ["component", "src"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRAPNGView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native APNG (Animated PNG) component in Kuikly DSL. Used for playing APNG animated images. Requires host-side adapter implementation.",
+          "properties": {
+            "component": { "const": "KRAPNGView" },
+            "src": {
+              "type": "string",
+              "description": "APNG animation source file path. Supports URL or local file path."
+            },
+            "repeatCount": {
+              "type": "integer",
+              "description": "Number of times the animation repeats. Default: 0 (infinite loop).",
+              "minimum": 0,
+              "default": 0
+            },
+            "autoPlay": {
+              "type": "boolean",
+              "description": "Whether the animation starts playing automatically. Default: true.",
+              "default": true
+            }
+          },
+          "required": ["component", "src"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRModalView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native modal/overlay component in Kuikly DSL. Displays a floating window on top of the current page. When visible, users cannot interact with the background page. Used for dialogs, alerts, bottom sheets, and popups.",
+          "properties": {
+            "component": { "const": "KRModalView" },
+            "children": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of child component IDs to render inside the modal."
+            }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "KRCanvasView": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/KRCommonProps" },
+        {
+          "type": "object",
+          "description": "A native canvas/drawing component in Kuikly DSL. Provides a 2D drawing surface for custom graphics, charts, and shapes using path operations, fills, strokes, and transformations.",
+          "properties": {
+            "component": { "const": "KRCanvasView" }
+          },
+          "required": ["component"]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  },
+  "functions": {},
+  "$defs": {
+    "KRCommonProps": {
+      "type": "object",
+      "description": "Common layout and style properties shared by all KR-series components. These map directly to Kuikly's flexbox layout engine and CSS-like styling system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this component within the surface."
+        },
+        "width": {
+          "type": "number",
+          "description": "Fixed width in dp/pt.",
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "description": "Fixed height in dp/pt.",
+          "minimum": 0
+        },
+        "minWidth": {
+          "type": "number",
+          "description": "Minimum width in dp/pt.",
+          "minimum": 0
+        },
+        "minHeight": {
+          "type": "number",
+          "description": "Minimum height in dp/pt.",
+          "minimum": 0
+        },
+        "maxWidth": {
+          "type": "number",
+          "description": "Maximum width in dp/pt.",
+          "minimum": 0
+        },
+        "maxHeight": {
+          "type": "number",
+          "description": "Maximum height in dp/pt.",
+          "minimum": 0
+        },
+        "flex": {
+          "type": "number",
+          "description": "Flex grow factor. Determines how much of the remaining space this component should take up.",
+          "minimum": 0
+        },
+        "flexGrow": {
+          "type": "number",
+          "description": "Flex grow factor (more explicit than 'flex'). Defines how much the item should grow relative to siblings.",
+          "minimum": 0
+        },
+        "flexShrink": {
+          "type": "number",
+          "description": "Flex shrink factor. Defines how much the item should shrink when there is not enough space.",
+          "minimum": 0
+        },
+        "flexBasis": {
+          "type": "number",
+          "description": "The initial main size of the flex item before free space is distributed.",
+          "minimum": 0
+        },
+        "alignSelf": {
+          "type": "string",
+          "enum": ["auto", "flex-start", "flex-end", "center", "stretch", "baseline"],
+          "description": "Override the parent's alignItems for this specific component."
+        },
+        "margin": {
+          "type": "number",
+          "description": "Margin on all sides in dp/pt."
+        },
+        "marginTop": {
+          "type": "number",
+          "description": "Top margin in dp/pt."
+        },
+        "marginBottom": {
+          "type": "number",
+          "description": "Bottom margin in dp/pt."
+        },
+        "marginLeft": {
+          "type": "number",
+          "description": "Left margin in dp/pt."
+        },
+        "marginRight": {
+          "type": "number",
+          "description": "Right margin in dp/pt."
+        },
+        "padding": {
+          "type": "number",
+          "description": "Padding on all sides in dp/pt."
+        },
+        "paddingTop": {
+          "type": "number",
+          "description": "Top padding in dp/pt."
+        },
+        "paddingBottom": {
+          "type": "number",
+          "description": "Bottom padding in dp/pt."
+        },
+        "paddingLeft": {
+          "type": "number",
+          "description": "Left padding in dp/pt."
+        },
+        "paddingRight": {
+          "type": "number",
+          "description": "Right padding in dp/pt."
+        },
+        "backgroundColor": {
+          "type": "string",
+          "description": "Background color. Format: CSS hex color code (e.g., '#FFFFFF', '#1565C0').",
+          "pattern": "^#[0-9a-fA-F]{3,8}$"
+        },
+        "backgroundLinearGradient": {
+          "type": "object",
+          "description": "Linear gradient background. Overrides backgroundColor when set.",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": ["to-top", "to-bottom", "to-left", "to-right", "to-top-left", "to-top-right", "to-bottom-left", "to-bottom-right"],
+              "description": "Direction of the gradient."
+            },
+            "colorStops": {
+              "type": "array",
+              "description": "Array of color stops defining the gradient.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "color": { "type": "string", "description": "Color at this stop. Format: CSS hex color code." },
+                  "stop": { "type": "number", "description": "Position of this stop (0.0 to 1.0).", "minimum": 0, "maximum": 1 }
+                },
+                "required": ["color", "stop"]
+              },
+              "minItems": 2
+            }
+          },
+          "required": ["direction", "colorStops"]
+        },
+        "borderRadius": {
+          "type": "number",
+          "description": "Border radius for all corners in dp/pt. Note: setting borderRadius will clip child content that overflows the rounded corners.",
+          "minimum": 0
+        },
+        "borderWidth": {
+          "type": "number",
+          "description": "Border width on all sides in dp/pt.",
+          "minimum": 0
+        },
+        "borderColor": {
+          "type": "string",
+          "description": "Border color on all sides. Format: CSS hex color code.",
+          "pattern": "^#[0-9a-fA-F]{3,8}$"
+        },
+        "borderStyle": {
+          "type": "string",
+          "enum": ["solid", "dotted", "dashed"],
+          "description": "Border line style.",
+          "default": "solid"
+        },
+        "opacity": {
+          "type": "number",
+          "description": "Opacity of the component (0.0 = fully transparent, 1.0 = fully opaque).",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "visibility": {
+          "type": "boolean",
+          "description": "Whether the component is visible. Default: true. When false, the component is hidden but still occupies layout space.",
+          "default": true
+        },
+        "overflow": {
+          "type": "string",
+          "enum": ["visible", "hidden"],
+          "description": "Whether content that overflows the component bounds is visible or clipped. Default in Kuikly is 'visible' (unlike Android native which clips by default).",
+          "default": "visible"
+        },
+        "zIndex": {
+          "type": "integer",
+          "description": "Z-order stacking level. Higher values appear on top of lower values."
+        },
+        "transform": {
+          "type": "object",
+          "description": "Transform operations applied to the component (scale, rotate, translate, skew).",
+          "properties": {
+            "scale": {
+              "type": "object",
+              "description": "Scale transform.",
+              "properties": {
+                "x": { "type": "number", "description": "X-axis scale factor.", "minimum": 0 },
+                "y": { "type": "number", "description": "Y-axis scale factor.", "minimum": 0 }
+              }
+            },
+            "rotate": {
+              "type": "object",
+              "description": "Rotation transform.",
+              "properties": {
+                "angle": { "type": "number", "description": "Z-axis rotation angle in degrees [-360, 360]." },
+                "xAngle": { "type": "number", "description": "X-axis 3D rotation angle in degrees." },
+                "yAngle": { "type": "number", "description": "Y-axis 3D rotation angle in degrees." }
+              }
+            },
+            "translate": {
+              "type": "object",
+              "description": "Translation transform.",
+              "properties": {
+                "percentageX": { "type": "number", "description": "X translation as percentage of own width." },
+                "percentageY": { "type": "number", "description": "Y translation as percentage of own height." },
+                "offsetX": { "type": "number", "description": "Additional X offset in dp." },
+                "offsetY": { "type": "number", "description": "Additional Y offset in dp." }
+              }
+            },
+            "skew": {
+              "type": "object",
+              "description": "Skew transform.",
+              "properties": {
+                "horizontalAngle": { "type": "number", "description": "Horizontal skew angle in degrees (-90, 90)." },
+                "verticalAngle": { "type": "number", "description": "Vertical skew angle in degrees (-90, 90)." }
+              }
+            },
+            "anchor": {
+              "type": "object",
+              "description": "Transform origin point. Default: (0.5, 0.5) = center.",
+              "properties": {
+                "x": { "type": "number", "description": "X anchor as percentage of width [0, 1].", "minimum": 0, "maximum": 1 },
+                "y": { "type": "number", "description": "Y anchor as percentage of height [0, 1].", "minimum": 0, "maximum": 1 }
+              }
+            }
+          }
+        },
+        "positionType": {
+          "type": "string",
+          "enum": ["relative", "absolute"],
+          "description": "Position type. 'absolute' positions the component relative to its parent, removing it from normal flow.",
+          "default": "relative"
+        },
+        "top": {
+          "type": "number",
+          "description": "Top offset. In 'absolute' mode: distance from parent's top edge. In 'relative' mode: equivalent to marginTop."
+        },
+        "left": {
+          "type": "number",
+          "description": "Left offset. In 'absolute' mode: distance from parent's left edge. In 'relative' mode: equivalent to marginLeft."
+        },
+        "bottom": {
+          "type": "number",
+          "description": "Bottom offset. In 'absolute' mode: distance from parent's bottom edge. In 'relative' mode: equivalent to marginBottom."
+        },
+        "right": {
+          "type": "number",
+          "description": "Right offset. In 'absolute' mode: distance from parent's right edge. In 'relative' mode: equivalent to marginRight."
+        },
+        "touchEnable": {
+          "type": ["integer", "boolean"],
+          "description": "Whether the component is interactive/clickable. Set to 1 or true to enable click handling via the action system.",
+          "enum": [0, 1, true, false]
+        },
+        "boxShadow": {
+          "type": "string",
+          "description": "Box shadow in CSS-like format. Parameters: offsetX, offsetY, shadowRadius, shadowColor (e.g., '0 2px 4px rgba(0,0,0,0.1)')."
+        },
+        "accessibility": {
+          "type": "string",
+          "description": "Accessibility label. When the app is in TalkBack/VoiceOver mode, this text is read aloud when the element gains focus."
+        },
+        "action": {
+          "type": "object",
+          "description": "Action to trigger when the component is tapped (requires touchEnable=1 or action presence implies touchEnable). Supports functionCall and event types.",
+          "properties": {
+            "functionCall": {
+              "type": "object",
+              "description": "Invoke a function call on tap.",
+              "properties": {
+                "call": { "type": "string", "description": "The function name to call." },
+                "args": { "type": "object", "description": "Arguments to pass to the function." }
+              },
+              "required": ["call"]
+            },
+            "event": {
+              "type": "object",
+              "description": "Emit an event on tap.",
+              "properties": {
+                "name": { "type": "string", "description": "The event name." },
+                "context": { "type": "object", "description": "Additional context data for the event." }
+              },
+              "required": ["name"]
+            }
+          }
+        }
+      },
+      "required": ["id"]
+    },
+    "anyComponent": {
+      "oneOf": [
+        { "$ref": "#/components/KRView" },
+        { "$ref": "#/components/KRRichTextView" },
+        { "$ref": "#/components/KRImageView" },
+        { "$ref": "#/components/KRScrollView" },
+        { "$ref": "#/components/KRListView" },
+        { "$ref": "#/components/KRBlurView" },
+        { "$ref": "#/components/KRActivityIndicatorView" },
+        { "$ref": "#/components/KRHoverView" },
+        { "$ref": "#/components/KRTextFieldView" },
+        { "$ref": "#/components/KRTextAreaView" },
+        { "$ref": "#/components/KRVideoView" },
+        { "$ref": "#/components/KRAudioView" },
+        { "$ref": "#/components/KRPAGView" },
+        { "$ref": "#/components/KRAPNGView" },
+        { "$ref": "#/components/KRModalView" },
+        { "$ref": "#/components/KRCanvasView" }
+      ],
+      "discriminator": {
+        "propertyName": "component"
+      }
+    }
+  },
+  "extends": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+}

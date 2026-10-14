@@ -1,0 +1,37 @@
+{
+  "name": "绝对路径 · DynamicString",
+  "description": "Text.text 通过 {path:\"/user/name\"} 绑定字符串。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ap-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ap-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "greeting"] },
+          { "id": "title", "component": "Text", "text": "绑定 /user/name → Text", "variant": "caption" },
+          {
+            "id": "greeting",
+            "component": "Text",
+            "text": { "path": "/user/name" },
+            "variant": "h4"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ap-1",
+        "value": { "user": { "name": "Alice" } }
+      }
+    }
+  ]
+}

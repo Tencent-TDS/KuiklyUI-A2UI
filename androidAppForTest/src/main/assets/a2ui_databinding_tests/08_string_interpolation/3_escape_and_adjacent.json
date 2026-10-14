@@ -1,0 +1,69 @@
+{
+  "name": "formatString · 转义与字面 ${",
+  "description": "使用 \\${ 表示字面量 ${，同时验证连续多个 ${} 不干扰。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-si-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-si-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "escaped", "adjacent"] },
+          {
+            "id": "title",
+            "component": "Text",
+            "variant": "caption",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "\\${var} 转义示例 · 当前用户：${/user/name}"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "escaped",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "文档中写法：\\${username} → 实际值 ${/user/name}"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "adjacent",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "${/left}${/mid}${/right}（三段无空格拼接）"
+              },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-si-3",
+        "value": {
+          "user": { "name": "Bob" },
+          "left": "AAA",
+          "mid": "BBB",
+          "right": "CCC"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "Action.event.context · 模板中携带迭代项",
+  "description": "ChildList 模板中每行的 Button 的 context 使用相对路径，把当前项 id/label 一起回传。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ac-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ac-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "list"] },
+          { "id": "title", "component": "Text", "text": "点击任意行 → context 中携带该行 id/label", "variant": "caption" },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "row-tpl", "path": "/rows" }
+          },
+          {
+            "id": "row-tpl",
+            "component": "Row",
+            "children": ["row-label", "row-btn", "row-btn-lbl"]
+          },
+          { "id": "row-label", "component": "Text", "text": { "path": "label" } },
+          {
+            "id": "row-btn",
+            "component": "Button",
+            "child": "row-btn-lbl",
+            "variant": "secondary",
+            "action": {
+              "event": {
+                "name": "row_selected",
+                "context": {
+                  "id": { "path": "id" },
+                  "label": { "path": "label" }
+                }
+              }
+            }
+          },
+          { "id": "row-btn-lbl", "component": "Text", "text": "选择" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ac-2",
+        "value": {
+          "rows": [
+            { "id": "r-1", "label": "选项一" },
+            { "id": "r-2", "label": "选项二" },
+            { "id": "r-3", "label": "选项三" }
+          ]
+        }
+      }
+    }
+  ]
+}

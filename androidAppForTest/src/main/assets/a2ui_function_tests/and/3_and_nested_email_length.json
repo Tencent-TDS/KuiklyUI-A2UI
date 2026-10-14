@@ -1,0 +1,100 @@
+{
+  "name": "and · 嵌套 email + length",
+  "description": "邮箱格式正确 & 长度 ≤ 30 才可提交。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-and-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-and-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "邮箱",
+            "value": {
+              "path": "/f/email"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      {
+                        "call": "email",
+                        "args": {
+                          "value": {
+                            "path": "/f/email"
+                          }
+                        },
+                        "returnType": "boolean"
+                      },
+                      {
+                        "call": "length",
+                        "args": {
+                          "value": {
+                            "path": "/f/email"
+                          },
+                          "max": 30
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "邮箱格式必须正确且不超过 30 字符"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "订阅"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-and-3",
+        "value": {
+          "f": {
+            "email": ""
+          }
+        }
+      }
+    }
+  ]
+}

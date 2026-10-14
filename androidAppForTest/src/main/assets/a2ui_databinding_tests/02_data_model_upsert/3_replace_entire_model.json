@@ -1,0 +1,61 @@
+{
+  "name": "updateDataModel · 整体替换（path 缺省）",
+  "description": "省略 path 直接下发 value，等价于替换整个 Data Model。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-du-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-du-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "who", "extra"] },
+          { "id": "title", "component": "Text", "text": "整体替换 Data Model", "variant": "caption" },
+          {
+            "id": "who",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "当前展示：${/current/label}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "extra",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "备注：${/current/note}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-du-3",
+        "value": {
+          "current": { "label": "第 1 版", "note": "初始版本" },
+          "extraField": "legacy"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-du-3",
+        "value": {
+          "current": { "label": "第 2 版", "note": "整体替换后 extraField 被清除" }
+        }
+      }
+    }
+  ]
+}

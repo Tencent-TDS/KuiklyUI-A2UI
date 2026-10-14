@@ -1,0 +1,53 @@
+{
+  "name": "AudioPlayer - in Column",
+  "description": "AudioPlayer combined with title and subtitle in a Column",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-audio-column",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-audio-column",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "subtitle",
+              "player"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Now Playing",
+            "variant": "caption"
+          },
+          {
+            "id": "subtitle",
+            "component": "Text",
+            "text": "SoundHelix Song 1",
+            "variant": "h5"
+          },
+          {
+            "id": "player",
+            "component": "AudioPlayer",
+            "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            "description": "SoundHelix Song 1"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+require_relative '../scripts/lib/kuikly_path'
+kuikly_root = A2UI::KuiklyPath.resolve!(__dir__)
+
+platform :ios, '14.0'
+
+target 'A2UIDemoApp' do
+  use_modular_headers!
+
+  # A2UI Kotlin/Native framework - auto-generated podspec by cocoapods plugin
+  # This triggers Gradle syncFramework on each Xcode build (debug/release follows Xcode config)
+  pod 'a2ui', :path => '../a2ui'
+
+  # Kuikly iOS Render (core-render-ios) — resolved from the external
+  # KuiklyUI checkout (single source of truth: `kuikly.projectDir`).
+  pod 'OpenKuiklyIOSRender', :path => kuikly_root
+
+  # A2UI iOS Render - local podspec
+  pod 'OpenA2UIIOSRender', :path => '../a2ui-render-ios/'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
+  end
+end

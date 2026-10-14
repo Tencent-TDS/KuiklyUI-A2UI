@@ -1,0 +1,77 @@
+{
+  "name": "混合作用域 · 嵌套 ChildList",
+  "description": "外层 Column 遍历 /sections，内层 Column 遍历相对路径 items，模板作用域随层级递进。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ms-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ms-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "outer" },
+          {
+            "id": "outer",
+            "component": "Column",
+            "children": { "componentId": "section-tpl", "path": "/sections" }
+          },
+          {
+            "id": "section-tpl",
+            "component": "Column",
+            "children": ["sec-title", "sec-items"]
+          },
+          {
+            "id": "sec-title",
+            "component": "Text",
+            "text": { "path": "title" },
+            "variant": "h5"
+          },
+          {
+            "id": "sec-items",
+            "component": "Column",
+            "children": { "componentId": "item-tpl", "path": "items" }
+          },
+          {
+            "id": "item-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "  • ${label}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ms-2",
+        "value": {
+          "sections": [
+            {
+              "title": "水果",
+              "items": [
+                { "label": "苹果" },
+                { "label": "香蕉" },
+                { "label": "橙子" }
+              ]
+            },
+            {
+              "title": "蔬菜",
+              "items": [
+                { "label": "西红柿" },
+                { "label": "黄瓜" }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

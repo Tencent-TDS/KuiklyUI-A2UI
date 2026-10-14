@@ -1,0 +1,47 @@
+{
+  "name": "Button - action.functionCall",
+  "description": "Button action invoking a local client-side function",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-btn-function-call",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-btn-function-call",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "btn"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "lbl",
+            "action": {
+              "functionCall": {
+                "call": "logEvent",
+                "args": {
+                  "message": "Hello from local function!"
+                },
+                "returnType": "void"
+              }
+            },
+            "variant": "default"
+          },
+          {
+            "id": "lbl",
+            "component": "Text",
+            "text": "Call Local Function",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

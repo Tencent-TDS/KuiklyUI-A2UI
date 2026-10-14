@@ -1,0 +1,116 @@
+{
+  "name": "progressive rendering · formatString 中 undefined 转空串",
+  "description": "验证规范原文明文条款：'formatString type conversion —— Null/Undefined: An empty string \"\"'（a2ui_protocol.md §formatString type conversion）。当 formatString 插值中路径解析为 undefined 时，该段展开必须替换为空字符串，而非 'undefined' / 'null' / 路径字符串本身。用例覆盖 4 种混合模式：(1) 缺失路径夹在已存在路径之间；(2) 首尾都缺失；(3) 连续两个缺失路径相邻；(4) 缺失路径出现在 formatString 的括号函数参数里。dataModel 只提供 /a=foo /b=bar，其它路径故意留空。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-pr-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-pr-5",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "label_mid", "t_mid",
+              "label_edge", "t_edge",
+              "label_adj", "t_adj",
+              "label_fn", "t_fn",
+              "footer"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "formatString: undefined 段应替换为空串",
+            "variant": "h5"
+          },
+          {
+            "id": "label_mid",
+            "component": "Text",
+            "text": "① 缺失夹在中间：'[${/a}][${/gap}][${/b}]'",
+            "variant": "caption"
+          },
+          {
+            "id": "t_mid",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "[${/a}][${/gap}][${/b}]" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "label_edge",
+            "component": "Text",
+            "text": "② 首尾都缺失：'[${/lead}]-body-[${/trail}]'",
+            "variant": "caption"
+          },
+          {
+            "id": "t_edge",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "[${/lead}]-body-[${/trail}]" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "label_adj",
+            "component": "Text",
+            "text": "③ 相邻缺失：'x${/m1}${/m2}y'",
+            "variant": "caption"
+          },
+          {
+            "id": "t_adj",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "x${/m1}${/m2}y" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "label_fn",
+            "component": "Text",
+            "text": "④ 函数参数里的缺失：'up=${formatString(value:\"pre-${/none}-post\")}'",
+            "variant": "caption"
+          },
+          {
+            "id": "t_fn",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "up=${formatString(value:'pre-${/none}-post')}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "footer",
+            "component": "Text",
+            "text": "期望：① '[foo][][bar]'；② '[]-body-[]'；③ 'xy'；④ 'up=pre--post'。任何 undefined 字面量出现即失败。",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-pr-5",
+        "value": {
+          "a": "foo",
+          "b": "bar"
+        }
+      }
+    }
+  ]
+}

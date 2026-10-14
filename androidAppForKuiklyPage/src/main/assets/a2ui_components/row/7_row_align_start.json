@@ -1,0 +1,55 @@
+{
+  "name": "Row - align=start",
+  "description": "Row align=start (cross-axis): items align to top",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-row-align-start",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-row-align-start",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "row"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "a",
+              "b",
+              "c"
+            ],
+            "align": "start",
+            "justify": "spaceEvenly"
+          },
+          {
+            "id": "a",
+            "component": "Text",
+            "text": "Tall\nText\nA",
+            "variant": "h5"
+          },
+          {
+            "id": "b",
+            "component": "Text",
+            "text": "B",
+            "variant": "body"
+          },
+          {
+            "id": "c",
+            "component": "Text",
+            "text": "C",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

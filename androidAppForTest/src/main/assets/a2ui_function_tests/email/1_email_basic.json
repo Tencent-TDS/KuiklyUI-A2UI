@@ -1,0 +1,82 @@
+{
+  "name": "email · 基础校验",
+  "description": "TextField 输入邮箱，Button 用 email 校验。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-email-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-email-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "邮箱",
+            "value": {
+              "path": "/form/email"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "email",
+                  "args": {
+                    "value": {
+                      "path": "/form/email"
+                    }
+                  }
+                },
+                "message": "邮箱格式不正确"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "发送"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-email-1",
+        "value": {
+          "form": {
+            "email": ""
+          }
+        }
+      }
+    }
+  ]
+}

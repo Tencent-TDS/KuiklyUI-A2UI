@@ -1,0 +1,110 @@
+{
+  "name": "and · 三个条件全为真",
+  "description": "三个 CheckBox 必须全部勾选（同意条款）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-and-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-and-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "c1",
+              "c2",
+              "c3",
+              "btn"
+            ]
+          },
+          {
+            "id": "c1",
+            "component": "CheckBox",
+            "label": "同意用户协议",
+            "value": {
+              "path": "/agree/tos"
+            }
+          },
+          {
+            "id": "c2",
+            "component": "CheckBox",
+            "label": "同意隐私政策",
+            "value": {
+              "path": "/agree/privacy"
+            }
+          },
+          {
+            "id": "c3",
+            "component": "CheckBox",
+            "label": "同意接收邮件",
+            "value": {
+              "path": "/agree/marketing"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      {
+                        "path": "/agree/tos"
+                      },
+                      {
+                        "path": "/agree/privacy"
+                      },
+                      {
+                        "path": "/agree/marketing"
+                      }
+                    ]
+                  }
+                },
+                "message": "必须全部勾选"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "开始使用"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-and-2",
+        "value": {
+          "agree": {
+            "tos": false,
+            "privacy": false,
+            "marketing": false
+          }
+        }
+      }
+    }
+  ]
+}

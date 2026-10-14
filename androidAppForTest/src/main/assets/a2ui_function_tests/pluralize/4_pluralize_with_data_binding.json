@@ -1,0 +1,63 @@
+{
+  "name": "pluralize · 数据绑定 + 拼接",
+  "description": "购物车数量随 /cart/count 变化时展示 item / items。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-pl-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-pl-4",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "hint"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "购物车：${/cart/count} ${pluralize(value:${/cart/count}, one:'item', other:'items')}"
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "改变 data model /cart/count 观察复数变化",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-pl-4",
+        "value": {
+          "cart": {
+            "count": 3
+          }
+        }
+      }
+    }
+  ]
+}

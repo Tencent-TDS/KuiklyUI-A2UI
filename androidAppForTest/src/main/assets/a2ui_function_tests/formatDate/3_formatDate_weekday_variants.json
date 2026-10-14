@@ -1,0 +1,73 @@
+{
+  "name": "formatDate · 星期变体（E / EEEE）",
+  "description": "缩写与完整星期。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fd-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fd-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "t2"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at"
+                },
+                "format": "E"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "formatDate",
+              "args": {
+                "value": {
+                  "path": "/at"
+                },
+                "format": "EEEE, d MMMM"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fd-3",
+        "value": {
+          "at": "2025-12-15T17:30:00Z"
+        }
+      }
+    }
+  ]
+}

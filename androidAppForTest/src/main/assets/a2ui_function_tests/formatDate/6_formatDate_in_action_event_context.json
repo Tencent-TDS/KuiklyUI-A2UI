@@ -1,0 +1,100 @@
+{
+  "name": "formatDate · 用于 Action.event.context",
+  "description": "Button 点击时派发 event，context 内嵌 formatDate 与路径引用。规范 protocol.md §Action 与 §Contact form example：context 是一个 map，值可以是 DynamicValue（含 FunctionCall）。点击后请查看日志中的 action params，可看到 clientTime 已被格式化。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fd-6",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fd-6",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "hint",
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Action.event.context 内嵌 FunctionCall",
+            "variant": "h5"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "点击提交后，服务器/宿主收到的 event 会包含：\n · formId：字面量\n · clientTime：formatDate(/nowIso, 'E MMM d, YYYY h:mm a') 结果\n · isSubscribed：路径 /form/subscribe 的值",
+            "variant": "caption"
+          },
+          {
+            "id": "input",
+            "component": "CheckBox",
+            "label": "订阅邮件通知",
+            "value": {
+              "path": "/form/subscribe"
+            }
+          },
+          {
+            "id": "btn-label",
+            "component": "Text",
+            "text": "提交表单"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn-label",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submitContactForm",
+                "context": {
+                  "formId": "contact_form_1",
+                  "clientTime": {
+                    "call": "formatDate",
+                    "args": {
+                      "value": {
+                        "path": "/nowIso"
+                      },
+                      "format": "E MMM d, YYYY h:mm a"
+                    },
+                    "returnType": "string"
+                  },
+                  "isSubscribed": {
+                    "path": "/form/subscribe"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fd-6",
+        "value": {
+          "nowIso": "2026-02-02T15:17:00Z",
+          "form": {
+            "subscribe": true
+          }
+        }
+      }
+    }
+  ]
+}

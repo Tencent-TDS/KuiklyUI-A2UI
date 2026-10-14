@@ -1,0 +1,28 @@
+require_relative '../scripts/lib/kuikly_path'
+kuikly_root = A2UI::KuiklyPath.resolve!(__dir__)
+
+platform :ios, '14.0'
+
+target 'A2UIDemoApp' do
+  use_modular_headers!
+
+  # A2UIDemo.framework already embeds every Kotlin symbol from `:a2ui`
+  # (see demo/build.2.1.21.gradle.kts), so a single Kotlin/Native framework
+  # is enough for BothPages — it serves both the `A2UISurfaceDemo` Kuikly
+  # page (hosted by `KuiklyPageCardViewController`) and the standalone
+  # native `A2UISurfaceView` used by native-page demos. Linking `pod 'a2ui'`
+  # additionally would produce duplicate stdlib-cache symbols.
+  # The render pod resolves `A2UICoreEntry` at runtime via `NSClassFromString`.
+  pod 'a2ui_demo', :path => '../demo'
+
+  pod 'OpenKuiklyIOSRender', :path => kuikly_root
+  pod 'OpenA2UIIOSRender', :path => '../a2ui-render-ios/'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
+  end
+end

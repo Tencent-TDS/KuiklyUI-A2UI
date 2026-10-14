@@ -1,0 +1,74 @@
+{
+  "name": "formatString · 多路径拼接",
+  "description": "拼接名字、消息数、通知数。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "t2"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "${/user/first} ${/user/last}"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "你有 ${/stats/msgs} 条消息，${/stats/notifs} 条通知"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-2",
+        "value": {
+          "user": {
+            "first": "Alex",
+            "last": "Chen"
+          },
+          "stats": {
+            "msgs": 5,
+            "notifs": 12
+          }
+        }
+      }
+    }
+  ]
+}

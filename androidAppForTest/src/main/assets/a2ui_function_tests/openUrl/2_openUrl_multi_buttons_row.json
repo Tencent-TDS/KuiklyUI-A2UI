@@ -1,0 +1,107 @@
+{
+  "name": "openUrl · Row 多按钮",
+  "description": "三个按钮打开不同链接。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-url-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-url-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "row"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "常用链接",
+            "variant": "h5"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "b1",
+              "b2",
+              "b3"
+            ],
+            "justify": "spaceAround"
+          },
+          {
+            "id": "b1",
+            "component": "Button",
+            "child": "b1_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "https://github.com/"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "b1_lbl",
+            "component": "Text",
+            "text": "GitHub"
+          },
+          {
+            "id": "b2",
+            "component": "Button",
+            "child": "b2_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "https://a2ui.org/"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "b2_lbl",
+            "component": "Text",
+            "text": "官网"
+          },
+          {
+            "id": "b3",
+            "component": "Button",
+            "child": "b3_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": {
+                  "url": "https://a2ui.org/specification/v0_9/"
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          {
+            "id": "b3_lbl",
+            "component": "Text",
+            "text": "文档"
+          }
+        ]
+      }
+    }
+  ]
+}

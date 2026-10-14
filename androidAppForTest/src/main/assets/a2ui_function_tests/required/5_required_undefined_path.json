@@ -1,0 +1,193 @@
+{
+  "name": "required · undefined 路径 & 三种空值对照",
+  "description": "并列展示三种\"空\"场景：/form/missing 数据模型不存在（undefined）、/form/nullField 显式为 null、/form/emptyStr 为空串。三个 Button 的 required 校验均失败（禁用），演示 required 对三者行为一致。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-required-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-required-5",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "hint",
+              "row1",
+              "row2",
+              "row3"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "required 对 undefined / null / 空串 的判定",
+            "variant": "h5"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "三种空场景 required 均返回 false，按钮全部禁用。",
+            "variant": "caption"
+          },
+          {
+            "id": "row1",
+            "component": "Row",
+            "children": [
+              "label1",
+              "btn1"
+            ],
+            "justify": "spaceBetween"
+          },
+          {
+            "id": "label1",
+            "component": "Text",
+            "text": "1. undefined（数据模型无该 key）",
+            "variant": "body"
+          },
+          {
+            "id": "btn1",
+            "component": "Button",
+            "child": "btn1_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit1"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "required",
+                  "args": {
+                    "value": {
+                      "path": "/form/missing"
+                    }
+                  }
+                },
+                "message": "path 未定义 → required 失败"
+              }
+            ]
+          },
+          {
+            "id": "row2",
+            "component": "Row",
+            "children": [
+              "label2",
+              "btn2"
+            ],
+            "justify": "spaceBetween"
+          },
+          {
+            "id": "label2",
+            "component": "Text",
+            "text": "2. null（显式赋值为 null）",
+            "variant": "body"
+          },
+          {
+            "id": "btn2",
+            "component": "Button",
+            "child": "btn2_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit2"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "required",
+                  "args": {
+                    "value": {
+                      "path": "/form/nullField"
+                    }
+                  }
+                },
+                "message": "值为 null → required 失败"
+              }
+            ]
+          },
+          {
+            "id": "row3",
+            "component": "Row",
+            "children": [
+              "label3",
+              "btn3"
+            ],
+            "justify": "spaceBetween"
+          },
+          {
+            "id": "label3",
+            "component": "Text",
+            "text": "3. 空串 \"\"",
+            "variant": "body"
+          },
+          {
+            "id": "btn3",
+            "component": "Button",
+            "child": "btn3_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit3"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "required",
+                  "args": {
+                    "value": {
+                      "path": "/form/emptyStr"
+                    }
+                  }
+                },
+                "message": "值为空串 → required 失败"
+              }
+            ]
+          },
+          {
+            "id": "btn1_lbl",
+            "component": "Text",
+            "text": "提交"
+          },
+          {
+            "id": "btn2_lbl",
+            "component": "Text",
+            "text": "提交"
+          },
+          {
+            "id": "btn3_lbl",
+            "component": "Text",
+            "text": "提交"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-required-5",
+        "value": {
+          "form": {
+            "nullField": null,
+            "emptyStr": ""
+          }
+        }
+      }
+    }
+  ]
+}

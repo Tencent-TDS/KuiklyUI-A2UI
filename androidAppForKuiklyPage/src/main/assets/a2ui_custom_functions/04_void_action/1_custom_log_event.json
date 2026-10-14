@@ -1,0 +1,49 @@
+{
+  "name": "自定义 Void 函数作为 Action",
+  "description": "自定义函数 logEvent（void|sync）作为 Button 的 action.functionCall。点击按钮触发 logEvent，Demo 注册实现为打印日志。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "cf-void-1",
+"catalogId": "custom_functions_catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "cf-void-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "desc", "btn"] },
+          { "id": "title", "component": "Text", "text": "logEvent(event, data) → Void", "variant": "caption" },
+          { "id": "desc", "component": "Text", "text": "点击按钮触发自定义 void 函数 logEvent", "variant": "body" },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btnText",
+            "variant": "primary",
+            "action": {
+              "functionCall": {
+                "call": "logEvent",
+                "args": {
+                  "event": "button_click",
+                  "data": { "path": "/eventData" }
+                },
+                "returnType": "void"
+              }
+            }
+          },
+          { "id": "btnText", "component": "Text", "text": "触发 logEvent", "variant": "body" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "cf-void-1",
+        "value": { "eventData": "custom_function_demo" }
+      }
+    }
+  ]
+}

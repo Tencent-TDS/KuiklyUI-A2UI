@@ -1,0 +1,43 @@
+{
+  "name": "自定义函数格式化电话号码",
+  "description": "自定义函数 formatPhone 接收 phone 参数，返回格式化后的电话号码字符串（如 138-0000-1234）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "cf-str-2",
+"catalogId": "custom_functions_catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "cf-str-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "phone"] },
+          { "id": "title", "component": "Text", "text": "formatPhone(phone) → String", "variant": "caption" },
+          {
+            "id": "phone",
+            "component": "Text",
+            "text": {
+              "call": "formatPhone",
+              "args": {
+                "phone": { "path": "/rawPhone" }
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "cf-str-2",
+        "value": { "rawPhone": "13800001234" }
+      }
+    }
+  ]
+}

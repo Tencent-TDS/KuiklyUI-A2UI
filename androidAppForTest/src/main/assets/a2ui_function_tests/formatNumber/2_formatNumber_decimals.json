@@ -1,0 +1,57 @@
+{
+  "name": "formatNumber · 指定 decimals=3",
+  "description": "π 保留 3 位小数。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fn-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fn-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatNumber",
+              "args": {
+                "value": {
+                  "path": "/pi"
+                },
+                "decimals": 3
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fn-2",
+        "value": {
+          "pi": 3.14159265358
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "name": "Divider - multiple sections",
+  "description": "Multiple Dividers separating Column sections",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-divider-multi",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-divider-multi",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "s1",
+              "d1",
+              "s2",
+              "d2",
+              "s3"
+            ]
+          },
+          {
+            "id": "s1",
+            "component": "Text",
+            "text": "Section 1",
+            "variant": "h5"
+          },
+          {
+            "id": "d1",
+            "component": "Divider"
+          },
+          {
+            "id": "s2",
+            "component": "Text",
+            "text": "Section 2",
+            "variant": "h5"
+          },
+          {
+            "id": "d2",
+            "component": "Divider"
+          },
+          {
+            "id": "s3",
+            "component": "Text",
+            "text": "Section 3",
+            "variant": "h5"
+          }
+        ]
+      }
+    }
+  ]
+}

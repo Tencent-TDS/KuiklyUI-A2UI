@@ -1,0 +1,73 @@
+{
+  "name": "渐进渲染 · 未收到 updateDataModel（缺数据降级）",
+  "description": "只发 createSurface + updateComponents（组件里含多个 {path:...} 引用），不发任何 updateDataModel。规范要求：路径解析为 undefined 时应优雅降级（Text 显示空串、Slider/CheckBox 使用默认值、formatString 中断插值仍生成合法字符串）。核心验证点：UI 应正常渲染卡片和输入控件，不 crash、不显示 'undefined' 字面量。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-pr-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-pr-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "hint", "t_missing", "t_interp", "tf", "sl", "cb"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "渐进渲染：未提供 dataModel",
+            "variant": "h5"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "以下所有绑定路径都指向未定义的数据；渲染层应优雅降级，不显示 'undefined' 字面量、不 crash。",
+            "variant": "caption"
+          },
+          {
+            "id": "t_missing",
+            "component": "Text",
+            "text": { "path": "/user/name" }
+          },
+          {
+            "id": "t_interp",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "Hello ${/user/name}, score=${/user/score}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "备注（path 未定义）",
+            "value": { "path": "/form/note" }
+          },
+          {
+            "id": "sl",
+            "component": "Slider",
+            "label": "分值（path 未定义）",
+            "min": 0,
+            "max": 10,
+            "value": { "path": "/form/score" }
+          },
+          {
+            "id": "cb",
+            "component": "CheckBox",
+            "label": "开关（path 未定义）",
+            "value": { "path": "/form/agree" }
+          }
+        ]
+      }
+    }
+  ]
+}

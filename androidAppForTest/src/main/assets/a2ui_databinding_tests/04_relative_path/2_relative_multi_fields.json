@@ -1,0 +1,51 @@
+{
+  "name": "相对路径 · 多字段 formatString",
+  "description": "同一模板节点通过 formatString 引用多个相对字段 ${firstName} / ${lastName} / ${age}。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-rp-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-rp-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "list"] },
+          { "id": "title", "component": "Text", "text": "参会人员", "variant": "h5" },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "person-tpl", "path": "/people" }
+          },
+          {
+            "id": "person-tpl",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "${firstName} ${lastName}（${age} 岁）" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-rp-2",
+        "value": {
+          "people": [
+            { "firstName": "小明", "lastName": "王", "age": 28 },
+            { "firstName": "小红", "lastName": "李", "age": 32 },
+            { "firstName": "小刚", "lastName": "赵", "age": 24 }
+          ]
+        }
+      }
+    }
+  ]
+}

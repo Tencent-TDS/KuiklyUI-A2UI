@@ -1,0 +1,83 @@
+{
+  "name": "regex · HTTP(S) URL",
+  "description": "pattern=^https?://.+ 校验 URL 输入。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-regex-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-regex-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "网址",
+            "value": {
+              "path": "/data/url"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "regex",
+                  "args": {
+                    "value": {
+                      "path": "/data/url"
+                    },
+                    "pattern": "^https?://.+"
+                  }
+                },
+                "message": "必须以 http:// 或 https:// 开头"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "打开"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-regex-2",
+        "value": {
+          "data": {
+            "url": ""
+          }
+        }
+      }
+    }
+  ]
+}

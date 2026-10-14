@@ -1,0 +1,120 @@
+{
+  "name": "not · and(not(regex), not(length)) 三层复合",
+  "description": "用户名规则：不能含数字（not(regex('.*\\d.*'))）且长度不超过 20（not(length(min=21))）。演示 not 与 regex/length 组合。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-not-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-not-5",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "hint",
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "用户名不能含数字，长度不超过 20 字符",
+            "variant": "caption"
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "用户名",
+            "value": {
+              "path": "/f/name"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "and",
+                  "args": {
+                    "values": [
+                      {
+                        "call": "not",
+                        "args": {
+                          "value": {
+                            "call": "regex",
+                            "args": {
+                              "value": {
+                                "path": "/f/name"
+                              },
+                              "pattern": ".*\\d.*"
+                            },
+                            "returnType": "boolean"
+                          }
+                        },
+                        "returnType": "boolean"
+                      },
+                      {
+                        "call": "not",
+                        "args": {
+                          "value": {
+                            "call": "length",
+                            "args": {
+                              "value": {
+                                "path": "/f/name"
+                              },
+                              "min": 21
+                            },
+                            "returnType": "boolean"
+                          }
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "用户名不合法：不能含数字，且长度需 ≤ 20"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "提交"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-not-5",
+        "value": {
+          "f": {
+            "name": ""
+          }
+        }
+      }
+    }
+  ]
+}

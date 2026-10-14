@@ -1,0 +1,48 @@
+{
+  "name": "Text - variant body / default",
+  "description": "Text component with variant=body (16dp, default) and a Text without variant property (should fall back to body)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-body",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-body",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "main-column"
+          },
+          {
+            "id": "main-column",
+            "component": "Column",
+            "children": ["t-body", "t-default", "t-long"]
+          },
+          {
+            "id": "t-body",
+            "component": "Text",
+            "text": "This is body text with variant=\"body\" (16dp).",
+            "variant": "body"
+          },
+          {
+            "id": "t-default",
+            "component": "Text",
+            "text": "This is text WITHOUT variant set (should default to body)."
+          },
+          {
+            "id": "t-long",
+            "component": "Text",
+            "text": "Long body text to verify wrapping. The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

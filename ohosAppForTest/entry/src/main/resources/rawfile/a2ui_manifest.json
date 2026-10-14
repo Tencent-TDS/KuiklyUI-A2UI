@@ -1,0 +1,240 @@
+{
+  "examples": [
+    "01_flight-status.json",
+    "02_email-compose.json",
+    "03_calendar-day.json",
+    "04_weather-current.json",
+    "05_product-card.json",
+    "06_music-player.json",
+    "07_task-card.json",
+    "08_user-profile.json",
+    "09_login-form.json",
+    "10_notification-permission.json",
+    "11_purchase-complete.json",
+    "12_chat-message.json",
+    "13_coffee-order.json",
+    "14_sports-player.json",
+    "15_account-balance.json",
+    "16_workout-summary.json",
+    "17_event-detail.json",
+    "18_track-list.json",
+    "19_software-purchase.json",
+    "20_restaurant-card.json",
+    "21_shipping-status.json",
+    "22_credit-card.json",
+    "23_step-counter.json",
+    "24_recipe-card.json",
+    "25_contact-card.json",
+    "26_podcast-episode.json",
+    "27_stats-card.json",
+    "28_countdown-timer.json",
+    "29_movie-card.json",
+    "30_live-invitation-builder.json",
+    "31_incremental-dashboard.json",
+    "32_advanced-form-validator.json",
+    "33_financial-data-grid.json",
+    "34_child-list-template.json",
+    "35_markdown-text.json",
+    "36_modal.json"
+  ],
+  "function_tests": {
+    "and": [
+      "1_and_two_required.json",
+      "2_and_three_values.json",
+      "3_and_nested_email_length.json",
+      "4_and_or_literal_bool_values.json",
+      "5_and_of_two_ors.json"
+    ],
+    "email": [
+      "1_email_basic.json",
+      "2_email_with_required.json",
+      "3_email_prefilled_valid.json"
+    ],
+    "formatCurrency": [
+      "1_formatCurrency_usd.json",
+      "2_formatCurrency_eur_and_jpy.json",
+      "3_formatCurrency_cny_decimals.json",
+      "4_formatCurrency_no_grouping.json",
+      "5_formatCurrency_dynamic_currency.json"
+    ],
+    "formatDate": [
+      "1_formatDate_long_month_day_year.json",
+      "2_formatDate_iso_dt.json",
+      "3_formatDate_weekday_variants.json",
+      "4_formatDate_am_pm.json",
+      "5_formatDate_multi_locales_pattern.json",
+      "6_formatDate_in_action_event_context.json",
+      "7_formatDate_seconds_and_timezone.json"
+    ],
+    "formatNumber": [
+      "1_formatNumber_default.json",
+      "2_formatNumber_decimals.json",
+      "3_formatNumber_no_grouping.json",
+      "4_formatNumber_literal_number.json",
+      "5_formatNumber_negative_and_bindings.json"
+    ],
+    "formatString": [
+      "1_formatString_single_path.json",
+      "2_formatString_multi_paths.json",
+      "3_formatString_nested_format_date.json",
+      "4_formatString_nested_format_currency.json",
+      "5_formatString_relative_path_in_template.json",
+      "6_formatString_mixed_absolute_relative_paths.json",
+      "7_formatString_escape_literal.json",
+      "8_formatString_type_conversion.json",
+      "9_nested_dollar_expression.json"
+    ],
+    "length": [
+      "1_length_min_only.json",
+      "2_length_max_only.json",
+      "3_length_min_max_range.json"
+    ],
+    "not": [
+      "1_not_invert_bool.json",
+      "2_not_not_of_email.json",
+      "3_not_not_of_and.json",
+      "4_not_not_of_or.json",
+      "5_and_of_two_nots.json"
+    ],
+    "numeric": [
+      "1_numeric_age_min_18.json",
+      "2_numeric_discount_max_100.json",
+      "3_numeric_temperature_range.json"
+    ],
+    "openUrl": [
+      "1_openUrl_button_click.json",
+      "2_openUrl_multi_buttons_row.json",
+      "3_openUrl_icon_only_button.json",
+      "4_openUrl_uri_schemes.json",
+      "5_scheme_allowlist_reject.json"
+    ],
+    "or": [
+      "1_or_email_or_phone.json",
+      "2_or_three_values.json",
+      "3_or_with_not.json",
+      "4_or_of_two_ands.json"
+    ],
+    "pluralize": [
+      "1_pluralize_en_one_other.json",
+      "2_pluralize_with_zero.json",
+      "3_pluralize_cldr_categories.json",
+      "4_pluralize_with_data_binding.json",
+      "5_pluralize_cldr_boundaries.json",
+      "6_fallback_only_other.json",
+      "7_string_value_coercion.json"
+    ],
+    "regex": [
+      "1_regex_zipcode_5digits.json",
+      "2_regex_http_url.json",
+      "3_regex_cn_mobile.json"
+    ],
+    "required": [
+      "1_required_literal_pass.json",
+      "2_required_path_empty_disable.json",
+      "3_required_form_multi_fields.json",
+      "4_required_null_value.json",
+      "5_required_undefined_path.json"
+    ]
+  },
+  "databinding_tests": {
+    "01_absolute_path": [
+      "1_absolute_path_string.json",
+      "2_absolute_path_number.json",
+      "3_absolute_path_boolean.json",
+      "4_absolute_path_deep_json_pointer.json"
+    ],
+    "02_data_model_upsert": [
+      "1_upsert_partial.json",
+      "2_upsert_create_missing.json",
+      "3_replace_entire_model.json",
+      "4_remove_field.json"
+    ],
+    "03_child_list_template": [
+      "1_column_template.json",
+      "2_row_template.json",
+      "3_template_append_update.json",
+      "4_edge_empty_undefined_nonarray.json"
+    ],
+    "04_relative_path": [
+      "1_relative_path_binding.json",
+      "2_relative_multi_fields.json",
+      "3_relative_in_function.json"
+    ],
+    "05_mixed_scope": [
+      "1_absolute_and_relative_mixed.json",
+      "2_nested_child_list.json"
+    ],
+    "06_two_way_binding": [
+      "1_textfield_two_way.json",
+      "2_slider_two_way.json",
+      "3_checkbox_two_way.json",
+      "4_multi_fields_reactive.json"
+    ],
+    "07_function_binding": [
+      "1_function_as_dynamic_string.json",
+      "2_function_nested.json",
+      "3_function_dynamic_args.json"
+    ],
+    "08_string_interpolation": [
+      "1_multi_paths_and_nested.json",
+      "2_type_coercion.json",
+      "3_escape_and_adjacent.json"
+    ],
+    "09_check_binding": [
+      "1_single_check.json",
+      "2_and_combined.json",
+      "3_not_and_exclusive.json"
+    ],
+    "10_action_context": [
+      "1_event_context_form_data.json",
+      "2_event_context_template_row.json",
+      "3_context_mixed_dynamic_value.json"
+    ],
+    "11_accessibility": [
+      "1_accessibility_label_dynamic.json",
+      "2_accessibility_in_template.json"
+    ],
+    "12_progressive_rendering": [
+      "1_no_data_model.json",
+      "2_data_arrives_later.json",
+      "3_root_scope_relative_path_fallback.json",
+      "4_undefined_path_placeholder.json",
+      "5_undefined_treated_as_empty.json"
+    ]
+  },
+  "theme_tests": {
+    "01_primary_color_basic": [
+      "1_primary_color_basic.json",
+      "2_primary_color_brand_green.json"
+    ],
+    "02_agent_identity": [
+      "1_icon_and_display_name.json"
+    ],
+    "03_theme_all_fields": [
+      "1_full_theme_with_extras.json"
+    ],
+    "04_invalid_color_fallback": [
+      "1_invalid_string.json",
+      "2_short_hex_rejected.json",
+      "3_eight_digit_hex_rejected.json",
+      "4_missing_hash_rejected.json",
+      "5_non_hex_chars_rejected.json",
+      "6_empty_string_rejected.json",
+      "7_uppercase_hex_accepted.json"
+    ],
+    "05_default_no_theme": [
+      "1_no_theme_uses_default.json"
+    ],
+    "06_extreme_colors": [
+      "1_black_primary.json",
+      "2_white_primary.json"
+    ],
+    "07_button_variant_isolation": [
+      "1_default_borderless_not_tinted.json"
+    ],
+    "08_agent_identity_edge": [
+      "1_long_display_name.json",
+      "2_data_uri_icon.json"
+    ]
+  }
+}

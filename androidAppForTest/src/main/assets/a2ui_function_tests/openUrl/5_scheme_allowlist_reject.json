@@ -1,0 +1,123 @@
+{
+  "name": "openUrl · scheme allowlist（规范 Mandatory · 安全强制项）",
+  "description": "验证规范原文明文条款（basic_catalog_implementation_guide.md §openUrl 'Security Constraints & Implementation Requirements (Mandatory)'）：为防止 DOM-Based XSS，openUrl 必须严格校验 URL scheme 仅允许 http: / https:，其他 scheme（尤其 javascript: 和 data:）必须拒绝并 abort action。本用例展示 4 个恶意/危险 URL 按钮，规范级实现下点击应：(1) 不打开系统浏览器；(2) 打印 warning 或抛异常；(3) 不派发任何跨域调用。本项目 demo host（A2UIComponentTestActivity.openUrl）当前未做 scheme allowlist，直接派发 Intent.ACTION_VIEW —— 这是与规范的差距。此用例作为规范符合性负例存在，其价值在于**暴露未实现的强制安全条款**，便于日后引擎/host 层修复后作为回归验证。安全提醒：点击 javascript: / data: 按钮不会真的执行 JS（Android Intent.ACTION_VIEW 对这两种 scheme 通常没有 handler，会被系统吞掉），但这不代表实现合规。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-url-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-url-5",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title", "hint",
+              "btn_js", "btn_js_lbl",
+              "btn_data", "btn_data_lbl",
+              "btn_file", "btn_file_lbl",
+              "btn_ftp", "btn_ftp_lbl",
+              "divider", "safe_hint",
+              "btn_ok", "btn_ok_lbl"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "openUrl allowlist（Mandatory 安全强制项）",
+            "variant": "h5"
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "规范要求：以下 4 个按钮点击后应被 renderer/host 主动拒绝，不打开任何目标。若浏览器/系统弹起或 Toast 无提示，说明实现未对齐规范。",
+            "variant": "caption"
+          },
+          {
+            "id": "btn_js",
+            "component": "Button",
+            "child": "btn_js_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": { "url": "javascript:alert('xss-poc')" },
+                "returnType": "void"
+              }
+            }
+          },
+          { "id": "btn_js_lbl", "component": "Text", "text": "❌ javascript: (XSS)" },
+          {
+            "id": "btn_data",
+            "component": "Button",
+            "child": "btn_data_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": { "url": "data:text/html,<script>alert('xss')</script>" },
+                "returnType": "void"
+              }
+            }
+          },
+          { "id": "btn_data_lbl", "component": "Text", "text": "❌ data:text/html (inline HTML)" },
+          {
+            "id": "btn_file",
+            "component": "Button",
+            "child": "btn_file_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": { "url": "file:///etc/passwd" },
+                "returnType": "void"
+              }
+            }
+          },
+          { "id": "btn_file_lbl", "component": "Text", "text": "❌ file:// (本地文件泄露)" },
+          {
+            "id": "btn_ftp",
+            "component": "Button",
+            "child": "btn_ftp_lbl",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": { "url": "ftp://example.com/secret.txt" },
+                "returnType": "void"
+              }
+            }
+          },
+          { "id": "btn_ftp_lbl", "component": "Text", "text": "❌ ftp:// (非 HTTP)" },
+          {
+            "id": "divider",
+            "component": "Divider"
+          },
+          {
+            "id": "safe_hint",
+            "component": "Text",
+            "text": "以下按钮是合规对照（应正常打开）：",
+            "variant": "caption"
+          },
+          {
+            "id": "btn_ok",
+            "component": "Button",
+            "child": "btn_ok_lbl",
+            "variant": "primary",
+            "action": {
+              "functionCall": {
+                "call": "openUrl",
+                "args": { "url": "https://example.com/" },
+                "returnType": "void"
+              }
+            }
+          },
+          { "id": "btn_ok_lbl", "component": "Text", "text": "✅ https://example.com" }
+        ]
+      }
+    }
+  ]
+}

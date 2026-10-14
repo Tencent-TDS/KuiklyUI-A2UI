@@ -1,0 +1,54 @@
+{
+  "name": "formatString · 嵌套 formatDate",
+  "description": "内部函数：${formatDate(value:${/publishedAt}, format:'MMM d')}。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t"
+            ]
+          },
+          {
+            "id": "t",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "发布于 ${formatDate(value:${/publishedAt}, format:'MMM d, yyyy')}"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-3",
+        "value": {
+          "publishedAt": "2025-12-15T17:30:00Z"
+        }
+      }
+    }
+  ]
+}

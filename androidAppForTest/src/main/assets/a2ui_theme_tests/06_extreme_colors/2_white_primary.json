@@ -1,0 +1,53 @@
+{
+  "name": "极端色 · 纯白 primaryColor 可读性",
+  "description": "theme.primaryColor='#FFFFFF' 纯白。用于目视验证 Primary Button 在白底 Card 上仍能识别边界，Slider 进度色不彻底消失。属于已知'挑战'案例，帮助业务侧发现主题色不适配的场景。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-ext-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-ext-2",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn", "slider"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor=#FFFFFF（纯白）——极端边界。Primary Button 白底白字几乎不可读、Slider 进度色难辨。此用例用于让业务侧感知主题色对比度不当的后果，不代表实现缺陷。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（白底 · 对比度极低）" },
+          {
+            "id": "slider",
+            "component": "Slider",
+            "label": "Slider 进度色应为纯白",
+            "min": 0,
+            "max": 100,
+            "value": { "path": "/level" }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-ext-2",
+        "value": { "level": 60 }
+      }
+    }
+  ]
+}

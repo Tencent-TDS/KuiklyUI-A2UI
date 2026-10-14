@@ -1,0 +1,105 @@
+{
+  "name": "progressive rendering · 绝对路径指向不存在的数据",
+  "description": "验证规范原文明文条款：'Note that components may reference children or data bindings that do not yet exist; clients should handle this gracefully by rendering placeholders (progressive rendering).'（a2ui_protocol.md §updateComponents）。用例使用规范合法的绝对路径（/ 开头），但故意指向 dataModel 中不存在的 key，验证 renderer 以占位形式优雅降级。dataModel 只提供 /present，其它引用的 /missing/*、/nowhere 完全缺席。期望渲染：t_present 显示 'HELLO'；其余三条 Text 平静渲染为空占位或 '[]'（stringifyForInterpolation 对 undefined 返回 ''）；formatString 中缺失路径也应被 '' 替代（对应规范 §formatString type conversion：'Null/Undefined: An empty string ""'）。绝不能显示 'undefined' / 'null' 字面量，绝不能 crash。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-pr-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-pr-4",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "label_present", "t_present",
+              "label_missing_shallow", "t_missing_shallow",
+              "label_missing_deep", "t_missing_deep",
+              "label_mixed", "t_mixed",
+              "footer"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "绝对路径指向不存在数据：规范要求 placeholder 降级",
+            "variant": "h5"
+          },
+          {
+            "id": "label_present",
+            "component": "Text",
+            "text": "① 存在路径 /present：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_present",
+            "component": "Text",
+            "text": { "path": "/present" }
+          },
+          {
+            "id": "label_missing_shallow",
+            "component": "Text",
+            "text": "② 顶层不存在 /nowhere：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_missing_shallow",
+            "component": "Text",
+            "text": { "path": "/nowhere" }
+          },
+          {
+            "id": "label_missing_deep",
+            "component": "Text",
+            "text": "③ 深层不存在 /missing/user/name：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_missing_deep",
+            "component": "Text",
+            "text": { "path": "/missing/user/name" }
+          },
+          {
+            "id": "label_mixed",
+            "component": "Text",
+            "text": "④ formatString 混合已存在与不存在：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_mixed",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "present=[${/present}] missing=[${/nowhere}] deep=[${/missing/user/name}]"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "footer",
+            "component": "Text",
+            "text": "期望：① 显示 HELLO；②③ 空占位；④ 显示 present=[HELLO] missing=[] deep=[]。绝不能出现 'undefined'/'null' 字面量。",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-pr-4",
+        "value": {
+          "present": "HELLO"
+        }
+      }
+    }
+  ]
+}

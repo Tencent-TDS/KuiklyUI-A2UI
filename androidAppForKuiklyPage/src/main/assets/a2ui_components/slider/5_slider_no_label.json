@@ -1,0 +1,33 @@
+{
+  "name": "Slider - no label",
+  "description": "Slider without label, fractional range 0-1",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-sl-nolabel",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-sl-nolabel",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "s"
+          },
+          {
+            "id": "s",
+            "component": "Slider",
+            "min": 0,
+            "max": 1,
+            "value": 0.5
+          }
+        ]
+      }
+    }
+  ]
+}

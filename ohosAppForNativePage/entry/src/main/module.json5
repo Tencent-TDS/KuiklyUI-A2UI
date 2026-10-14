@@ -1,0 +1,42 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "A2UI Demo Entry",
+    "mainElement": "A2UIDemoAbility",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET"
+      }
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "A2UIDemoAbility",
+        "srcEntry": "./ets/entryability/A2UIDemoAbility.ets",
+        "description": "A2UI Demo Ability",
+        "icon": "$media:icon",
+        "label": "$string:entry_label",
+        "startWindowIcon": "$media:icon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

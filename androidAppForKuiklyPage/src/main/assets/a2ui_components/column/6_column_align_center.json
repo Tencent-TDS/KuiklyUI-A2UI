@@ -1,0 +1,47 @@
+{
+  "name": "Column - align=center",
+  "description": "Column align=center (cross-axis): children horizontally centered",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-col-align-center",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-col-align-center",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "a",
+              "b"
+            ],
+            "align": "center"
+          },
+          {
+            "id": "a",
+            "component": "Text",
+            "text": "Short",
+            "variant": "body"
+          },
+          {
+            "id": "b",
+            "component": "Text",
+            "text": "Longer text in column",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

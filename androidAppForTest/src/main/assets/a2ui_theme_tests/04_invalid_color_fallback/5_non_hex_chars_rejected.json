@@ -1,0 +1,38 @@
+{
+  "name": "非法值 · 非法 hex 字符应被拒绝",
+  "description": "theme.primaryColor='#GGGGGG' 长度符合但字符超出 [0-9a-fA-F]，不匹配 ^#[0-9a-fA-F]{6}$，应回退默认 #00BFFF。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-inv-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#GGGGGG"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-inv-5",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "theme.primaryColor='#GGGGGG' 含非 hex 字符，规范要求 [0-9a-fA-F]。引擎应回退默认 #00BFFF（浅蓝），不应崩溃或渲染成黑色。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（应显示默认浅蓝 #00BFFF）" }
+        ]
+      }
+    }
+  ]
+}

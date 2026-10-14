@@ -1,0 +1,13 @@
+# Copy this file to `local.properties` (which is git-ignored) and adjust
+# the values for your local machine. This file must NOT be checked into
+# version control.
+
+# Path to the Android SDK.
+sdk.dir=/Users/YOUR_USER/Library/Android/sdk
+
+# ─────────────────────────────────────────────────────────────────────────
+# Override the location of the external KuiklyUI checkout.
+# If unset here, the default from `gradle.properties` (../KuiklyUI)
+# is used. Absolute paths recommended for per-machine overrides.
+# ─────────────────────────────────────────────────────────────────────────
+# kuikly.projectDir=/absolute/path/to/KuiklyUI

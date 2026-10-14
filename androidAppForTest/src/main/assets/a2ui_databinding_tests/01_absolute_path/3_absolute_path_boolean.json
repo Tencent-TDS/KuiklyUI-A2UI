@@ -1,0 +1,46 @@
+{
+  "name": "绝对路径 · DynamicBoolean（CheckBox.value）",
+  "description": "CheckBox.value 通过 {path:\"/prefs/newsletter\"} 绑定布尔。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ap-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ap-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "cb", "echo"] },
+          { "id": "title", "component": "Text", "text": "订阅（绑定 /prefs/newsletter，boolean）", "variant": "caption" },
+          {
+            "id": "cb",
+            "component": "CheckBox",
+            "label": "接收营销邮件",
+            "value": { "path": "/prefs/newsletter" }
+          },
+          {
+            "id": "echo",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "当前值：${/prefs/newsletter}" },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ap-3",
+        "value": { "prefs": { "newsletter": true } }
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "formatString · 嵌套 formatCurrency",
+  "description": "订单价：${formatCurrency(value:${/price}, currency:'USD')}",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fs-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fs-4",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t"
+            ]
+          },
+          {
+            "id": "t",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "总价：${formatCurrency(value:${/price}, currency:'USD')}"
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fs-4",
+        "value": {
+          "price": 199.99
+        }
+      }
+    }
+  ]
+}

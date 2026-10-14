@@ -1,0 +1,12 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "A2UI Demo Entry Module",
+  "main": "",
+  "author": "Kuikly Team",
+  "license": "KuiklyUI License",
+  "dependencies": {
+    "@kuikly-open/a2ui-render": "file:../../a2ui-render-ohos",
+    "@kuikly-open/render": "file:../../core-render-ohos"
+  }
+}

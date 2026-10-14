@@ -1,0 +1,34 @@
+{
+  "name": "DateTimeInput - empty initial value",
+  "description": "DateTimeInput initialized with empty string (not yet set)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-dt-empty",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-dt-empty",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "d"
+          },
+          {
+            "id": "d",
+            "component": "DateTimeInput",
+            "label": "Pick a date",
+            "value": "",
+            "enableDate": true,
+            "enableTime": false
+          }
+        ]
+      }
+    }
+  ]
+}

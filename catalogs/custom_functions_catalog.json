@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "custom_functions_catalog.json",
+  "title": "A2UI Custom Functions Catalog",
+  "description": "Extended catalog that includes A2UI basic components and functions, plus custom business functions: getGreeting, formatPhone, isVip, calculateDiscount, logEvent, and buildSummary.",
+  "catalogId": "custom_functions_catalog.json",
+  "components": {},
+  "functions": {
+    "getGreeting": {
+      "type": "object",
+      "description": "Returns a greeting string by concatenating 'Hello, ' with the given name. Example: getGreeting(name:'Kuikly') → 'Hello, Kuikly!'",
+      "properties": {
+        "call": { "const": "getGreeting" },
+        "args": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicString",
+              "description": "The name to include in the greeting."
+            }
+          },
+          "required": ["name"],
+          "unevaluatedProperties": false
+        },
+        "returnType": { "const": "string" }
+      },
+      "required": ["call", "args"],
+      "unevaluatedProperties": false
+    },
+    "formatPhone": {
+      "type": "object",
+      "description": "Formats an 11-digit phone number string into 'XXX-XXXX-XXXX' format. If the input is not 11 digits, returns it unchanged. Example: formatPhone(phone:'13800001234') → '138-0000-1234'",
+      "properties": {
+        "call": { "const": "formatPhone" },
+        "args": {
+          "type": "object",
+          "properties": {
+            "phone": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicString",
+              "description": "The raw phone number string (expected 11 digits)."
+            }
+          },
+          "required": ["phone"],
+          "unevaluatedProperties": false
+        },
+        "returnType": { "const": "string" }
+      },
+      "required": ["call", "args"],
+      "unevaluatedProperties": false
+    },
+    "isVip": {
+      "type": "object",
+      "description": "Checks whether the user is a VIP based on their level. Returns true if level >= 3, false otherwise. Typically used in Button checks conditions.",
+      "properties": {
+        "call": { "const": "isVip" },
+        "args": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicNumber",
+              "description": "The user's VIP level (integer). Returns true when >= 3."
+            }
+          },
+          "required": ["level"],
+          "unevaluatedProperties": false
+        },
+        "returnType": { "const": "boolean" }
+      },
+      "required": ["call", "args"],
+      "unevaluatedProperties": false
+    },
+    "calculateDiscount": {
+      "type": "object",
+      "description": "Calculates the discounted price by multiplying price × rate, rounded to 2 decimal places. Example: calculateDiscount(price:199, rate:0.7) → 139.3",
+      "properties": {
+        "call": { "const": "calculateDiscount" },
+        "args": {
+          "type": "object",
+          "properties": {
+            "price": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicNumber",
+              "description": "The original price."
+            },
+            "rate": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicNumber",
+              "description": "The discount rate (e.g., 0.7 for 30% off)."
+            }
+          },
+          "required": ["price", "rate"],
+          "unevaluatedProperties": false
+        },
+        "returnType": { "const": "number" }
+      },
+      "required": ["call", "args"],
+      "unevaluatedProperties": false
+    },
+    "logEvent": {
+      "type": "object",
+      "description": "Logs a business event with associated data. This is a void function typically used as a Button action (functionCall). It has no return value.",
+      "properties": {
+        "call": { "const": "logEvent" },
+        "args": {
+          "type": "object",
+          "properties": {
+            "event": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicString",
+              "description": "The event name to log (e.g., 'button_click')."
+            },
+            "data": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicString",
+              "description": "Additional data associated with the event."
+            }
+          },
+          "required": ["event"],
+          "unevaluatedProperties": false
+        },
+        "returnType": { "const": "void" }
+      },
+      "required": ["call", "args"],
+      "unevaluatedProperties": false
+    },
+    "buildSummary": {
+      "type": "object",
+      "description": "Builds a summary string from multiple parameters. Concatenates name, count, and status into a human-readable summary. Example: buildSummary(name:'KuiklyUI', count:42, status:'active') → 'Project KuiklyUI: 42 tasks (active)'",
+      "properties": {
+        "call": { "const": "buildSummary" },
+        "args": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicString",
+              "description": "The project or entity name."
+            },
+            "count": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicNumber",
+              "description": "The number of items (e.g., task count)."
+            },
+            "status": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DynamicString",
+              "description": "The current status (e.g., 'active', 'completed')."
+            }
+          },
+          "required": ["name", "count", "status"],
+          "unevaluatedProperties": false
+        },
+        "returnType": { "const": "string" }
+      },
+      "required": ["call", "args"],
+      "unevaluatedProperties": false
+    }
+  },
+  "$defs": {
+    "CatalogComponentCommon": {
+      "type": "object",
+      "properties": {
+        "weight": {
+          "type": "number",
+          "description": "The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column."
+        }
+      }
+    },
+    "anyFunction": {
+      "oneOf": [
+        { "$ref": "#/functions/getGreeting" },
+        { "$ref": "#/functions/formatPhone" },
+        { "$ref": "#/functions/isVip" },
+        { "$ref": "#/functions/calculateDiscount" },
+        { "$ref": "#/functions/logEvent" },
+        { "$ref": "#/functions/buildSummary" }
+      ]
+    }
+  },
+  "extends": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+}

@@ -1,0 +1,112 @@
+{
+  "name": "formatNumber · 负数与动态参数",
+  "description": "覆盖三个既有用例遗漏的合规输入：(1) 负数 —— schema 未限定 min，任何数字都合法；(2) decimals 用数据绑定 —— catalog 明确 decimals 是 DynamicNumber，可来自 path；(3) grouping 用数据绑定 —— catalog 明确 grouping 是 DynamicBoolean。可通过 CheckBox 动态切换 grouping 观察行为。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-fn-5",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-fn-5",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "t1", "t2", "t3", "t4", "row", "toggle", "hint"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "负数 & 动态 decimals/grouping",
+            "variant": "h5"
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "负数默认: ${formatNumber(value:${/neg})}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "零值: ${formatNumber(value:${/zero}, decimals:2)}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t3",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "decimals 绑定 (/prec=${/prec}): ${formatNumber(value:${/pi}, decimals:${/prec})}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "t4",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "grouping 绑定: ${formatNumber(value:${/big}, grouping:${/useGrouping})}"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": ["toggle"]
+          },
+          {
+            "id": "toggle",
+            "component": "CheckBox",
+            "label": "启用千位分隔（切换观察 t4 变化）",
+            "value": { "path": "/useGrouping" }
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "prec=3 且 pi=3.14159 时，t3 应输出 3.142（保留 3 位）；勾选/取消 CheckBox 后 t4 应在 1,234,567 与 1234567 间切换。",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-fn-5",
+        "value": {
+          "neg": -1234567.89,
+          "zero": 0,
+          "pi": 3.14159,
+          "prec": 3,
+          "big": 1234567,
+          "useGrouping": true
+        }
+      }
+    }
+  ]
+}

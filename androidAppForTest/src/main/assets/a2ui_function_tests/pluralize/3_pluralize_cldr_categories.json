@@ -1,0 +1,62 @@
+{
+  "name": "pluralize · CLDR few/many（多语言）",
+  "description": "演示 zero/one/two/few/many/other 全部分类占位串。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-pl-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-pl-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": {
+                  "path": "/n"
+                },
+                "zero": "zero",
+                "one": "one",
+                "two": "two",
+                "few": "few",
+                "many": "many",
+                "other": "other"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-pl-3",
+        "value": {
+          "n": 5
+        }
+      }
+    }
+  ]
+}

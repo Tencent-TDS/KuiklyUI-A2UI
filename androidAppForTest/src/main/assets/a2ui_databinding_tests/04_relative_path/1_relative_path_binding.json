@@ -1,0 +1,58 @@
+{
+  "name": "相对路径 · 直接 path 绑定",
+  "description": "模板子树内使用 {path:\"name\"} 无前导斜杠的相对路径，指向当前迭代项。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-rp-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-rp-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "list"] },
+          { "id": "title", "component": "Text", "text": "相对 path 绑定：${name}", "variant": "caption" },
+          {
+            "id": "list",
+            "component": "Column",
+            "children": { "componentId": "row-tpl", "path": "/friends" }
+          },
+          {
+            "id": "row-tpl",
+            "component": "Row",
+            "children": ["avatar", "name-txt"]
+          },
+          {
+            "id": "avatar",
+            "component": "Text",
+            "text": "👤"
+          },
+          {
+            "id": "name-txt",
+            "component": "Text",
+            "text": { "path": "name" },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-rp-1",
+        "value": {
+          "friends": [
+            { "name": "Alice" },
+            { "name": "Bob" },
+            { "name": "Carol" }
+          ]
+        }
+      }
+    }
+  ]
+}

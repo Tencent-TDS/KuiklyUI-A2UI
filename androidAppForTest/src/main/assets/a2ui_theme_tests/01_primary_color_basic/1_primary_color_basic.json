@@ -1,0 +1,65 @@
+{
+  "name": "primaryColor · 一次性染色多组件",
+  "description": "createSurface.theme.primaryColor=#E91E63 应染色 Button variant=primary 背景、Slider progressColor、Tabs 选中态。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "theme-pc-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "theme": {
+          "primaryColor": "#E91E63"
+        }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "theme-pc-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["hint", "btn", "slider", "tabs"]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "本页面 theme.primaryColor = #E91E63（品红），下列元素背景/进度/选中态应统一使用该色。",
+            "variant": "caption"
+          },
+          { "id": "btn", "component": "Button", "child": "btn_lbl", "variant": "primary" },
+          { "id": "btn_lbl", "component": "Text", "text": "Primary Button（背景应为品红）" },
+          {
+            "id": "slider",
+            "component": "Slider",
+            "label": "Slider progressColor 应为品红",
+            "min": 0,
+            "max": 100,
+            "value": { "path": "/level" }
+          },
+          {
+            "id": "tabs",
+            "component": "Tabs",
+            "selectedTabId": { "path": "/tab" },
+            "children": ["tab1", "tab2", "tab3"]
+          },
+          { "id": "tab1", "component": "Tab", "title": "首页", "tabId": "home" },
+          { "id": "tab2", "component": "Tab", "title": "发现", "tabId": "discover" },
+          { "id": "tab3", "component": "Tab", "title": "我的", "tabId": "me" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "theme-pc-1",
+        "value": {
+          "level": 60,
+          "tab": "discover"
+        }
+      }
+    }
+  ]
+}

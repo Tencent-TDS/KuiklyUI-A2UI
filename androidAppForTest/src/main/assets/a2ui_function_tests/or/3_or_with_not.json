@@ -1,0 +1,103 @@
+{
+  "name": "or · 与 not 组合",
+  "description": "or(未同意条款, 邮箱格式对) → not 演示：这里只是组合逻辑演示。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-or-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-or-3",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "c1",
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "c1",
+            "component": "CheckBox",
+            "label": "游客模式",
+            "value": {
+              "path": "/f/guest"
+            }
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "邮箱（若非游客）",
+            "value": {
+              "path": "/f/email"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "or",
+                  "args": {
+                    "values": [
+                      {
+                        "path": "/f/guest"
+                      },
+                      {
+                        "call": "email",
+                        "args": {
+                          "value": {
+                            "path": "/f/email"
+                          }
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "请勾选游客模式或填写合法邮箱"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "继续"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-or-3",
+        "value": {
+          "f": {
+            "guest": false,
+            "email": ""
+          }
+        }
+      }
+    }
+  ]
+}

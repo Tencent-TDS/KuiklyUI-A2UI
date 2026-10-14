@@ -1,0 +1,59 @@
+{
+  "name": "多字段协同 · 服务端派生字段渲染",
+  "description": "同时绑定 /order/qty（Slider）与 /order/unit（TextField）；/order/total 为服务端派生字段（A2UI v0.9 无算术函数，客户端不计算），每次 qty/unit 变化后由服务端在下一次 updateDataModel 时推送新 total，客户端通过 formatString 自动重新渲染。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-tw-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-tw-4",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "qty", "unit", "sum"] },
+          { "id": "title", "component": "Text", "text": "qty/unit 由客户端双向绑定，total 由服务端派生并下推", "variant": "caption" },
+          {
+            "id": "qty",
+            "component": "Slider",
+            "label": "数量",
+            "min": 1,
+            "max": 20,
+            "value": { "path": "/order/qty" }
+          },
+          {
+            "id": "unit",
+            "component": "TextField",
+            "label": "单价 (元)",
+            "value": { "path": "/order/unit" }
+          },
+          {
+            "id": "sum",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "小计：${formatCurrency(value:${/order/total}, currency:'CNY')}（数量 ${/order/qty} × 单价 ${/order/unit}）"
+              },
+              "returnType": "string"
+            },
+            "variant": "h5"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-tw-4",
+        "value": {
+          "order": { "qty": 3, "unit": 25.5, "total": 76.5 }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "name": "pluralize · 字符串 value 强制转数字",
+  "description": "验证当 value 参数是字符串（例如从 formatString 内联传入 '${/count}' 展开为 '1'/'3'）时，pluralize 应把它强制转成数字后再走 CLDR 分类。用例内嵌于 formatString，让 ${/count} 以字符串形式流入 pluralize.value。期望渲染结果：/count=1 时显示 'You have 1 item'；把 /count 改为 3（或任意 ≠1 的正数）时显示 'You have N items'。若引擎未做强制转型（当前默认走 other 分支），此用例会暴露 'You have 1 items' 的错误。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-pl-7",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-pl-7",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "t_from_binding", "t_literal_string", "hint"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "字符串 value 强制转数字",
+            "variant": "h5"
+          },
+          {
+            "id": "t_from_binding",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "You have ${/count} ${pluralize(value:${/count}, one:'item', other:'items')}"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "t_literal_string",
+            "component": "Text",
+            "text": {
+              "call": "pluralize",
+              "args": {
+                "value": "1",
+                "one": "1 item (from literal string)",
+                "other": "%d items (from literal string)"
+              },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "改 /count 为 3/5 时，第一行应变为 'items'；字符串 '1' 应命中 'one' 分支",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-pl-7",
+        "value": {
+          "count": 1
+        }
+      }
+    }
+  ]
+}

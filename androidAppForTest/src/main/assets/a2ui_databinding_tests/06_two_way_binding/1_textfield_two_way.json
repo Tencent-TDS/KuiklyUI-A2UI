@@ -1,0 +1,46 @@
+{
+  "name": "TextField 双向绑定 · 输入实时回显",
+  "description": "TextField.value 绑定 /form/username；输入立即回写 Data Model，另一个 Text 通过 formatString 实时展示。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-tw-1",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-tw-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["tf", "echo"] },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "用户名",
+            "value": { "path": "/form/username" }
+          },
+          {
+            "id": "echo",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "Hello, ${/form/username}!" },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-tw-1",
+        "value": { "form": { "username": "" } }
+      }
+    }
+  ]
+}

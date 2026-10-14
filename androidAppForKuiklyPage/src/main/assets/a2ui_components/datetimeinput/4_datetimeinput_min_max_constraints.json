@@ -1,0 +1,36 @@
+{
+  "name": "DateTimeInput - min / max constraints",
+  "description": "DateTimeInput restricted to 2026-06-01..2026-12-31",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-dt-range",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-dt-range",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "d"
+          },
+          {
+            "id": "d",
+            "component": "DateTimeInput",
+            "label": "Booking date",
+            "value": "2026-06-20",
+            "enableDate": true,
+            "enableTime": false,
+            "min": "2026-06-01",
+            "max": "2026-12-31"
+          }
+        ]
+      }
+    }
+  ]
+}

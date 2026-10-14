@@ -1,0 +1,104 @@
+{
+  "name": "upsert · path 无 value 表示移除该 key",
+  "description": "验证规范原文明文条款（a2ui_protocol.md §updateDataModel L246-L252）：'`value` (any, optional): The new value for the specified path. **If omitted, the key at `path` is removed.**' 用例流程：(1) 先建立 dataModel {a:'A',b:'B',c:'C'}；(2) 发送 updateDataModel{path:'/b'} 不带 value，规范要求移除 b；(3) 页面显示 /a、/b、/c 三个绑定。规范期望：第一次快照显示 A/B/C；移除后 /b 因规范定义为 removed（等价 undefined），按 progressive rendering 应显示空占位，最终三行应为 A/[]/C。若引擎未实现 remove 语义（例如把 b 写为 null 而非删除），此用例会暴露：第二个 Text 可能仍显示 'B'、'null' 或空——观察实际差异即为负例价值。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-upsert-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-upsert-4",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "label_a", "t_a",
+              "label_b", "t_b",
+              "label_c", "t_c",
+              "footer"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "path 无 value 表示 remove（规范条款）",
+            "variant": "h5"
+          },
+          {
+            "id": "label_a",
+            "component": "Text",
+            "text": "/a （未删）：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_a",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "[${/a}]" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "label_b",
+            "component": "Text",
+            "text": "/b （规范要求移除后应显示空）：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_b",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "[${/b}]" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "label_c",
+            "component": "Text",
+            "text": "/c （未删）：",
+            "variant": "caption"
+          },
+          {
+            "id": "t_c",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "[${/c}]" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "footer",
+            "component": "Text",
+            "text": "规范期望：[A] [] [C]。若显示 [A] [B] [C] 则 remove 未生效；若显示 [A] [null] [C] 或 [A] [B] [C] 均属未完全对齐规范。",
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-upsert-4",
+        "value": { "a": "A", "b": "B", "c": "C" }
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-upsert-4",
+        "path": "/b"
+      }
+    }
+  ]
+}

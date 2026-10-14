@@ -1,0 +1,95 @@
+{
+  "name": "not · not(email(x)) 反向逻辑",
+  "description": "仅当值不是合法邮箱时按钮才启用（演示反向条件）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-not-2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-not-2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "hint",
+              "input",
+              "btn"
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "填入非邮箱的字符串以启用按钮",
+            "variant": "caption"
+          },
+          {
+            "id": "input",
+            "component": "TextField",
+            "label": "非邮箱",
+            "value": {
+              "path": "/f/text"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "not",
+                  "args": {
+                    "value": {
+                      "call": "email",
+                      "args": {
+                        "value": {
+                          "path": "/f/text"
+                        }
+                      },
+                      "returnType": "boolean"
+                    }
+                  }
+                },
+                "message": "该值必须不是合法邮箱"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "确认（值不是邮箱）"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-not-2",
+        "value": {
+          "f": {
+            "text": "user@example.com"
+          }
+        }
+      }
+    }
+  ]
+}

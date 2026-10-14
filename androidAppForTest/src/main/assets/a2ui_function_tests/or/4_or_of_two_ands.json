@@ -1,0 +1,163 @@
+{
+  "name": "or · or(and, and) 双方案二选一",
+  "description": "方案A = and(邮箱, 密码)；方案B = and(手机, 短信码)。任一方案完整即可。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "fn-or-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "fn-or-4",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "email",
+              "password",
+              "phone",
+              "smsCode",
+              "btn"
+            ]
+          },
+          {
+            "id": "email",
+            "component": "TextField",
+            "label": "邮箱（方案A）",
+            "value": {
+              "path": "/f/email"
+            }
+          },
+          {
+            "id": "password",
+            "component": "TextField",
+            "label": "密码（方案A）",
+            "value": {
+              "path": "/f/password"
+            }
+          },
+          {
+            "id": "phone",
+            "component": "TextField",
+            "label": "手机号（方案B）",
+            "value": {
+              "path": "/f/phone"
+            }
+          },
+          {
+            "id": "smsCode",
+            "component": "TextField",
+            "label": "短信码（方案B）",
+            "value": {
+              "path": "/f/smsCode"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": {
+              "event": {
+                "name": "submit"
+              }
+            },
+            "checks": [
+              {
+                "condition": {
+                  "call": "or",
+                  "args": {
+                    "values": [
+                      {
+                        "call": "and",
+                        "args": {
+                          "values": [
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/email"
+                                }
+                              },
+                              "returnType": "boolean"
+                            },
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/password"
+                                }
+                              },
+                              "returnType": "boolean"
+                            }
+                          ]
+                        },
+                        "returnType": "boolean"
+                      },
+                      {
+                        "call": "and",
+                        "args": {
+                          "values": [
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/phone"
+                                }
+                              },
+                              "returnType": "boolean"
+                            },
+                            {
+                              "call": "required",
+                              "args": {
+                                "value": {
+                                  "path": "/f/smsCode"
+                                }
+                              },
+                              "returnType": "boolean"
+                            }
+                          ]
+                        },
+                        "returnType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "message": "请完整填写方案A（邮箱+密码）或方案B（手机+短信码）"
+              }
+            ]
+          },
+          {
+            "id": "btn_lbl",
+            "component": "Text",
+            "text": "登录"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "fn-or-4",
+        "value": {
+          "f": {
+            "email": "",
+            "password": "",
+            "phone": "",
+            "smsCode": ""
+          }
+        }
+      }
+    }
+  ]
+}

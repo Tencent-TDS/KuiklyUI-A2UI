@@ -1,0 +1,63 @@
+{
+  "name": "CheckBox 双向绑定 · 控制显示",
+  "description": "CheckBox.value 绑定 /prefs/showEmail；勾选后另一个 Text 才显示邮箱信息（通过条件性 checks/message 演示布尔响应）。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-tw-3",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-tw-3",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["cb", "echo", "btn", "btn_lbl"] },
+          {
+            "id": "cb",
+            "component": "CheckBox",
+            "label": "显示我的邮箱",
+            "value": { "path": "/prefs/showEmail" }
+          },
+          {
+            "id": "echo",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "showEmail = ${/prefs/showEmail}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "btn_lbl",
+            "variant": "primary",
+            "action": { "event": { "name": "confirm" } },
+            "checks": [
+              {
+                "condition": {
+                  "call": "required",
+                  "args": { "value": { "path": "/prefs/showEmail" } },
+                  "returnType": "boolean"
+                },
+                "message": "请先勾选\"显示我的邮箱\""
+              }
+            ]
+          },
+          { "id": "btn_lbl", "component": "Text", "text": "确认" }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-tw-3",
+        "value": { "prefs": { "showEmail": false } }
+      }
+    }
+  ]
+}

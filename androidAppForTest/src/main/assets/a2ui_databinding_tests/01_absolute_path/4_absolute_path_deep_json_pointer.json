@@ -1,0 +1,59 @@
+{
+  "name": "绝对路径 · 深层 JSON Pointer 与反应式广播",
+  "description": "两处 Text 分别绑定 /order/customer/name 与 /order/items/0/price，任一节点变化都会重渲染。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "db-ap-4",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "db-ap-4",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "name", "price"] },
+          { "id": "title", "component": "Text", "text": "深层 JSON Pointer", "variant": "h5" },
+          {
+            "id": "name",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": { "value": "客户：${/order/customer/name}" },
+              "returnType": "string"
+            }
+          },
+          {
+            "id": "price",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "首件价格：${formatCurrency(value:${/order/items/0/price}, currency:'USD')}"
+              },
+              "returnType": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "db-ap-4",
+        "value": {
+          "order": {
+            "customer": { "name": "王小明", "vip": true },
+            "items": [
+              { "sku": "A-1", "price": 19.99 },
+              { "sku": "A-2", "price": 5.5 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

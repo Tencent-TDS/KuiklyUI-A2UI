@@ -1,0 +1,33 @@
+{
+  "name": "TextField - variant=shortText (default)",
+  "description": "Single-line short text input",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tf-short",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tf-short",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "tf"
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "Username",
+            "value": "",
+            "variant": "shortText"
+          }
+        ]
+      }
+    }
+  ]
+}

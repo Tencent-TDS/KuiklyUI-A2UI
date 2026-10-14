@@ -1,0 +1,66 @@
+{
+  "name": "Row - template children (v-for)",
+  "description": "Row with dynamic children generated from /tags array via template",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-row-template",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-row-template",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "row"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": {
+              "componentId": "tag",
+              "path": "/tags"
+            },
+            "justify": "start"
+          },
+          {
+            "id": "tag",
+            "component": "Text",
+            "text": {
+              "path": "/label"
+            },
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-row-template",
+        "value": {
+          "tags": [
+            {
+              "label": "Kotlin"
+            },
+            {
+              "label": "Compose"
+            },
+            {
+              "label": "iOS"
+            },
+            {
+              "label": "A2UI"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
