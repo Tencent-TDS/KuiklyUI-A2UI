@@ -20,6 +20,7 @@ import com.tencent.kuikly.a2ui.bridge.A2UINativeMethod
 import com.tencent.kuikly.a2ui.parser.A2UIStreamParser
 import com.tencent.kuikly.a2ui.protocol.A2UIMessage
 import com.tencent.kuikly.a2ui.protocol.A2UIMessageType
+import com.tencent.kuikly.core.base.ContainerAttr
 import com.tencent.kuikly.core.base.CrossPlatFeature
 import com.tencent.kuikly.core.manager.BridgeManager
 import com.tencent.kuikly.core.manager.PagerManager
@@ -133,15 +134,16 @@ class A2UIDSLBridge(
         // native views for containers that only have layout properties).
         //
         // - Embedded mode: we set the per-subtree flag on the host's rootContainer
-        //   (see [A2UIHost.rootContainer] / [ViewContainer.forceRenderViewSubtree]).
-        //   The flag is write-once and is propagated to every child container at
-        //   insert time by `ViewContainer.internalAddChild`, so only the A2UI
-        //   subtree is affected — the enclosing Kuikly page keeps its flat-layer
-        //   optimization intact.
+        //   ATTR (see [A2UIHost.rootContainer] / [ContainerAttr.forceRenderView]).
+        //   The attr setter is monotonic (SUB_TREE wins) and the SUB_TREE mode is
+        //   propagated to every child container at insert time by
+        //   `ViewContainer.internalAddChild`, so only the A2UI subtree is affected
+        //   — the enclosing Kuikly page keeps its flat-layer optimization intact.
         // - Legacy mode: we toggle the process-wide switch, matching pre-existing
         //   behavior (the whole A2UIPager tree is A2UI-owned anyway).
         if (externalHost != null) {
-            externalHost.rootContainer.forceRenderViewSubtree = true
+            (externalHost.rootContainer.getViewAttr() as? ContainerAttr)
+                ?.forceRenderViewSubtree()
         } else {
             CrossPlatFeature.isIgnoreRenderViewForFlatLayer = true
         }
