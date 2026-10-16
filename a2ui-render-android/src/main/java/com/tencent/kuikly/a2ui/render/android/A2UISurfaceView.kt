@@ -1042,7 +1042,16 @@ class A2UISurfaceView @JvmOverloads constructor(
                             // module is stateless and the common case here is
                             // `calculateCustomViewSize` (syncCall=1) which
                             // returns the measured size as a `"w|h"` string.
-                            return A2UIBridgeModule().call(method, params, null)
+                            return try {
+                                A2UIBridgeModule().call(method, params, null)
+                            } catch (t: Throwable) {
+                                Log.e(
+                                    "A2UISurfaceView",
+                                    "A2UIBridgeModule dispatch threw: ${t.javaClass.simpleName}: ${t.message}",
+                                    t
+                                )
+                                null
+                            }
                         }
                     }
                     A2UINativeMethod.SET_TIMEOUT -> {

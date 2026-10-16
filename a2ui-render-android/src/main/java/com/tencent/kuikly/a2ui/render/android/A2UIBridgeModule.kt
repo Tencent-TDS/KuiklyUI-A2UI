@@ -61,7 +61,7 @@ import com.tencent.kuikly.core.render.android.export.KuiklyRenderCallback
  */
 class A2UIBridgeModule : KuiklyRenderBaseModule() {
 
-    override fun call(method: String, params: Any?, callback: KuiklyRenderCallback?): Any? {
+    override fun call(method: String, params: String?, callback: KuiklyRenderCallback?): Any? {
         return when (method) {
             METHOD_CONTENT_HEIGHT_CHANGED -> {
                 // No-op on Android: the host Kuikly page already drives the
@@ -79,25 +79,25 @@ class A2UIBridgeModule : KuiklyRenderBaseModule() {
                 null
             }
             METHOD_SHOW_DATE_TIME_PICKER -> {
-                val configJson = params as? String ?: return null
+                val configJson = params ?: return null
                 handleShowDateTimePicker(configJson)
                 null
             }
             METHOD_EXECUTE_FUNCTION_CALL -> {
-                val payload = params as? String ?: return null
+                val payload = params ?: return null
                 handleExecuteFunctionCall(payload)
                 null
             }
             METHOD_INVOKE_CUSTOM_FUNCTION -> {
-                val payload = params as? String ?: return null
+                val payload = params ?: return null
                 handleInvokeCustomFunction(payload)
             }
             METHOD_CALCULATE_CUSTOM_VIEW_SIZE -> {
-                val payload = params as? String ?: return null
+                val payload = params ?: return null
                 handleCalculateCustomViewSize(payload)
             }
             METHOD_DEBUG_LOG -> {
-                val msg = params as? String ?: return null
+                val msg = params ?: return null
                 Log.d(TAG, msg)
                 null
             }
@@ -191,11 +191,23 @@ class A2UIBridgeModule : KuiklyRenderBaseModule() {
      */
     private fun handleCalculateCustomViewSize(payload: String): String {
         val parts = payload.split('\n')
-        if (parts.size < 4) return ""
+        if (parts.size < 4) {
+            Log.w(TAG, "handleCalculateCustomViewSize: payload parts<4 (${parts.size})")
+            return ""
+        }
         val viewName = parts[0]
-        val cw = parts[2].toFloatOrNull() ?: return ""
-        val ch = parts[3].toFloatOrNull() ?: return ""
-        val measurer = A2UIAndroidCustomViewRegistry.lookupMeasurer(viewName) ?: return ""
+        val cw = parts[2].toFloatOrNull() ?: run {
+            Log.w(TAG, "handleCalculateCustomViewSize: cw parse failed from '${parts[2]}'")
+            return ""
+        }
+        val ch = parts[3].toFloatOrNull() ?: run {
+            Log.w(TAG, "handleCalculateCustomViewSize: ch parse failed from '${parts[3]}'")
+            return ""
+        }
+        val measurer = A2UIAndroidCustomViewRegistry.lookupMeasurer(viewName) ?: run {
+            Log.w(TAG, "handleCalculateCustomViewSize: no measurer for '$viewName'")
+            return ""
+        }
         return try {
             val size = measurer.measure(cw, ch)
             "${size.width}|${size.height}"
