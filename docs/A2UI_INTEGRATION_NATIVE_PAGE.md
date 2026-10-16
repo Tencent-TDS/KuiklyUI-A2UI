@@ -137,11 +137,14 @@ class MyActivity : AppCompatActivity() {
 
 ```kotlin
 // 自定义组件
+// 注意：measurer 的输入/输出都是 Kuikly 的**逻辑单位 dp**，不要在这里
+// 乘 `displayMetrics.density`——Kuikly native render handler 会在
+// 布局到 Android View 时自己把 dp 转 px。
 A2UISurfaceView.registerCustomRenderView(
     viewName = "A2UIWeb",
     creator = { context -> A2UIWebView(context) },
-    measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
-        SizeF(cwPx, 240f * context.resources.displayMetrics.density)
+    measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+        SizeF(cwDp, 240f)                       // 宽：父约束（dp）；高：240dp
     }                                           // 可选
 )
 

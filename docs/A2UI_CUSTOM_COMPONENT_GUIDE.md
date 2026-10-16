@@ -392,8 +392,8 @@ A2UISurfaceView.registerCustomRenderView(
 A2UISurfaceView.registerCustomRenderView(
     viewName = "MyA2UIView",
     creator = { context -> MyA2UIView(context) },
-    measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
-        SizeF(cwPx, 200f * density)
+    measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+        SizeF(cwDp, 200f)
     }
 )
 ```
@@ -503,13 +503,16 @@ class CustomComponentDemoActivity : AppCompatActivity() {
     }
 
     private fun registerCustomComponents() {
-        val density = Resources.getSystem().displayMetrics.density
+        // measurer 的输入/输出都是 Kuikly 的逻辑单位 dp，不要乘 density：
+        // Kuikly native render handler 会在布局到 Android View 时自己把
+        // dp 转 px；在这里再乘一次会让组件渲染出 density 倍的尺寸。
+        //
         // A2UIWeb：WebView 组件
         A2UISurfaceView.registerCustomRenderView(
             viewName = "A2UIWeb",
             creator = { context -> A2UIWebView(context) },
-            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
-                SizeF(cwPx, 240f * density)
+            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+                SizeF(cwDp, 240f)
             }
         )
 
@@ -517,8 +520,8 @@ class CustomComponentDemoActivity : AppCompatActivity() {
         A2UISurfaceView.registerCustomRenderView(
             viewName = "MyA2UIView",
             creator = { context -> MyA2UIView(context) },
-            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
-                SizeF(cwPx, 200f * density)
+            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+                SizeF(cwDp, 200f)
             }
         )
 
