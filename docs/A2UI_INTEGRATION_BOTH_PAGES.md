@@ -95,7 +95,7 @@ class MyApplication : Application() {
 ### Podfile 合并（**最重要**）
 
 ```ruby
-platform :ios, '14.0'
+platform :ios, '15.0'
 
 target 'MyApp' do
   use_modular_headers!

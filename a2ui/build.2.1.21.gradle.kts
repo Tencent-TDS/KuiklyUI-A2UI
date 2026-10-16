@@ -69,7 +69,7 @@ kotlin {
         version = A2uiVersion.getSemantic(project)
         license = "{ :type => 'KuiklyUI', :file => '../LICENSE' }"
         authors = "Kuikly Team"
-        ios.deploymentTarget = "14.0"
+        ios.deploymentTarget = "15.0"
         framework {
             baseName = "A2UICore"
             isStatic = true

@@ -2,14 +2,14 @@ name: A2UIDemoApp
 options:
   bundleIdPrefix: com.tencent.kuikly.a2ui
   deploymentTarget:
-    iOS: "14.0"
+    iOS: "15.0"
   xcodeVersion: "15.0"
   createIntermediateGroups: true
 
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
 
 targets:
   A2UIDemoApp:

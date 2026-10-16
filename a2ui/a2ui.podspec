@@ -8,7 +8,7 @@ Pod::Spec.new do |spec|
     spec.summary                  = 'A2UI Core Module'
     spec.vendored_frameworks      = 'build/cocoapods/framework/A2UICore.framework'
     spec.libraries                = 'c++'
-    spec.ios.deployment_target    = '14.0'
+    spec.ios.deployment_target    = '15.0'
                 
                 
     if !Dir.exist?('build/cocoapods/framework/A2UICore.framework') || Dir.empty?('build/cocoapods/framework/A2UICore.framework')

@@ -471,7 +471,7 @@ Kotlin Common 层的统一入口，管理所有 A2UI 实例的生命周期：
 - **Android/KMP Maven 坐标**：`0.9.0-2.1.21-SNAPSHOT`（默认，Kotlin `2.1.21`），HarmonyOS 兼容构建为 `0.9.0-2.0.21-ohos-SNAPSHOT`。这是为对齐 KuiklyUI Core 的坐标规则；两种版本号都由 [`buildSrc/src/main/java/A2uiVersion.kt`](buildSrc/src/main/java/A2uiVersion.kt) 生成
 - **依赖 KuiklyUI Core 版本**：2.1.21 主线（HarmonyOS 2.0 兼容构建使用 2.0.21-KBA-010，见 `settings.2.0.ohos.gradle.kts`）
 - **最低 Android SDK**：API 21 (Android 5.0)
-- **最低 iOS 版本**：14.0
+- **最低 iOS 版本**：15.0
 - **HarmonyOS**：API 12 及以上（DevEco Studio 4.1+）
 - **Kotlin 版本**：2.1.21
 - **Gradle 版本**：7.6.3（HarmonyOS 2.0 兼容构建下切至 8.0，由 `publish/FileReplacer` 临时打补丁）

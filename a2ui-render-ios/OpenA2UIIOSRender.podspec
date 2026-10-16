@@ -27,7 +27,7 @@ Pod::Spec.new do |spec|
   # (KuiklyUI license text) since this podspec lives under `a2ui-render-ios/`.
   spec.license          = { :type => "KuiklyUI", :file => "../LICENSE" }
   spec.author           = "Kuikly Team"
-  spec.ios.deployment_target = '14.0'
+  spec.ios.deployment_target = '15.0'
   spec.source           = { :git => "https://github.com/Tencent-TDS/KuiklyUI-A2UI.git", :tag => "#{spec.version}" }
   spec.user_target_xcconfig = { 'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES' }
   spec.requires_arc     = true

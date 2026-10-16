@@ -210,7 +210,7 @@ class MyBizPage : Pager() {
 Kuikly 页宿主推荐使用 `pod 'a2ui_demo'`——它把 A2UI KMP 逻辑和业务 KMP 逻辑一并编入同一个 K/N framework（默认名 `A2UIDemo`），运行时只有一个 KMP framework，无 duplicate-symbol 风险。
 
 ```ruby
-platform :ios, '14.0'
+platform :ios, '15.0'
 
 target 'MyApp' do
   use_modular_headers!
