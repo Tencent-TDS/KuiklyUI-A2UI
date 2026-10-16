@@ -45,12 +45,12 @@ import com.tencent.kuikly.core.views.PAGView
 import com.tencent.kuikly.core.views.APNGVView
 import com.tencent.kuikly.core.views.ActivityIndicatorView
 import com.tencent.kuikly.core.views.ScrollerView
-import com.tencent.kuikly.core.views.SliderView
 import com.tencent.kuikly.core.views.VideoView
 import com.tencent.kuikly.core.views.VideoPlayControl
 import com.tencent.kuikly.core.views.willDismiss
 import com.tencent.kuikly.a2ui.views.A2UIScrollerView
 import com.tencent.kuikly.a2ui.views.A2UICustomComponentView
+import com.tencent.kuikly.a2ui.views.A2UISliderView
 import com.tencent.kuikly.a2ui.views.DateTimeInputView
 import com.tencent.kuikly.a2ui.markdown.MarkdownParser
 
@@ -213,38 +213,14 @@ class A2UIApplier(private val host: A2UIHost) {
         val effectiveParentTag = if (parentTag < 0) ROOT_TAG else parentTag
         val parent = host.registry.getContainer(effectiveParentTag) ?: host.rootContainer
 
-        // For ComposeView subclasses (e.g. SliderView, CheckBoxView), didInit() is called during addChild
-        // and may require certain props (like width/height) to be set beforehand.
-        // We pass props in the init lambda so they are applied before didInit().
-        if (view is SliderView && props != null && props.isNotEmpty()) {
-            // SliderView.didInit() requires styleWidth to be set, and body() uses
-            // attr.sliderWidth (set via width()) to calculate contentWidth for progress.
-            // Strategy:
-            // 1. Set a temporary width so didInit() passes and body() has a reasonable contentWidth
-            // 2. After addChild, reset styleWidth to NaN so alignSelf=stretch takes effect during layout
-            // 3. After layout, update sliderWidth with actual computed width for handlePanGesture
-            val tempWidth = if (host.surfaceWidth > 0f) host.surfaceWidth * 0.8f else 300f
-            val propsWithWidth = if (props.containsKey("width")) props else props + ("width" to tempWidth)
-
-            parent.addChild(view, {
-                applyProps(view, viewName, propsWithWidth)
-            }, if (index >= 0) index else -1)
-
-            // Reset styleWidth to NaN so alignSelf=stretch determines actual width during layout.
-            // This is safe because didInit()/body() has already executed with the temp width.
-            if (!props.containsKey("width")) {
-                view.flexNode.styleWidth = Float.NaN
-            }
-
-            // After layout, update sliderWidth with actual computed width so that
-            // handlePanGesture() calculates progress correctly.
-            host.addTaskWhenLayoutFinish {
-                val actualWidth = view.flexNode.layoutFrame.width
-                if (actualWidth > 0f) {
-                    view.attr { width(actualWidth) }
-                }
-            }
-        } else if (view is CheckBoxView && props != null && props.isNotEmpty()) {
+        // For ComposeView subclasses (e.g. CheckBoxView, DateTimeInputView), didInit() is called during
+        // addChild and may require certain props (like width/height, or enableDate/enableTime/value) to
+        // be set beforehand. We pass props in the init lambda so they are applied before didInit().
+        //
+        // Slider is intentionally NOT special-cased here: a2ui's A2UISliderView wraps kuikly's SliderView
+        // and defers creating the inner SliderView until its own layoutFrameDidChanged observes a real
+        // width/height, so didInit()/body() do not need a seed size.
+        if (view is CheckBoxView && props != null && props.isNotEmpty()) {
             // CheckBoxView.didInit() requires styleWidth and styleHeight to be set.
             // CheckBox uses fixed size (24x24 per protocol), so just apply props in init lambda.
             parent.addChild(view, {
@@ -397,7 +373,7 @@ class A2UIApplier(private val host: A2UIHost) {
             "KRAudioView", "AudioPlayer" -> AudioView()
             "KRTextFieldView", "TextField" -> InputView()
             "KRTextAreaView" -> TextAreaView()
-            "KRSliderView", "Slider" -> SliderView()
+            "KRSliderView", "Slider" -> A2UISliderView()
             "KRCheckBoxView", "CheckBox" -> CheckBoxView()
             "KRDateTimeInputView", "DateTimeInput" -> DateTimeInputView()
             "KRModalView", "Modal" -> ModalView().apply { inWindow = true }
@@ -448,7 +424,7 @@ class A2UIApplier(private val host: A2UIHost) {
             is ImageView -> applyImageProps(view, props)
             is VideoView -> applyVideoProps(view, props)
             is AudioView -> applyAudioProps(view, props)
-            is SliderView -> applySliderProps(view, props)
+            is A2UISliderView -> applySliderProps(view, props)
             is CheckBoxView -> applyCheckBoxProps(view, props)
             is DateTimeInputView -> applyDateTimeInputProps(view, props)
             is BlurView -> applyBlurProps(view, props)
@@ -1153,11 +1129,12 @@ class A2UIApplier(private val host: A2UIHost) {
     }
 
     /**
-     * Apply slider-specific properties to a SliderView.
-     * Handles value normalization (protocol value range [min,max] → SliderView [0,1]).
+     * Apply slider-specific properties to an [A2UISliderView] (which wraps kuikly's SliderView
+     * and owns "stretch width + measured-size backfill" so kuikly's SliderView stays untouched).
+     * Handles value normalization (protocol value range [min,max] → slider [0,1]).
      * Also registers two-way binding if a binding path is provided.
      */
-    private fun applySliderProps(view: SliderView, props: Map<String, Any?>) {
+    private fun applySliderProps(view: A2UISliderView, props: Map<String, Any?>) {
         val tag = host.registry.getTag(view)
 
         // When called from updateDataModel re-evaluation, props may only contain "value"

@@ -59,7 +59,6 @@ interface A2UIHost {
 
     /**
      * Current width constraint in dp for the surface. Used by:
-     * - Slider width bootstrapping (see [A2UIApplier.createComponent]).
      * - Modal full-screen sizing fallback.
      *
      * For [A2UIPager] this is the pager's `surfaceWidth` (set via setSurfaceWidth).
@@ -80,7 +79,7 @@ interface A2UIHost {
     /**
      * Enqueue [task] to be run *after* the next Kuikly Pager layout pass on this
      * host's owning Pager completes. Used by [A2UIApplier] for post-layout fixes
-     * (Text width in Row, vertical divider height, Slider actual width, etc.).
+     * (Text width in Row, vertical divider height, etc.).
      */
     fun addTaskWhenLayoutFinish(task: () -> Unit)
 

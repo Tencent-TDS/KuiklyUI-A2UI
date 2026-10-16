@@ -2628,7 +2628,9 @@ class A2UIProtocolAdapter {
                 // Per guide: Slider is a leaf component, carries 8dp margin
                 // Per A2UI protocol: Slider should span full width of parent (like Video/AudioPlayer)
                 // No explicit width - alignSelf=stretch handles it in Column context.
-                // A2UIApplier handles the SliderView.didInit() width requirement specially.
+                // The a2ui [A2UISliderView] wrapper observes its own laid-out size via
+                // layoutFrameDidChanged and only mounts the inner kuikly SliderView once the
+                // real width/height are known, so no bootstrap width is needed here.
                 props["alignSelf"] = "stretch"
                 props["height"] = 40
                 props["margin"] = 8
@@ -4513,7 +4515,9 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
                 props["__primaryColor"] = primaryColor
             }
             "Slider" -> {
-                // Mirror buildProps("Slider"): SliderView.didInit() also requires a height.
+                // Mirror buildProps("Slider"): the A2UISliderView wrapper needs a height
+                // (and alignSelf=stretch for full-width) to lay out correctly before it
+                // mounts the inner kuikly SliderView.
                 props["alignSelf"] = "stretch"
                 props["height"] = 40
                 props["margin"] = 8
