@@ -125,8 +125,8 @@ internal enum A2UIFrameworkClassResolver {
     /// callers that need to construct related protocol names such as
     /// `<realClassName>Delegate` — K/N derives the delegate protocol
     /// name from the *exposed* class name after framework-prefix
-    /// mangling (e.g. `AUIDA2UICustomFunctionInvokerBridge` →
-    /// `AUIDA2UICustomFunctionInvokerBridgeDelegate`), so we must use
+    /// mangling (e.g. `AUIDA2UICoreEntry` →
+    /// `AUIDA2UICoreEntryDelegate`), so we must use
     /// the exact resolved name, not the bare `@ObjCName` value.
     static func resolveClassName(objCName: String, frameworkName: String?) -> String? {
         for name in candidateNames(objCName: objCName, frameworkName: frameworkName) {
@@ -312,71 +312,6 @@ internal enum A2UICustomFunctionRegistryBridge {
     }
 }
 
-// MARK: - Custom Function Invoker Bridge (Kuikly-page embedded mode)
-
-/// Swift-side shadow of the Kotlin nested `A2UICustomFunctionInvokerBridge.Delegate`.
-///
-/// The Kotlin interface is declared unannotated (no `@ObjCName`) so K/N
-/// emits `id`-based dispatch — that lets us hand off a Swift object here
-/// without a compile-time dependency on the Kotlin framework. The
-/// selector emitted by K/N for the sole method is
-/// `invokeName:argsJson:spec:` (K/N appends the first parameter's name
-/// automatically), which is what `@objc(invokeName:argsJson:spec:)`
-/// below binds to.
-@objc protocol A2UICustomFunctionInvokerDelegateProtocol {
-    @objc(invokeName:argsJson:spec:)
-    func invoke(name: String, argsJson: String, spec: String) -> Any?
-}
-
-/// Swift-side shadow of the Kotlin `A2UICustomFunctionInvokerBridge` class.
-///
-/// The bridge is a process-global singleton (`+shared`). Callers install
-/// their delegate once at app boot; the DSL bridge on the Kotlin side
-/// picks up `A2UICustomFunctionNativeInvoker.hook` transparently on
-/// first access of `+shared` (see A2UICustomFunctionInvokerBridge.kt).
-@objc protocol A2UICustomFunctionInvokerBridgeProtocol {
-    /// The setter selector K/N emits is `-setDelegate:`; getter is `-delegate`.
-    @objc var delegate: A2UICustomFunctionInvokerDelegateProtocol? { get set }
-}
-
-/// Runtime resolver for the shared `A2UICustomFunctionInvokerBridge`
-/// singleton. Same lookup pattern as
-/// [A2UICustomFunctionRegistryBridge] / [A2UIIconRegistryBridge] — see
-/// their doc comments for the rationale (avoiding a compile-time
-/// dependency on either `A2UICore.framework` or `A2UIDemo.framework`).
-internal enum A2UICustomFunctionInvokerBridge {
-    static var shared: A2UICustomFunctionInvokerBridgeProtocol? {
-        A2UIFrameworkClassResolver.resolveSharedSingleton(
-            objCName: "A2UICustomFunctionInvokerBridge",
-            frameworkName: A2UISurfaceView.frameworkName,
-            as: A2UICustomFunctionInvokerBridgeProtocol.self
-        )
-    }
-}
-
-/// Concrete Swift implementation of
-/// [A2UICustomFunctionInvokerDelegateProtocol]. Held retained by the
-/// [A2UISurfaceView] class-level `installedInvokerDelegate` static
-/// property so it outlives every A2UI surface.
-///
-/// Its sole job is to translate `-invokeName:argsJson:spec:` calls from
-/// the Kotlin side back into
-/// [A2UISurfaceView.invokeCustomFunctionLocallyStatic], which performs
-/// the actual synchronous handler dispatch and value coercion.
-///
-/// Threading: called from the Kuikly Context Queue (same queue that
-/// runs the DSL bridge). The static invoker is thread-safe because it
-/// only touches `A2UISurfaceView`'s `handlersLock`-protected registry
-/// and dispatches to `DispatchQueue.main.async` for `void|async`
-/// handlers.
-final class A2UICustomFunctionInvokerDelegateImpl: NSObject, A2UICustomFunctionInvokerDelegateProtocol {
-    func invoke(name: String, argsJson: String, spec: String) -> Any? {
-        return A2UISurfaceView.invokeCustomFunctionLocallyStatic(
-            name: name, argsJson: argsJson, spec: spec
-        )
-    }
-}
-
 
 /// iOS A2UI Surface View.
 /// This is the main entry point for embedding A2UI rendered content in an iOS application.
@@ -503,8 +438,7 @@ public class A2UISurfaceView: UIView {
     /// for the actual method dispatch.
     ///
     /// Ensure `targetClass` conforms to the K/N-emitted ObjC delegate
-    /// protocol named `<entryClassName>Delegate` (e.g. `AUICA2UICoreEntryDelegate`
-    /// or `AUIDA2UICustomFunctionInvokerBridgeDelegate`).
+    /// protocol named `<entryClassName>Delegate` (e.g. `AUICA2UICoreEntryDelegate`).
     ///
     /// Called from every callsite that installs a Swift instance as a
     /// K/N-side delegate. Kotlin/Native gates `id`-based delegate
@@ -515,12 +449,10 @@ public class A2UISurfaceView: UIView {
     /// - Parameters:
     ///   - entryClassName: The runtime ObjC class name of the enclosing
     ///     Kotlin class that owns the delegate (e.g. the resolved value
-    ///     of `A2UICoreEntry` or `A2UICustomFunctionInvokerBridge`).
+    ///     of `A2UICoreEntry`).
     ///   - targetClass: The Swift/ObjC class we need to *pretend* conforms
     ///     to that protocol. Defaults to `A2UISurfaceView.self` because
-    ///     that's the historical caller — new call-sites should pass the
-    ///     Swift delegate-impl class explicitly (e.g.
-    ///     `A2UICustomFunctionInvokerDelegateImpl.self`).
+    ///     that's the historical caller.
     ///
     /// The protocol is intentionally empty — K/N only checks conformance
     /// by name and then falls back to `respondsToSelector:` + `msgSend`
@@ -590,13 +522,6 @@ public class A2UISurfaceView: UIView {
         globalHandlers[name] = handler
         globalDescriptors[name] = spec
         handlersLock.unlock()
-        // 0) Make sure the KMP-side custom-function invoker bridge has our
-        //    Swift delegate installed so that Kuikly-page embedded mode
-        //    (no per-surface A2UICoreEntry) can still reach these handlers
-        //    at evaluation time. Idempotent — subsequent calls are a
-        //    cheap flag check. See ensureInvokerDelegateInstalled for the
-        //    full rationale.
-        ensureInvokerDelegateInstalled()
         // 1) Push the descriptor to the KMP-side process-global registry so
         //    that the Kuikly-page embedded mode (`A2UISurfaceDSLView`, which
         //    has no per-surface `A2UICoreEntry`) can also see the function.
@@ -604,6 +529,12 @@ public class A2UISurfaceView: UIView {
         //    Safe & idempotent alongside the per-surface broadcast below —
         //    both writes target the same KMP `A2UICustomFunctionRegistry`
         //    JVM-singleton object.
+        //
+        //    Evaluation-time invocation of custom functions in Kuikly-page
+        //    embedded mode no longer needs a Swift-side delegate: it flows
+        //    through the standard Kuikly Module channel (`A2UIBridgeModule`
+        //    → `A2UIBridgeModuleHelper.invokeCustomFunctionWithName:argsJson:spec:`
+        //    → `A2UISurfaceView.invokeCustomFunctionLocallyStatic`).
         A2UICustomFunctionRegistryBridge.shared?.register(name: name, spec: spec)
         // 2) Broadcast to every currently-live standalone `A2UISurfaceView`
         //    so their per-instance `A2UICoreEntry` learns the new descriptor
@@ -658,77 +589,21 @@ public class A2UISurfaceView: UIView {
         return h
     }
 
-    // MARK: - Custom Function Invoker Delegate (Kuikly-page embedded mode)
-
-    /// Retains the Swift-side delegate that KMP's
-    /// `A2UICustomFunctionInvokerBridge.shared` holds a weak/nonretained
-    /// reference to. Without this static, ARC would drop the impl
-    /// immediately after `ensureInvokerDelegateInstalled` returns and
-    /// the Kotlin bridge would dispatch to a dead object.
-    private static var installedInvokerDelegate: A2UICustomFunctionInvokerDelegateImpl?
-
-    /// Install our Swift-side delegate onto the KMP-side
-    /// `A2UICustomFunctionInvokerBridge` **exactly once**. Called from
-    /// `registerCustomFunction` (and from `registerCustomFunctions` /
-    /// `registerA2UIIcons` for parity with all the other registration
-    /// entry points) so business code doesn't need a separate boot-time
-    /// hook.
-    ///
-    /// Why this is the right entry point:
-    ///   * The app must call `A2UISurfaceView.frameworkName = ...` *before*
-    ///     any surface work, so by the time a business layer registers
-    ///     its first custom function the framework class-resolver knows
-    ///     which K/N framework to look at.
-    ///   * `A2UICustomFunctionInvokerBridge.shared` in Kotlin auto-wires
-    ///     itself into `A2UICustomFunctionNativeInvoker.hook` on first
-    ///     access (see A2UICustomFunctionInvokerBridge.kt), so simply
-    ///     touching `.shared` here is enough to activate the whole path.
-    ///
-    /// Threading: registerCustomFunction is expected to be called on the
-    /// main thread at app boot. The `installedInvokerDelegate` static is
-    /// only mutated here, on that thread, so no locking is required.
-    private static func ensureInvokerDelegateInstalled() {
-        if installedInvokerDelegate != nil { return }
-        // 1) K/N gates delegate dispatch on `class_conformsToProtocol`.
-        //    Attach the runtime-generated ObjC protocol
-        //    `<realBridgeClass>Delegate` to our Swift impl before we hand
-        //    it off, otherwise the trampoline in
-        //    `A2UICustomFunctionInvokerBridge.Delegate#invoke` crashes at
-        //    `EXC_BAD_ACCESS` (K/N falls through to an empty Kotlin
-        //    vtable). Mirrors what `initSurface()` already does for
-        //    `<A2UICoreEntry>Delegate` on `A2UISurfaceView`.
-        if let realBridgeClassName = A2UIFrameworkClassResolver.resolveClassName(
-            objCName: "A2UICustomFunctionInvokerBridge",
-            frameworkName: A2UISurfaceView.frameworkName
-        ) {
-            ensureConformsToKotlinDelegateProtocol(
-                entryClassName: realBridgeClassName,
-                targetClass: A2UICustomFunctionInvokerDelegateImpl.self
-            )
-        }
-        let delegate = A2UICustomFunctionInvokerDelegateImpl()
-        installedInvokerDelegate = delegate
-        // 2) Assign after conformance is in place. Reading `.shared` also
-        //    triggers `A2UICustomFunctionInvokerBridge`'s companion
-        //    initializer, which auto-wires `A2UICustomFunctionNativeInvoker.hook`
-        //    on the Kotlin side.
-        A2UICustomFunctionInvokerBridge.shared?.delegate = delegate
-    }
-
     /// Static counterpart of the instance method `invokeCustomFunctionLocally`.
     ///
-    /// This is the path used by
-    /// [A2UICustomFunctionInvokerDelegateImpl] to service Kotlin's
-    /// evaluation-time invoker requests in Kuikly-page embedded mode,
-    /// where there is no `A2UISurfaceView` instance to dispatch through.
-    /// The Native-page path (per-surface `A2UICoreEntry` → `perform` →
-    /// instance `invokeCustomFunctionLocally`) is unchanged.
+    /// Used by `A2UIBridgeModuleHelper.invokeCustomFunctionWithName:argsJson:spec:`
+    /// to service evaluation-time custom-function invocations in
+    /// Kuikly-page embedded mode, where there is no `A2UISurfaceView`
+    /// instance to dispatch through. The Native-page path (per-surface
+    /// `A2UICoreEntry` → `perform` → instance
+    /// `invokeCustomFunctionLocally`) is unchanged.
     ///
     /// Threading: called on the Kuikly Context Queue by the KMP DSL
-    /// bridge. `void|async` handlers are dispatched to the main queue
-    /// and this method returns `nil` immediately; all other handlers
-    /// run inline (must return quickly to avoid stalling render/parse).
-    fileprivate static func invokeCustomFunctionLocallyStatic(
+    /// bridge (via the Module channel). `void|async` handlers are
+    /// dispatched to the main queue and this method returns `nil`
+    /// immediately; all other handlers run inline (must return quickly
+    /// to avoid stalling render/parse).
+    internal static func invokeCustomFunctionLocallyStatic(
         name: String,
         argsJson: String,
         spec: String

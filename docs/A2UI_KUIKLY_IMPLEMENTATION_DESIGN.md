@@ -522,13 +522,19 @@ sealed class A2UIValue {
 4. 若既不是自定义函数、也不是 `openUrl`：打印 warn 日志（"neither a registered custom function nor a reserved A2UI v0.9 built-in"）并静默丢弃，防止 JSON 里错误的 function 名称把宿主拖入未定义行为；
 5. 返回值：是否已处理，被处理的 Action 不再进入常规 `ACTION_CALLBACK` 通道。
 
-##### HarmonyOS 平台的补丁通道
+##### 三端通用的 Module 通道
 
-`A2UIBridgeManager.dispatchToA2UIBridgeModule(...)` 是**只在 HarmonyOS 上生效**的旁路——通过 `KuiklyCore.callModuleMethod("A2UIBridgeModule", ...)` 走 ArkTS 模块通知宿主：
+`A2UIBridgeManager.dispatchToA2UIBridgeModule(...)` 是**三端共用的旁路**——通过 `KuiklyCore.callModuleMethod("A2UIBridgeModule", ...)` 走各平台的 Kuikly Module 系统通知宿主：
 
-- 硬门：`if (!isModuleBasedPlatform) return null`（iOS / JVM 上直接短路，零成本；Android 与 OHOS 均返回 true 并走 Module 通道）；
-- 兼容性：由于历史原因，HarmonyOS 端的 C++ 渲染层不路由部分 A2UI 自有 methodId（105/106/107 等），这条旁路把关键调用同步以 Module Method 形式复制一份给 ArkTS，保证 HarmonyOS 宿主也能收到 `OPEN_URL` / `EXECUTE_FUNCTION_CALL` / `INVOKE_CUSTOM_FUNCTION`；
-- 防御：包裹 `try/catch(Throwable)`，宿主尚未注册 `A2UIBridgeModule` 时打印一条日志、不影响主流程。
+- 硬门：`if (!isModuleBasedPlatform) return null`（Android / OHOS / iOS 均返回 `true` 并走 Module 通道；JVM 返回 `false`，零成本短路）；
+- iOS 二次保险：在硬门之后再做一次 `isA2UIBridgeModuleAvailable()`——基于 `objc_lookUpClass("A2UIBridgeModule")` 预检。只有类真正链接进进程时才继续调用，彻底回避 Kuikly iOS 侧 `KuiklyRenderLayerHandler` 在找不到 Module 时触发的 `NSAssert(NO, "创建Module失败 …")`（该 ObjC `NSException` 跨 K/N 边界不可被 Kotlin `try/catch` 捕获，会直接 abort 进程）；
+- 平台落点：
+  - Android：`A2UIBridgeModule.kt`，由 `A2UIKuiklyBaseViewSupport.wrap(delegate)` 的 `moduleExport("A2UIBridgeModule")` 挂到宿主 Kuikly 页；
+  - OHOS：ArkTS 侧 `A2UIBridgeModule`，由 `A2UIKuiklyRenderViewSupport.getCustomRenderModuleCreatorRegisterMap` 挂到宿主 Kuikly 页；
+  - iOS：ObjC 侧 `A2UIBridgeModule.m`，继承 `KRBaseModule`，由 Kuikly `KuiklyRenderLayerHandler` 的 `NSClassFromString("A2UIBridgeModule")` 自动发现；pod 侧用 `OTHER_LDFLAGS=-ObjC` + `A2UIKuiklyRenderViewSupport.prepareForKuiklyPageHosting()` 中的 `NSClassFromString(...)` 触点双重保活，防止 dead-stripping。
+- 覆盖的方法：`showDateTimePicker` / `executeFunctionCall` / `invokeCustomFunction`（三端对称的 payload 格式）、以及 iOS/OHOS 侧为跨平台 API 对齐而提供的 no-op `contentHeightChanged` / `actionCallback` / `debugLog`；
+- 防御：包裹 `try/catch(Throwable)`，宿主尚未注册 `A2UIBridgeModule` 或 payload 格式异常时打印一条日志、不影响主流程；
+- iOS picker 结果回传：由于 Module 的同步返回值不足以承载异步选择结果，iOS 侧另有一条 `A2UIPickerResultBridge`（KMP → Swift 的 ObjC 单例 bridge），`A2UIBridgeModuleHelper.showPickerWithConfigJson:` 弹完 picker 后通过它调 `A2UIBridgeManager.callKotlinMethod(PICKER_RESULT, …)` 把结果回写到 KMP。Android/OHOS 用各自 Native-side 等价回调。
 
 ##### methodId 常量表（节选）
 

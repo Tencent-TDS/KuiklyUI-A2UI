@@ -43,30 +43,67 @@ import com.tencent.kuikly.core.nvi.serialization.json.JSONObject
  *
  * Usage:
  * ```kotlin
+ * // Native-page mode:
  * val bridge = A2UIDSLBridge(instanceId, nativeBridge)
+ * // Kuikly-page-embedded mode (no per-surface NativeBridge needed):
+ * val bridge = A2UIDSLBridge(instanceId, nativeBridge = null, externalHost = host)
  * bridge.initialize(width = 375f)
  * bridge.writeStream(jsonChunk)
  * bridge.finishStream()
  * // Content height is reported via onContentHeightChanged callback
  * bridge.destroy()
  * ```
+ *
+ * Transport channels
+ * ------------------
+ * This bridge has to reach the platform (native) layer for a few things:
+ * showing the date/time picker, running `executeFunctionCall(openUrl)`,
+ * invoking a registered custom function synchronously, …
+ *
+ * There are two possible wires:
+ *
+ * - **NativeBridge** (`toNative(methodId, …)`): the per-pager Kuikly
+ *   transport. Used *only* in Native-page mode, where this class owns a
+ *   dedicated `NativeBridge` (coming in through the constructor) that is
+ *   handled directly by `A2UISurfaceView.callNative(…)` on all three
+ *   platforms. In Kuikly-page-embedded mode this is `null` and we skip
+ *   the methodId path entirely — the enclosing page's render core would
+ *   have no receiver for those ids anyway.
+ * - **Module channel** (`A2UIBridgeManager.dispatchToA2UIBridgeModule`):
+ *   the standard Kuikly module bus. Used in Kuikly-page-embedded mode on
+ *   all three target platforms (Android / OHOS / iOS); the module class
+ *   `A2UIBridgeModule` is installed on the host Kuikly page's delegate.
+ *
+ * Both wires carry identical payload shapes so Native and Module handlers
+ * are symmetric. Native-page mode normally fires only the NativeBridge
+ * path (the Module path is a cheap compile-time no-op on non-module
+ * targets and a redundant extra call on the others).
  */
 @Suppress("DEPRECATION")
 class A2UIDSLBridge(
     private val instanceId: String,
-    private val nativeBridge: NativeBridge,
+    /**
+     * The per-pager NativeBridge used in **Native-page mode only**. In
+     * **Kuikly-page-embedded mode** this is `null`: the enclosing Kuikly
+     * page owns its own NativeBridge and the enclosing page's render core
+     * has no receiver for A2UI's methodId=103/106/107, so all native
+     * dispatch goes through the Module channel
+     * (`A2UIBridgeManager.dispatchToA2UIBridgeModule`).
+     */
+    private val nativeBridge: NativeBridge?,
     /**
      * The A2UIHost that hosts A2UI-generated components.
      *
      * - If `null` (default / legacy path): [initialize] creates its own [A2UIPager]
      *   via [PagerManager.createPager], and this bridge fully owns the pager lifecycle
      *   (register NativeBridge, destroy pager on [destroy]). This matches the existing
-     *   native A2UISurfaceView integration.
+     *   native A2UISurfaceView integration. [nativeBridge] MUST be non-null in this
+     *   mode.
      *
      * - If non-null (embedded / DSL path): the bridge attaches [A2UIApplier] to the
      *   provided host directly, without creating or destroying any Pager. The caller
-     *   (e.g. `A2UISurfaceDSLView`) owns the pager lifecycle and provides a shared
-     *   NativeBridge from the enclosing Kuikly page.
+     *   (e.g. `A2UISurfaceDSLView`) owns the pager lifecycle. All platform dispatch
+     *   happens through the Module channel in this mode.
      */
     private val externalHost: A2UIHost? = null
 ) {
@@ -159,9 +196,12 @@ class A2UIDSLBridge(
             BridgeManager.currentPageId = activeHost.hostPagerId
         } else {
             // Legacy mode: own the Pager lifecycle.
+            // In this mode [nativeBridge] is contractually non-null.
+            val transport = nativeBridge
+                ?: error("A2UIDSLBridge: nativeBridge must be non-null in Native-page mode")
 
             // Register NativeBridge with BridgeManager
-            BridgeManager.registerNativeBridge(instanceId, nativeBridge)
+            BridgeManager.registerNativeBridge(instanceId, transport)
 
             // Register the A2UIPager as a page
             PagerManager.registerPageRouter("a2ui_dsl_$instanceId") { A2UIPager() }
@@ -531,20 +571,9 @@ class A2UIDSLBridge(
     }
 
     /**
-     * Expose the [NativeBridge] this DSL bridge was constructed with so the
-     * embedded surface path (which owns the bridge lifecycle without going
-     * through the legacy INIT → [A2UIBridgeManager.initInstance] handshake)
-     * can still reuse manager-level helpers (e.g. `tryHandleFunctionCall`)
-     * that need a `NativeBridge` handle.
-     *
-     * Marked `internal` because only the embed accessor should reach in for it.
-     */
-    internal fun getNativeBridge(): NativeBridge = nativeBridge
-
-    /**
      * In embedded mode (Kuikly page hosts an A2UISurface DSL), the enclosing
      * Kuikly page's pagerId — used to route `callModuleMethod` calls to the
-     * ArkTS-side `A2UIBridgeModule`, which is installed on the *host*
+     * host-side `A2UIBridgeModule`, which is installed on the *host*
      * Kuikly page's delegate rather than on the internal A2UI child pager.
      * Returns `null` in legacy Native-page mode; callers should then fall
      * back to `instanceId` (which equals the child pager's own pagerId).
@@ -556,85 +585,59 @@ class A2UIDSLBridge(
      * custom A2UI function synchronously, then return its raw value to the
      * protocol adapter for coercion.
      *
-     * On all platforms this uses [NativeBridge.toNative] with method id
-     * [A2UINativeMethod.INVOKE_CUSTOM_FUNCTION], which is a synchronous
-     * round-trip on the Kuikly Context Thread (handled directly by
-     * [A2UISurfaceView] in Native-page mode). In Kuikly-page-embedded mode
-     * the enclosing page's render core has no receiver for that methodId,
-     * so we additionally dispatch via `BridgeManager.callModuleMethod(...,
-     * syncCall = 1)` on module-based platforms (Android & OHOS); the return
-     * value from either call is used, preferring the NativeBridge result.
-     * iOS Kuikly-page-embedded mode goes through the
-     * [A2UICustomFunctionNativeInvoker] singleton hook instead — see below.
+     * Two symmetric channels (both carry the same `name / spec / argsJson`
+     * payload shape):
+     *
+     * 1. **Native-page mode** (this bridge owns a per-surface NativeBridge):
+     *    dispatch via [NativeBridge.toNative] with methodId
+     *    [A2UINativeMethod.INVOKE_CUSTOM_FUNCTION]. The platform's
+     *    `A2UISurfaceView.callNative(…)` handles the id directly and runs
+     *    the registered handler synchronously on the Kuikly Context Thread.
+     * 2. **Kuikly-page-embedded mode** (nativeBridge is null, [externalHost]
+     *    is set): dispatch via [A2UIBridgeManager.dispatchToA2UIBridgeModule]
+     *    with method `"invokeCustomFunction"`, syncCall=1. The host-page's
+     *    `A2UIBridgeModule` executes the handler and returns the raw value.
+     *    This path is active on all three target platforms (Android / OHOS
+     *    / iOS) — see `A2UIBridgeModule.kt` / `.ets` / `.m`.
+     *
+     * The embedded path routes by `externalHost.hostPagerId` because the
+     * `A2UIBridgeModule` lives on the enclosing Kuikly page's delegate,
+     * not on this bridge's own (child) pager.
      *
      * NOTE: The caller (adapter) is responsible for guarding this against
      *       VOID descriptors; VOID functions never reach expression paths.
      */
     private fun invokeCustomFunctionOnNative(name: String, argsJson: String, spec: String): Any? {
-        // 0) Preferred path (iOS Kuikly-page embedded mode): if the platform
-        //    installed a synchronous invoker hook, use it directly. This
-        //    bypasses `nativeBridge.toNative(107, …)` entirely — which
-        //    matters in embedded mode where `nativeBridge` is the enclosing
-        //    Kuikly page's bridge and has no receiver installed for
-        //    methodId 107. See A2UICustomFunctionNativeInvoker for the
-        //    full rationale. Android/OHOS deliberately leave the hook
-        //    unset, so this call is a cheap null-check on those platforms.
-        try {
-            val hookResult = com.tencent.kuikly.a2ui.function
-                .A2UICustomFunctionNativeInvoker.hook?.invoke(name, argsJson, spec)
-            if (hookResult != null) return hookResult
-        } catch (_: Exception) {
-            // Fall through to the classic transport on hook failure so
-            // Native-page semantics remain intact.
-        }
-
-        // 1) Direct sync round-trip to native (Android/iOS Native-page path).
-        val direct = try {
-            nativeBridge.toNative(
-                A2UINativeMethod.INVOKE_CUSTOM_FUNCTION,
-                instanceId,
-                name,
-                argsJson,
-                spec,
-                null,
+        return if (externalHost == null) {
+            // Native-page: direct per-surface NativeBridge round-trip.
+            // `nativeBridge` is contractually non-null in this mode (see
+            // the `error(...)` guard in `initialize`); use `!!` so a bug
+            // that regresses that invariant fails loud.
+            try {
+                nativeBridge!!.toNative(
+                    A2UINativeMethod.INVOKE_CUSTOM_FUNCTION,
+                    instanceId,
+                    name,
+                    argsJson,
+                    spec,
+                    null,
+                    null
+                )
+            } catch (_: Exception) {
                 null
-            )
-        } catch (_: Exception) {
-            null
+            }
+        } else {
+            // Kuikly-page-embedded: standard Module channel. Payload shape
+            // mirrors the Native-page NativeBridge call so the module side
+            // can parse name/spec/argsJson by splitting on '\n'.
+            com.tencent.kuikly.a2ui.bridge.A2UIBridgeManager
+                .dispatchToA2UIBridgeModule(
+                    externalHost.hostPagerId,
+                    "invokeCustomFunction",
+                    "$name\n$spec\n$argsJson",
+                    1
+                )
         }
-        if (direct != null) return direct
-
-        // 2) Module-based platforms (Android & OHOS) in Kuikly-page-embedded
-        //    mode: the enclosing page's render core does not deliver method
-        //    id 107 to any A2UI handler, so we go through the standard Module
-        //    mechanism with syncCall=1. Payload format:
-        //    "name\nspec\nargsJson" so the native side can split on '\n'.
-        //
-        //    In embedded mode (Kuikly page hosts an A2UISurface DSL), the DSL
-        //    creates its own child pager with `instanceId="a2ui_embed_N"`,
-        //    which has no native delegate → `callModuleMethod` by that id
-        //    finds no `A2UIBridgeModule` and returns null. The `A2UIBridgeModule`
-        //    is actually installed on the *host* Kuikly page's delegate
-        //    (see `A2UIKuiklyBaseViewSupport.wrap` on Android and
-        //    `A2UIKuiklyRenderViewSupport.getCustomRenderModuleCreatorRegisterMap`
-        //    on OHOS). So we route by `externalHost.hostPagerId` when present.
-        //    Legacy Native-page mode (externalHost == null) keeps using
-        //    `instanceId`, which equals its own pagerId and works as before.
-        val moduleInstanceId = externalHost?.hostPagerId ?: instanceId
-        // On Android/OHOS this returns the native-side sync result; on
-        // iOS/JVM the helper silently returns null because `A2UIBridgeModule`
-        // isn't registered there — the primary sync path is
-        // `nativeBridge.toNative(INVOKE_CUSTOM_FUNCTION)` above (Native-page
-        // mode) or the `A2UICustomFunctionNativeInvoker` singleton (iOS
-        // Kuikly-page-embedded mode).
-        val moduleResult = com.tencent.kuikly.a2ui.bridge.A2UIBridgeManager
-            .dispatchToA2UIBridgeModule(
-                moduleInstanceId,
-                "invokeCustomFunction",
-                "$name\n$spec\n$argsJson",
-                1
-            )
-        return moduleResult
     }
 
     /**
@@ -655,43 +658,43 @@ class A2UIDSLBridge(
     fun showDateTimePicker(tag: Int, enableDate: Boolean, enableTime: Boolean, currentValue: String, label: String, min: String = "", max: String = "") {
         val minPart = if (min.isNotEmpty()) ",\"min\":\"$min\"" else ""
         val maxPart = if (max.isNotEmpty()) ",\"max\":\"$max\"" else ""
-        // Include our own DSL instanceId so the module-based platform side
-        // (OHOS ArkTS, Android A2UIBridgeModule) can route the picker result
-        // back through the KMP unidirectional top-level bridge — in embedded
-        // mode there is no `A2UISurfaceView` to send the standard
-        // `a2ui_pickerResult` event through. Native-mode handlers ignore
-        // this field. See A2UISurfaceView.ets:A2UIBridgeModule on OHOS and
-        // A2UIBridgeModule.kt on Android.
+        // Include our own DSL instanceId so the Module-side handler
+        // (A2UIBridgeModule on Android / iOS / OHOS) can route the picker
+        // result back through `A2UIBridgeManager.callKotlinMethod(PICKER_RESULT, …)`
+        // — in Kuikly-page-embedded mode there is no `A2UISurfaceView` to
+        // dispatch the result through. Native-page handlers ignore this field.
         val configJson = "{\"tag\":$tag,\"enableDate\":$enableDate,\"enableTime\":$enableTime,\"value\":\"$currentValue\",\"label\":\"$label\",\"dslInstanceId\":\"$instanceId\"$minPart$maxPart}"
-        nativeBridge.toNative(
-            A2UINativeMethod.SHOW_DATE_TIME_PICKER,
-            instanceId,
-            tag,
-            configJson,
-            null,
-            null,
-            null
-        )
-        // Also dispatch via callModuleMethod for module-based platforms
-        // (Android & OHOS). In Kuikly-page-embedded mode the enclosing page's
-        // render core has no receiver for methodId=103, so the Module channel
-        // is the only effective path there.
-        //
-        // In embedded mode (Kuikly page hosts an A2UISurface DSL), our own
-        // `instanceId` is that of the internal `A2UIPager` child which has
-        // NO native delegate — `A2UIBridgeModule` is installed on the outer
-        // host Kuikly page's delegate. Route by `externalHost.hostPagerId`
-        // so the module call actually reaches native. Native-page mode keeps
-        // using `instanceId` (which equals its own pagerId) and works as
-        // before. Mirrors the same trick used by `invokeCustomFunctionOnNative`.
-        val moduleInstanceId = externalHost?.hostPagerId ?: instanceId
-        com.tencent.kuikly.a2ui.bridge.A2UIBridgeManager.dispatchToA2UIBridgeModule(
-            moduleInstanceId,
-            "showDateTimePicker",
-            configJson,
-            1
-        )
-        nativeBridge.toNative(A2UINativeMethod.FLUSH_UI_TASKS, instanceId, null, null, null, null, null)
+        if (externalHost == null) {
+            // Native-page: send through the per-surface NativeBridge.
+            // `A2UISurfaceView.callNative(SHOW_DATE_TIME_PICKER, …)` on each
+            // platform pops the picker locally and sends the result back
+            // via `callKotlinMethod(PICKER_RESULT, …)`.
+            val transport = nativeBridge
+                ?: error("A2UIDSLBridge: nativeBridge must be non-null in Native-page mode")
+            transport.toNative(
+                A2UINativeMethod.SHOW_DATE_TIME_PICKER,
+                instanceId,
+                tag,
+                configJson,
+                null,
+                null,
+                null
+            )
+            transport.toNative(A2UINativeMethod.FLUSH_UI_TASKS, instanceId, null, null, null, null, null)
+        } else {
+            // Kuikly-page-embedded: route through the standard Module channel.
+            // The `A2UIBridgeModule` installed on the host Kuikly page's
+            // delegate pops the native picker and sends the result back
+            // via `A2UIBridgeManager.callKotlinMethod(PICKER_RESULT, …)`.
+            com.tencent.kuikly.a2ui.bridge.A2UIBridgeManager.dispatchToA2UIBridgeModule(
+                externalHost.hostPagerId,
+                "showDateTimePicker",
+                configJson,
+                1
+            )
+            // Host Kuikly page's own render loop flushes UI tasks after we
+            // return; no need to send a per-surface FLUSH_UI_TASKS here.
+        }
     }
 
     /**

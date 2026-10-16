@@ -18,7 +18,6 @@ package com.tencent.kuikly.a2ui.bridge
 import com.tencent.kuikly.a2ui.adapter.A2UIIconRegistry
 import com.tencent.kuikly.a2ui.dsl.A2UIDSLBridge
 import com.tencent.kuikly.a2ui.dsl.A2UICustomViewRegistry
-import com.tencent.kuikly.a2ui.function.A2UICustomFunctionNativeInvoker
 import com.tencent.kuikly.a2ui.function.A2UICustomFunctionRegistry
 import com.tencent.kuikly.a2ui.function.A2UIFunctionInvokeMode
 import com.tencent.kuikly.a2ui.function.A2UIFunctionReturnType
@@ -67,29 +66,35 @@ object A2UIBridgeManager {
      * executeFunctionCall, invokeCustomFunction, contentHeightChanged,
      * actionCallback, openUrl, …) through the standard
      * `BridgeManager.callModuleMethod` bus instead of inventing a parallel
-     * methodId extension point. Supported on both Android (installed via
-     * `A2UIKuiklyBaseViewSupport.wrap`) and HarmonyOS (installed via
-     * `A2UIKuiklyRenderViewSupport.getCustomRenderModuleCreatorRegisterMap`).
+     * methodId extension point.
      *
-     * We must *not* call `BridgeManager.callModuleMethod("A2UIBridgeModule", …)`
-     * on platforms that don't register the module:
+     * All three target platforms participate in this channel:
+     *   * Android: installed via `A2UIKuiklyBaseViewSupport.wrap`.
+     *   * OHOS:    installed via `A2UIKuiklyRenderViewSupport
+     *                            .getCustomRenderModuleCreatorRegisterMap`.
+     *   * iOS:     resolved by `KuiklyRenderLayerHandler` via
+     *              `NSClassFromString("A2UIBridgeModule")` — the render pod
+     *              ships the class and keeps it alive with `-ObjC` /
+     *              `-force_load`.
      *
-     * * On **iOS**, `KuiklyRenderCore` raises an **Objective-C `NSException`**
-     *   ("创建Module失败 … 找不到对应Module实现") through `NSAssert` — this
-     *   is *not* a Kotlin `Throwable`, so a `catch (_: Throwable)` in K/N
-     *   cannot catch it. The exception then crosses the K/N boundary and
-     *   trips `TerminateHandler::kotlinHandler()`, aborting the process.
-     * * On **JVM** (unit tests, server renderer), no Kuikly render export
-     *   is wired up at all.
+     * iOS carries a sharp edge that drives the two-layer gate below:
+     * if `A2UIBridgeModule` is somehow NOT linked into the process (host
+     * app forgot the pod, dead-stripping surprise), `KuiklyRenderCore`
+     * raises an **Objective-C `NSException`** ("创建Module失败 … 找不到
+     * 对应Module实现") through `NSAssert`. That exception is NOT a Kotlin
+     * `Throwable`, so a `catch (_: Throwable)` in K/N cannot catch it —
+     * it crosses the K/N boundary and aborts the process. We therefore
+     * `objc_lookUpClass`-check availability *before* calling the module
+     * dispatcher on iOS; on Android/OHOS/JVM the check is a cheap
+     * constant.
      *
-     * The only safe design is therefore "guard first, dispatch only on
-     * platforms that register the module". [isModuleBasedPlatform] resolves
-     * at compile-time via per-source-set `actual` so the JIT / K/N optimizer
-     * can typically fold the check away entirely on non-module targets.
+     * [isModuleBasedPlatform] still resolves at compile-time via
+     * per-source-set `actual` so JVM / future non-render targets fold
+     * the whole function to a no-op.
      *
-     * A defensive `try/catch(Throwable)` is still kept so a misconfigured
-     * host app (module name typo, register-order bug) degrades to a no-op
-     * instead of taking down the render pipeline.
+     * A defensive `try/catch(Throwable)` is kept so a misconfigured host
+     * app (module name typo, register-order bug) still degrades to a
+     * no-op instead of taking down the render pipeline.
      */
     internal fun dispatchToA2UIBridgeModule(
         instanceId: String,
@@ -97,9 +102,12 @@ object A2UIBridgeManager {
         payload: Any?,
         syncCall: Int
     ): Any? {
-        // Hard gate: `A2UIBridgeModule` is only registered on Android / OHOS.
-        // Never even attempt the call on iOS / JVM — see KDoc above.
+        // Hard gate 1: compile-time, folds away on JVM.
         if (!isModuleBasedPlatform) return null
+        // Hard gate 2: runtime availability check (iOS: objc_lookUpClass).
+        //   On Android/OHOS this is a constant `true`; on iOS it catches
+        //   the "pod not linked" case before Kuikly's own NSAssert fires.
+        if (!isA2UIBridgeModuleAvailable()) return null
         return try {
             BridgeManager.callModuleMethod(
                 instanceId,
@@ -214,13 +222,6 @@ object A2UIBridgeManager {
     }
 
     /**
-     * Get the NativeBridge for an instance.
-     */
-    internal fun getNativeBridge(instanceId: String): NativeBridge? {
-        return nativeBridgeMap[instanceId]
-    }
-
-    /**
      * Get the DSL bridge for an instance.
      */
     internal fun getDSLBridge(instanceId: String): A2UIDSLBridge? {
@@ -271,22 +272,31 @@ object A2UIBridgeManager {
      * Attempt to intercept an A2UI `action.functionCall` and execute it via the
      * native/module bridge locally, so DSL-embedded surfaces get the same
      * behaviour as the legacy native-embedded surfaces (custom void functions
-     * routed to [A2UINativeMethod.INVOKE_CUSTOM_FUNCTION]; built-in like
-     * `openUrl` routed to [A2UINativeMethod.EXECUTE_FUNCTION_CALL]).
+     * routed to [A2UINativeMethod.INVOKE_CUSTOM_FUNCTION] / Module channel;
+     * built-in like `openUrl` routed to [A2UINativeMethod.EXECUTE_FUNCTION_CALL]
+     * / Module channel).
      *
      * Returns `true` if the action was handled here (caller must NOT forward to
      * its host `.action { }` callback). Returns `false` for non-functionCall
-     * actions and for cases the manager cannot reach the native bridge — the
-     * caller should then forward the raw JSON to the host as before.
+     * actions.
+     *
+     * Dispatch channel is picked by hosting mode:
+     *   * Native-page mode (`nativeBridgeMap[instanceId]` is set): go through
+     *     the per-surface `NativeBridge.toNative(methodId=106/107, …)`.
+     *   * Kuikly-page-embedded mode (`dslBridgeMap[instanceId]` has a non-null
+     *     `getHostPagerId()`): go through
+     *     [dispatchToA2UIBridgeModule] with the host page's pagerId.
      */
     internal fun tryHandleFunctionCall(instanceId: String, actionJson: String): Boolean {
-        // Legacy native-embedded path registers the NativeBridge via INIT →
-        // initInstance; DSL-embedded path does NOT (it owns the bridge itself),
-        // so we fall back to the DSL bridge's own NativeBridge when the map is empty.
-        val nativeBridge = nativeBridgeMap[instanceId]
-            ?: dslBridgeMap[instanceId]?.getNativeBridge()
-            ?: return false
-        return executeFunctionCallIfNeeded(instanceId, nativeBridge, actionJson)
+        // Native-page mode is identified by the presence of a per-surface
+        // NativeBridge in `nativeBridgeMap` (populated by `initInstance`).
+        // Embedded mode leaves the map empty and uses the Module channel
+        // instead (resolved inside executeFunctionCallIfNeeded by looking
+        // up the host pagerId through the DSL bridge).
+        if (dslBridgeMap[instanceId] == null && nativeBridgeMap[instanceId] == null) {
+            return false
+        }
+        return executeFunctionCallIfNeeded(instanceId, actionJson)
     }
 
     // region Private Methods
@@ -349,7 +359,11 @@ object A2UIBridgeManager {
         // Per A2UI protocol: action.functionCall invokes a client-side function.
         // Execute known functions locally via EXECUTE_FUNCTION_CALL native method
         // (e.g. openUrl) instead of just passing the raw JSON to the host.
-        if (executeFunctionCallIfNeeded(instanceId, nativeBridge, actionJson)) {
+        // `executeFunctionCallIfNeeded` resolves the transport internally
+        // (Native-page NativeBridge from `nativeBridgeMap` vs. Module channel
+        // via `dslBridgeMap[...].getHostPagerId()`), so we no longer need to
+        // pass a bridge here.
+        if (executeFunctionCallIfNeeded(instanceId, actionJson)) {
             return
         }
 
@@ -424,8 +438,13 @@ object A2UIBridgeManager {
 
         // Set up action callback
         dslBridge.onAction = { surfaceId, tag, action ->
-            // Per A2UI protocol: intercept functionCall actions and execute locally
-            if (!executeFunctionCallIfNeeded(instanceId, nativeBridge, action)) {
+            // Per A2UI protocol: intercept functionCall actions and execute locally.
+            // `executeFunctionCallIfNeeded` picks the Native-page transport
+            // (NativeBridge from `nativeBridgeMap`) itself when the action
+            // is a known functionCall; this closure's `nativeBridge` capture
+            // is still used below for the non-functionCall ACTION_CALLBACK
+            // fallback.
+            if (!executeFunctionCallIfNeeded(instanceId, action)) {
                 nativeBridge.toNative(
                     A2UINativeMethod.ACTION_CALLBACK,
                     instanceId,
@@ -579,12 +598,24 @@ object A2UIBridgeManager {
      * (e.g. openUrl) that should be executed by the framework rather
      * than forwarded to the host as a raw event.
      *
+     * Dispatch strategy (symmetric with [A2UIDSLBridge.showDateTimePicker] /
+     * [A2UIDSLBridge.invokeCustomFunctionOnNative]):
+     *
+     * * **Native-page mode** (`nativeBridgeMap[instanceId]` is set): send
+     *   methodId 106/107 through the per-surface NativeBridge; the surface's
+     *   `callNative(…)` on each platform handles it directly. Follow with
+     *   `FLUSH_UI_TASKS` to keep the host's render queue warm.
+     * * **Kuikly-page-embedded mode** (the DSL bridge reports a non-null
+     *   `getHostPagerId()`): dispatch through the Module channel keyed by
+     *   the host pager id so the enclosing page's `A2UIBridgeModule` picks
+     *   it up. The host page's own render loop flushes UI tasks after we
+     *   return, so no separate `FLUSH_UI_TASKS` is needed here.
+     *
      * @return true if the action was a functionCall and was handled (caller should
      *         NOT forward to ACTION_CALLBACK); false otherwise.
      */
     private fun executeFunctionCallIfNeeded(
         instanceId: String,
-        nativeBridge: NativeBridge,
         actionJson: String
     ): Boolean {
         // Quick check to avoid parsing non-functionCall actions
@@ -598,16 +629,17 @@ object A2UIBridgeManager {
             val args = functionCall.optJSONObject("args")
             val argsJson = args?.toString() ?: "{}"
 
-            // In embedded mode (Kuikly page hosts an A2UISurface DSL), the DSL
-            // creates its own child pager with `instanceId="a2ui_embed_N"`,
-            // which has no ArkTS delegate → `callModuleMethod` by that id
-            // finds no `A2UIBridgeModule` and returns null. The `A2UIBridgeModule`
-            // is actually installed on the *host* Kuikly page's delegate
-            // (see `A2UIKuiklyRenderViewSupport.getCustomRenderModuleCreatorRegisterMap`).
-            // So we route by the DSL bridge's host pagerId when present.
-            // Legacy Native-page mode returns null, and we fall back to
-            // `instanceId` (which equals the child pager's own pagerId).
-            val moduleInstanceId = dslBridgeMap[instanceId]?.getHostPagerId() ?: instanceId
+            // Decide which transport to use.
+            //   * Native-page mode: `nativeBridgeMap[instanceId]` was populated
+            //     by `initInstance`, so we can hit `nativeBridge.toNative(…)`.
+            //   * Kuikly-page-embedded mode: the DSL-embedded surface never
+            //     registered a NativeBridge under its own instanceId, but it
+            //     did `registerDslBridge`, and that bridge knows the enclosing
+            //     Kuikly page's pagerId. We route the Module call through that
+            //     host pagerId so `A2UIBridgeModule` (installed on the host's
+            //     delegate) actually receives it.
+            val transport = nativeBridgeMap[instanceId]
+            val hostPagerId = dslBridgeMap[instanceId]?.getHostPagerId()
 
             // First, check if this is a user-registered custom void function.
             // Non-void custom functions must not appear in an `action.functionCall`
@@ -615,63 +647,36 @@ object A2UIBridgeManager {
             val custom = A2UICustomFunctionRegistry.lookup(call)
             if (custom != null && custom.returnType == A2UIFunctionReturnType.VOID) {
                 val spec = custom.toSpec()
-                // iOS (Kuikly-Page mode): the host has installed a direct in-process
-                // hook via `A2UICustomFunctionNativeInvoker`. Prefer it — it delivers
-                // the invocation straight to the Swift-side global handler without
-                // going through `nativeBridge.toNative(107, …)` (whose methodId is
-                // unknown to Kuikly's iOS render core when A2UI is embedded inside a
-                // Kuikly page) nor through the `A2UIBridgeModule` module bus (which
-                // is HarmonyOS-only). If the hook is not installed (Android/OHOS,
-                // or iOS native-page mode where liveSurfaces broadcasting already
-                // covers registration), we fall through to the platform paths below.
-                val hook = A2UICustomFunctionNativeInvoker.hook
-                if (hook != null) {
-                    try {
-                        hook(call, argsJson, spec)
-                    } catch (_: Exception) {
-                        // Void actions are fire-and-forget: swallow any thrown
-                        // exception so a mis-behaving custom handler cannot bring
-                        // down the render pipeline.
-                    }
-                    nativeBridge.toNative(A2UINativeMethod.FLUSH_UI_TASKS, instanceId, null, null, null, null, null)
-                    return true
-                }
-                nativeBridge.toNative(
-                    A2UINativeMethod.INVOKE_CUSTOM_FUNCTION,
-                    instanceId,
-                    call,
-                    argsJson,
-                    spec,
-                    null,
-                    null
-                )
-                // Module-based platforms (Android & OHOS): also dispatch via
-                // callModuleMethod. ASYNC void functions use syncCall=0
-                // (fire-and-forget); SYNC void functions use syncCall=1 for
-                // ordered execution. iOS/JVM no-op via [dispatchToA2UIBridgeModule].
                 val syncCallFlag = if (custom.invokeMode == A2UIFunctionInvokeMode.SYNC) 1 else 0
-                dispatchToA2UIBridgeModule(
-                    moduleInstanceId,
-                    "invokeCustomFunction",
-                    "$call\n$spec\n$argsJson",
-                    syncCallFlag
-                )
-                nativeBridge.toNative(A2UINativeMethod.FLUSH_UI_TASKS, instanceId, null, null, null, null, null)
+                if (transport != null) {
+                    // Native-page: directly invoke via NativeBridge; the
+                    // per-surface A2UISurfaceView handles methodId=107.
+                    transport.toNative(
+                        A2UINativeMethod.INVOKE_CUSTOM_FUNCTION,
+                        instanceId,
+                        call,
+                        argsJson,
+                        spec,
+                        null,
+                        null
+                    )
+                    transport.toNative(A2UINativeMethod.FLUSH_UI_TASKS, instanceId, null, null, null, null, null)
+                } else if (hostPagerId != null) {
+                    // Kuikly-page-embedded: Module channel to the host page's
+                    // A2UIBridgeModule. ASYNC void functions use syncCall=0
+                    // (fire-and-forget); SYNC void functions use syncCall=1
+                    // for ordered execution.
+                    dispatchToA2UIBridgeModule(
+                        hostPagerId,
+                        "invokeCustomFunction",
+                        "$call\n$spec\n$argsJson",
+                        syncCallFlag
+                    )
+                }
                 return true
             }
 
-            // Dispatch to native layer via EXECUTE_FUNCTION_CALL for known built-in functions.
-            // The native render layer (A2UISurfaceView) handles the actual UI
-            // (e.g. opening a browser for openUrl).
-            //
-            // Per A2UI v0.9 spec the only standard `action.functionCall` intent
-            // is `openUrl`. If the JSON tries to invoke a name that is neither a
-            // registered custom function nor `openUrl`, log a warning so it is
-            // easy to catch misspelled or non-spec `call` values in demos and
-            // production JSON alike. We still forward the call to the platform
-            // layer so existing platform-specific hooks (if any) keep working;
-            // hosts that want strict behaviour should reject the payload
-            // themselves in the platform-side executeFunctionCall handler.
+            // Built-in function (per A2UI v0.9 only `openUrl` is reserved).
             if (!A2UICustomFunctionRegistry.isReserved(call)) {
                 println(
                     "[A2UI] warn: action.functionCall '$call' is not a registered custom " +
@@ -679,24 +684,28 @@ object A2UIBridgeManager {
                         "Consider emitting action.event instead — see A2UI_INTEGRATION_*.md."
                 )
             }
-            nativeBridge.toNative(
-                A2UINativeMethod.EXECUTE_FUNCTION_CALL,
-                instanceId,
-                call,
-                argsJson,
-                null,
-                null,
-                null
-            )
-            // Also dispatch via callModuleMethod for module-based platforms
-            // (Android & OHOS). iOS/JVM no-op via [dispatchToA2UIBridgeModule].
-            dispatchToA2UIBridgeModule(
-                moduleInstanceId,
-                "executeFunctionCall",
-                "$call\n$argsJson",
-                1
-            )
-            nativeBridge.toNative(A2UINativeMethod.FLUSH_UI_TASKS, instanceId, null, null, null, null, null)
+            if (transport != null) {
+                // Native-page: EXECUTE_FUNCTION_CALL methodId=106 handled
+                // directly by A2UISurfaceView.callNative on each platform.
+                transport.toNative(
+                    A2UINativeMethod.EXECUTE_FUNCTION_CALL,
+                    instanceId,
+                    call,
+                    argsJson,
+                    null,
+                    null,
+                    null
+                )
+                transport.toNative(A2UINativeMethod.FLUSH_UI_TASKS, instanceId, null, null, null, null, null)
+            } else if (hostPagerId != null) {
+                // Kuikly-page-embedded: Module channel.
+                dispatchToA2UIBridgeModule(
+                    hostPagerId,
+                    "executeFunctionCall",
+                    "$call\n$argsJson",
+                    1
+                )
+            }
             return true
         } catch (e: Exception) {
             return false

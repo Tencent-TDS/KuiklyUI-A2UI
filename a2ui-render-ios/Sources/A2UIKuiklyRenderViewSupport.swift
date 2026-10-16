@@ -131,6 +131,17 @@ public final class A2UIKuiklyRenderViewSupport: NSObject {
                 A2UICustomViewRegistryBridge.shared?.unregister(viewName: viewName)
             }
         )
+
+        // 3) Belt-and-braces touch of `A2UIBridgeModule` so the ObjC
+        //    class is kept alive even if the host app's linker drops
+        //    `-ObjC` / `-force_load`. Without a live symbol table entry
+        //    `KuiklyRenderLayerHandler.p_moduleHandlerWithModuleName:`
+        //    would eventually hit its `NSAssert(NO, "创建Module失败 … ")`
+        //    for A2UI method calls, which K/N cannot catch as a Kotlin
+        //    `Throwable`. The matching KMP-side `objc_lookUpClass`
+        //    pre-check (`isA2UIBridgeModuleAvailable` in `Platform.ios.kt`)
+        //    still protects us if this touch somehow didn't happen.
+        _ = NSClassFromString("A2UIBridgeModule")
     }
 
     /// Convenience overload: performs the same KMP-side custom-view

@@ -17,7 +17,6 @@ package com.tencent.kuikly.a2ui.bridge
 
 import com.tencent.kuikly.a2ui.adapter.A2UIIconRegistry
 import com.tencent.kuikly.a2ui.dsl.A2UICustomViewRegistry
-import com.tencent.kuikly.a2ui.function.A2UICustomFunctionNativeInvoker
 import com.tencent.kuikly.a2ui.function.A2UICustomFunctionRegistry
 import com.tencent.kuikly.core.nvi.NativeBridge
 import kotlin.experimental.ExperimentalObjCName
@@ -342,105 +341,70 @@ class A2UICustomFunctionRegistryBridge private constructor() {
 }
 
 /**
- * ObjC-facing bridge that lets the iOS native side supply a **synchronous**
- * invoker for A2UI custom functions.
+ * ObjC-facing bridge that lets the iOS Swift/ObjC layer push a native
+ * date/time picker result back into the KMP `A2UIBridgeManager`.
  *
- * Purpose — closing the second half of the Kuikly-page-embedded gap:
+ * Why this exists
+ * ---------------
+ * In **Kuikly-page-embedded mode** iOS no longer has a per-surface
+ * `A2UICoreEntry` to transport `PICKER_RESULT` through — the KMP core
+ * now reaches the native side exclusively via the standard Kuikly
+ * Module channel (`A2UIBridgeModule.showDateTimePicker`). The picker,
+ * however, is user-driven and the result is produced asynchronously
+ * long after `callModuleMethod` returns, so it cannot be delivered
+ * through the module's synchronous return value.
  *
- *   Registration metadata is already synced into KMP via
- *   [A2UICustomFunctionRegistryBridge] (see the register/unregister
- *   plumbing above). But at *evaluation time*, the DSL applier's
- *   `evaluateCustomFunctionAsString` still needs to actually execute the
- *   Swift/ObjC handler and receive its return value.
+ * The symmetric solution — mirroring the OHOS
+ * `a2uiNotifyPickerResult` NAPI writer and the Android
+ * `A2UIAndroidNativeMethodHandler.sendPickerResult` → `callKotlinMethod`
+ * path — is to let the Swift module expose a tiny top-level bridge that
+ * reaches straight back into `A2UIBridgeManager.callKotlinMethod(
+ * PICKER_RESULT, …)` on the Kuikly Context Thread.
  *
- *   In Native-page mode this works because the surface's own
- *   `A2UICoreEntry` transports the [A2UINativeMethod.INVOKE_CUSTOM_FUNCTION]
- *   message through `nativeBridge.toNative` → the surface's own
- *   `A2UISurfaceView.perform(...)` → `invokeCustomFunctionLocally`.
+ * Selectors (must match what Swift's `A2UIBridgeModule` expects):
+ *   - `+shared`                         → the process-global singleton
+ *   - `-sendDslInstanceId:tag:isoString:` → forward to
+ *     `A2UIBridgeManager.callKotlinMethod(PICKER_RESULT, dslInstanceId,
+ *     "<tag>|<isoString>", nil)`.
  *
- *   In Kuikly-page embedded mode there is **no** `A2UISurfaceView` on the
- *   receiving end — `nativeBridge.toNative(107, …)` dispatches through the
- *   host Kuikly page's `KuiklyRenderFrameworkContextHandler`, whose
- *   `_nativeMethodRegistry` has no entry for methodId 107, so it silently
- *   returns nil. That's what the current log shows:
- *   `FAIL reason=invoker-returned-null argsJson={"name": "Kuikly"}`.
- *
- *   This bridge fixes that by letting the render pod install a
- *   process-global [Delegate] once at app boot. The DSL bridge
- *   ([A2UIDSLBridge.invokeCustomFunctionOnNative]) then consults this
- *   bridge *first* — if a delegate is present it invokes it synchronously
- *   and returns the raw value straight to the protocol adapter, bypassing
- *   `nativeBridge.toNative` entirely. If no delegate is installed the DSL
- *   bridge falls back to the classic `nativeBridge.toNative(107, …)` path
- *   (unchanged Native-page semantics).
- *
- * Design notes (mirrored on [A2UICoreEntry.Delegate]):
- *   * The nested [Delegate] interface has **no `@ObjCName`** on either the
- *     interface or its method. Kotlin/Native therefore emits `id`-based
- *     ObjC dispatch, so calling `delegate?.invoke(...)` from Kotlin lands
- *     on Swift's `@objc(invokeName:argsJson:spec:)` via `objc_msgSend`.
- *   * The bridge is a class (not `object`) so the delegate can be reset
- *     from ObjC via `[A2UICustomFunctionInvokerBridge.shared setDelegate:nil]`
- *     in tests / teardown.
- *
- * Selectors (must match what the render-pod's Swift shadow protocol expects):
- *   - `+shared`                                       → the process-global singleton
- *   - `-setDelegate:` / `-delegate`                   → install/inspect the delegate
- *   - `-invokeName:argsJson:spec:`                    → synchronous invoker entry
+ * Why not call `A2UIBridgeManager.callKotlinMethod` directly from Swift
+ * ---------------------------------------------------------------------
+ * `A2UIBridgeManager` is a Kotlin `object` with multi-arg methods, which
+ * K/N exposes as class-level ObjC selectors with mangled names
+ * (`A2UIBridgeManagerCompanion.callKotlinMethodMethodId:arg0:arg1:arg2:`).
+ * That is callable but fragile across K/N versions. Wrapping it with
+ * this bridge pins the public ObjC selector to a stable shape and keeps
+ * every K/N-generated name internal to this module.
  */
 @OptIn(ExperimentalObjCName::class)
-@ObjCName("A2UICustomFunctionInvokerBridge")
-class A2UICustomFunctionInvokerBridge private constructor() {
+@ObjCName("A2UIPickerResultBridge")
+class A2UIPickerResultBridge private constructor() {
 
     /**
-     * Delegate that performs the actual synchronous invocation.
+     * Push the picker result back into the KMP core.
      *
-     * Intentionally nested and *unannotated* — see the KDoc on
-     * [A2UICoreEntry.Delegate] for why this is important for Swift/ObjC
-     * interop. Do NOT add `@ObjCName` here.
+     * Thread-safe wrt. the KMP side because [A2UIBridgeManager.callKotlinMethod]
+     * for [A2UIKotlinMethod.PICKER_RESULT] only touches `dslBridgeMap` and
+     * dispatches `handlePickerResult` → `A2UIDSLBridge.handlePickerResult`
+     * synchronously. The Swift caller is expected to invoke us on the
+     * Kuikly Context Queue (via `A2UIRenderHelper.perform(onContextQueue:)`).
      */
-    @ObjCName("delegate")
-    var delegate: Delegate? = null
-
-    /**
-     * Invoke a registered custom function synchronously and return its raw
-     * value. Called from [A2UIDSLBridge.invokeCustomFunctionOnNative] on
-     * the Kuikly Context Thread.
-     *
-     * Return value contract mirrors what
-     * `A2UISurfaceView.invokeCustomFunctionLocally` returns for the
-     * matching `spec`:
-     *   * `string|sync`  → Kotlin `String`
-     *   * `boolean|sync` → Kotlin `Boolean`
-     *   * `number|sync`  → Kotlin `Number` (Int/Long/Float/Double)
-     *   * `array|sync`   → Kotlin `String` (JSON-encoded array)
-     *   * `void|async`   → `null` (fire-and-forget)
-     *
-     * The DSL adapter coerces these via [A2UICoercer].
-     */
-    @ObjCName("invoke")
-    fun invoke(name: String, argsJson: String, spec: String): Any? {
-        return delegate?.invoke(name, argsJson, spec)
-    }
-
-    interface Delegate {
-        fun invoke(name: String, argsJson: String, spec: String): Any?
+    // Real ObjC selector emitted by K/N is
+    // `sendDslInstanceId:tag:isoString:` — the first parameter's name
+    // (`dslInstanceId`) is appended automatically. Don't pre-bake it
+    // into the @ObjCName value.
+    @ObjCName("send")
+    fun send(dslInstanceId: String, tag: Int, isoString: String) {
+        A2UIBridgeManager.callKotlinMethod(
+            A2UIKotlinMethod.PICKER_RESULT,
+            dslInstanceId,
+            "$tag|$isoString",
+            null
+        )
     }
 
     companion object {
         @ObjCName("shared")
-        val shared: A2UICustomFunctionInvokerBridge = A2UICustomFunctionInvokerBridge().also { bridge ->
-            // Automatically wire this singleton into the commonMain hook
-            // point on first access, so `A2UIDSLBridge.invokeCustomFunctionOnNative`
-            // picks it up without any extra explicit installation step on
-            // the Swift side. The Swift caller only has to install the
-            // per-app `delegate` (via `+shared.-setDelegate:`) and the
-            // rest is transparent. Idempotent: even if `shared` is touched
-            // multiple times, `also { }` only runs during the first (and
-            // only) initialisation of this `val`.
-            A2UICustomFunctionNativeInvoker.hook = { name, argsJson, spec ->
-                bridge.invoke(name, argsJson, spec)
-            }
-        }
+        val shared: A2UIPickerResultBridge = A2UIPickerResultBridge()
     }
 }

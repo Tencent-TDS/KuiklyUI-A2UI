@@ -36,6 +36,22 @@ Pod::Spec.new do |spec|
   spec.public_header_files = 'Sources/**/*.h'
 
   spec.dependency 'OpenKuiklyIOSRender'
+
+  # Keep ObjC-only classes (notably `A2UIBridgeModule`, discovered by
+  # `KuiklyRenderLayerHandler` via `NSClassFromString` at runtime) alive
+  # when this pod is linked as a static library. Without `-ObjC`, the
+  # linker's dead-strip pass can drop the module class on apps that
+  # never explicitly reference it from Swift, which then triggers the
+  # `NSAssert(NO, "创建Module失败 … ")` crash inside Kuikly's module
+  # resolver for A2UI module calls.
+  #
+  # The matching KMP-side `objc_lookUpClass` pre-check
+  # (`isA2UIBridgeModuleAvailable` in `Platform.ios.kt`) still protects
+  # us if a host still manages to strip the class, but we want that
+  # path to be rare, not routine.
+  spec.pod_target_xcconfig = {
+    'OTHER_LDFLAGS' => '-ObjC'
+  }
   # NOTE: We intentionally do NOT declare `spec.dependency 'a2ui'` here.
   #
   # This render pod bridges to Kotlin/Native purely through runtime

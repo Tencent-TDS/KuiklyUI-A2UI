@@ -23,7 +23,6 @@ import com.tencent.kuikly.core.base.ViewContainer
 import com.tencent.kuikly.core.base.domChildren
 import com.tencent.kuikly.core.layout.Frame
 import com.tencent.kuikly.core.layout.undefined
-import com.tencent.kuikly.core.manager.BridgeManager
 import com.tencent.kuikly.core.views.DivAttr
 import com.tencent.kuikly.core.views.DivEvent
 import com.tencent.kuikly.core.views.internal.GroupView
@@ -237,18 +236,19 @@ class A2UISurfaceDSLView
     override fun didInit() {
         super.didInit()
 
-        // Grab the enclosing Kuikly page's NativeBridge so A2UI reuses the same
-        // native transport (picker dialogs, action callbacks, custom-function
-        // invocation, etc.) as the host page. No separate registerNativeBridge.
-        val nativeBridge = BridgeManager.getNativeBridge(pagerId) ?: run {
-            // Defensive: without a NativeBridge, A2UI cannot dispatch to native.
-            // Skip bridge creation entirely; the surface still renders as an empty container.
-            return
-        }
-
+        // Kuikly-page-embedded mode: this surface lives inside a host
+        // Kuikly page. The DSL bridge no longer needs a per-surface
+        // NativeBridge because all native dispatch (picker dialogs, action
+        // callbacks, custom-function invocation, …) now flows through the
+        // standard Kuikly Module channel (`A2UIBridgeModule` installed on
+        // the host page's delegate — see A2UIKuiklyBaseViewSupport on
+        // Android, A2UIKuiklyRenderViewSupport on OHOS, and
+        // A2UIKuiklyRenderViewSupport.prepareForKuiklyPageHosting on iOS).
+        // Passing `nativeBridge = null` tells A2UIDSLBridge to use the
+        // Module channel exclusively.
         val bridge = A2UIDSLBridge(
             instanceId = instanceId,
-            nativeBridge = nativeBridge,
+            nativeBridge = null,
             externalHost = this
         )
         wireBridgeCallbacks(bridge)
@@ -426,8 +426,14 @@ class A2UISurfaceDSLView
         pendingFinished = false
 
         // Re-create only if the view is still attached (didInit ran once).
-        val nativeBridge = BridgeManager.getNativeBridge(pagerId) ?: return
-        val bridge = A2UIDSLBridge(instanceId, nativeBridge, this)
+        // Same reasoning as in `didInit`: embedded mode now goes exclusively
+        // through the Module channel, so no per-surface NativeBridge is
+        // needed.
+        val bridge = A2UIDSLBridge(
+            instanceId = instanceId,
+            nativeBridge = null,
+            externalHost = this
+        )
         wireBridgeCallbacks(bridge)
         bridge.initialize()
         A2UIBridgeManagerAccessor.registerDslBridge(instanceId, bridge)
