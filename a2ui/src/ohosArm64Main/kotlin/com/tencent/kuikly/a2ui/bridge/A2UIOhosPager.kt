@@ -16,6 +16,7 @@
 package com.tencent.kuikly.a2ui.bridge
 
 import com.tencent.kuikly.core.base.ViewBuilder
+import com.tencent.kuikly.core.manager.BridgeManager
 import com.tencent.kuikly.core.nvi.NativeBridge
 import com.tencent.kuikly.core.nvi.serialization.json.JSONObject
 import com.tencent.kuikly.core.pager.Pager
@@ -126,6 +127,27 @@ open class A2UIOhosPager : Pager() {
         /**
          * Call the C++ native function com_tencent_kuikly_CallNative.
          * This is the Kotlin/Native → C++ bridge for render commands.
+         *
+         * On OHOS, Kuikly's native (C++/NAPI) layer does NOT dispatch
+         * A2UI-specific methodIds (`SHOW_DATE_TIME_PICKER = 103`,
+         * `EXECUTE_FUNCTION_CALL = 106`, `INVOKE_CUSTOM_FUNCTION = 107`)
+         * — unlike Android/iOS which intercept them inside each
+         * `A2UISurfaceView.callNative(…)`. Those requests would otherwise
+         * reach `com_tencent_kuikly_CallNative` with no handler and
+         * silently return `null` (which was the root cause of
+         * `getGreeting / formatPhone / isVip / calculateDiscount /
+         * buildSummary` custom functions rendering as empty text in the
+         * OHOS Native-page demo).
+         *
+         * Fix: pre-dispatch those methodIds here through the standard
+         * Kuikly Module channel (`BridgeManager.callModuleMethod`,
+         * `syncCall = 1`), targeting the `A2UIBridgeModule` that
+         * `A2UISurfaceView.ets`'s own `getCustomRenderModuleCreatorRegisterMap`
+         * registers against the enclosed Kuikly delegate (same module
+         * `A2UIKuiklyRenderViewSupport.wrap(...)` uses for Kuikly-page-
+         * embedded mode). This mirrors — in KMP space — what Android/iOS
+         * do inside `A2UISurfaceView.callNative(…)` and is OHOS's single
+         * canonical dispatch point for the three methodIds.
          */
         @OptIn(ExperimentalForeignApi::class)
         private fun callNativeImpl(
@@ -137,6 +159,68 @@ open class A2UIOhosPager : Pager() {
             arg4: Any?,
             arg5: Any?
         ): Any? {
+            // ------------------------------------------------------------------
+            // OHOS-only: route A2UI-extended methodIds through the Module bus.
+            // ------------------------------------------------------------------
+            when (methodId) {
+                A2UINativeMethod.SHOW_DATE_TIME_PICKER -> {
+                    // arg0=instanceId, arg1=tag(Int), arg2=configJson(String)
+                    val instanceId = arg0 as? String ?: return null
+                    val configJson = arg2 as? String ?: return null
+                    return try {
+                        BridgeManager.callModuleMethod(
+                            instanceId,
+                            "A2UIBridgeModule",
+                            "showDateTimePicker",
+                            configJson,
+                            null,
+                            1
+                        )
+                    } catch (_: Throwable) {
+                        null
+                    }
+                }
+                A2UINativeMethod.EXECUTE_FUNCTION_CALL -> {
+                    // arg0=instanceId, arg1=name, arg2=argsJson
+                    val instanceId = arg0 as? String ?: return null
+                    val name = arg1 as? String ?: return null
+                    val argsJson = arg2 as? String ?: "{}"
+                    return try {
+                        BridgeManager.callModuleMethod(
+                            instanceId,
+                            "A2UIBridgeModule",
+                            "executeFunctionCall",
+                            "$name\n$argsJson",
+                            null,
+                            1
+                        )
+                    } catch (_: Throwable) {
+                        null
+                    }
+                }
+                A2UINativeMethod.INVOKE_CUSTOM_FUNCTION -> {
+                    // arg0=instanceId, arg1=name, arg2=argsJson, arg3="returnType|invokeMode"
+                    val instanceId = arg0 as? String ?: return null
+                    val name = arg1 as? String ?: return null
+                    val argsJson = arg2 as? String ?: "{}"
+                    val spec = arg3 as? String ?: return null
+                    return try {
+                        BridgeManager.callModuleMethod(
+                            instanceId,
+                            "A2UIBridgeModule",
+                            "invokeCustomFunction",
+                            // Payload format identical to the Native-page
+                            // Kuikly-page module path on all three platforms:
+                            // "name\nspec\nargsJson".
+                            "$name\n$spec\n$argsJson",
+                            null,
+                            1
+                        )
+                    } catch (_: Throwable) {
+                        null
+                    }
+                }
+            }
             return memScoped {
                 // 与 KSP 生成的 initKuikly 保持一致：直接在 arena 上 alloc + 就地填充，
                 // 避免 cValue<T> 产生的中间 ByteArray；额外 alloc 一个 result slot 承接
