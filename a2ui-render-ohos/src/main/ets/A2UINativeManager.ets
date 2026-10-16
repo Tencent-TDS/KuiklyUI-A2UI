@@ -115,6 +115,35 @@ class A2UINativeManager extends KuiklyNativeManager {
       );
     }
   }
+
+  /**
+   * Deliver an async "custom view size changed" notification into the KMP
+   * layer, so `A2UICustomComponentView.handleNativeResize(w, h)` can update
+   * its `flexNode.styleWidth` / `styleHeight` on the Kuikly Context Thread.
+   *
+   * See `A2UIRegistryBridge.a2uiNotifyCustomViewResize` on the KMP side
+   * for the thread-hop rationale (mirrors `a2uiNotifyPickerResult`:
+   * ArkTS main thread → schedule onto Kuikly Context Thread → mutate
+   * Flex tree).
+   *
+   * @param pagerId   Pager id that owns the target custom view (either the
+   *                  A2UI DSL instance id in native-page mode or the host
+   *                  Kuikly pager id in Kuikly-page-embedded mode).
+   * @param nativeRef Kuikly Core render-view tag of the custom view.
+   * @param width     New intrinsic width in vp, or `0` to keep the current
+   *                  width unchanged.
+   * @param height    New intrinsic height in vp, or `0` to keep the current
+   *                  height unchanged.
+   */
+  notifyCustomViewResizeInKmp(pagerId: string, nativeRef: number, width: number, height: number): void {
+    const napi = Napi as Record<string, Object>;
+    const fn = napi['a2uiNotifyCustomViewResize'];
+    if (typeof fn === 'function') {
+      (fn as (pagerId: string, nativeRef: number, width: number, height: number) => void)(
+        pagerId, nativeRef, width, height
+      );
+    }
+  }
 }
 
 // Export a global singleton instance

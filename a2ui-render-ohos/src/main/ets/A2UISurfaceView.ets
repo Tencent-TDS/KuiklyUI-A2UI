@@ -22,7 +22,8 @@ import {
   KRRecord,
   KuiklyRenderBaseModule,
   KRAny,
-  KuiklyRenderCallback
+  KuiklyRenderCallback,
+  KuiklyRenderBaseView
 } from '@kuikly-open/render';
 import { a2uiNativeManager } from './A2UINativeManager';
 import { promptAction, display } from '@kit.ArkUI';
@@ -89,6 +90,64 @@ const a2uiCustomFunctionDescriptors = new Map<string, string>();
 const a2uiCustomViewCreators = new Map<string, KRRenderViewExportCreator>();
 
 /**
+ * Size returned by an [A2UICustomViewMeasurer]. Width and height are
+ * expressed in vp (OHOS Kuikly's native layout unit); return `0` on an
+ * axis to tell the Flex engine to fall back to the parent-provided
+ * constraint or the JSON-side `width` / `height` hard override.
+ */
+export interface A2UICustomViewSize {
+  width: number;
+  height: number;
+}
+
+/**
+ * Optional intrinsic-size measurer attached to a custom render view at
+ * registration time. The framework calls it synchronously on the Kuikly
+ * Context Thread whenever the Flex engine needs an intrinsic size for the
+ * registered component — exactly the role an `IKuiklyRenderShadowExport`
+ * fills on Android or `+hrv_createShadow` fills on iOS.
+ *
+ * Returning `null` (or omitting the registration entirely) delegates to
+ * A2UI's default fallback: `width = parent cross-axis constraint`,
+ * `height = 0`. Authors may still supply `width` / `height` in JSON as a
+ * hard override; those always win over the measurer result (see
+ * `A2UICustomComponentView.measure` on the KMP side).
+ *
+ * Threading: the function runs inline on the Kuikly Context Thread, so
+ * keep it synchronous and fast — do not `await`, do not block on IO. If
+ * the final size depends on async work (e.g. a WebView's loaded content
+ * height) wait for the async callback and then call
+ * [notifyA2UICustomViewSizeChanged] with the new size; that path triggers
+ * a cheap second layout only when the dimensions actually changed.
+ *
+ * Props note:
+ *   The measurer intentionally does *not* receive the live view instance.
+ *   The property values that influence intrinsic size are usually hoisted
+ *   into the enclosing closure when the author passes a creator — e.g.
+ *   `registerA2UICustomRenderView('A2UIWeb', () => { const view = new …;
+ *   view.minHeight = 240; return view; }, (cw, ch) => ({ width: cw,
+ *   height: 240 }))` — so there is no need to re-plumb the instance into
+ *   every measurer call. Dynamic-size scenarios (content height arriving
+ *   after an async load) go through [notifyA2UICustomViewSizeChanged]
+ *   instead.
+ *
+ * @param constraintWidth   Cross-axis constraint from the parent (vp).
+ * @param constraintHeight  Main-axis constraint from the parent (vp); `-1`
+ *                          when unconstrained.
+ */
+export type A2UICustomViewMeasurer = (
+  constraintWidth: number,
+  constraintHeight: number
+) => A2UICustomViewSize | null;
+
+/**
+ * Global measurer table — `viewName → measurer`. Entries are optional;
+ * only the views whose authors want to control intrinsic size appear
+ * here. The companion to [a2uiCustomViewCreators] above.
+ */
+const a2uiCustomViewMeasurers = new Map<string, A2UICustomViewMeasurer>();
+
+/**
  * Register a custom render view **globally**. Once registered, the view is
  * available to every A2UISurfaceView instance in this process, both existing
  * and future ones.
@@ -97,19 +156,50 @@ const a2uiCustomViewCreators = new Map<string, KRRenderViewExportCreator>();
  * The same KuiklyRenderBaseView implementation used in Kuikly DSL can be
  * reused here without modification.
  *
+ * ### Optional [measurer]
+ *
+ * Supply [measurer] when the component's intrinsic size is something you
+ * can compute from constants or constraints — e.g. a WebView whose
+ * design height is always 240 vp. A2UI calls it synchronously on the
+ * Kuikly Context Thread whenever the Flex engine needs an intrinsic
+ * size, exactly where `IKuiklyRenderShadowExport` runs on Android and
+ * `+hrv_createShadow` runs on iOS. See [A2UICustomViewMeasurer] for the
+ * threading / return-value contract.
+ *
+ * If [measurer] is omitted, A2UI falls back to
+ * `width = parent cross-axis constraint`, `height = 0`; authors can
+ * still pin the size by writing `width` / `height` in the JSON
+ * component spec, which always wins.
+ *
+ * ### Second-pass resize
+ *
+ * For async-sized components (e.g. a WebView whose content height is
+ * only known after `onPageEnd`), register a best-guess size via
+ * [measurer] and later call [notifyA2UICustomViewSizeChanged] from the
+ * async callback. The second-pass path only triggers a layout when the
+ * dimensions actually changed.
+ *
  * @param viewName The view name as it appears in the A2UI protocol
  *                 (e.g. "KRMyCustomView"). Must match the viewName used in
  *                 createView commands.
  * @param creator  A factory function that creates the view instance.
+ * @param measurer Optional intrinsic-size resolver — see
+ *                 [A2UICustomViewMeasurer].
  */
 export function registerA2UICustomRenderView(
   viewName: string,
-  creator: KRRenderViewExportCreator
+  creator: KRRenderViewExportCreator,
+  measurer?: A2UICustomViewMeasurer
 ): void {
   if (viewName.length === 0) {
     return;
   }
   a2uiCustomViewCreators.set(viewName, creator);
+  if (measurer) {
+    a2uiCustomViewMeasurers.set(viewName, measurer);
+  } else {
+    a2uiCustomViewMeasurers.delete(viewName);
+  }
   // Push into the KMP-side A2UICustomViewRegistry directly so Kuikly-page
   // hosts (whose business Pagers don't override onReceivePagerEvent) also
   // see the registration. Idempotent w.r.t. native-mode which registers
@@ -131,10 +221,53 @@ export function unregisterA2UICustomRenderView(viewName: string): void {
     return;
   }
   a2uiCustomViewCreators.delete(viewName);
+  a2uiCustomViewMeasurers.delete(viewName);
   a2uiNativeManager.unregisterA2UICustomViewInKmp(viewName);
   for (const c of a2uiLiveControllers) {
     c.dispatchUnregisterCustomView(viewName);
   }
+}
+
+/**
+ * Report that an already-rendered custom view's intrinsic size has
+ * changed — typically from an async callback inside the view's own
+ * implementation (e.g. a WebView's `onPageEnd` learning the content
+ * height). Pass the live view instance you were given from your creator;
+ * A2UI reads its `instanceId` and `viewTag` through the public getters
+ * and forwards the new size to the KMP side.
+ *
+ * The downstream KMP-side `A2UICustomComponentView.handleNativeResize`
+ * is a **no-op when neither dimension changed meaningfully** (0.5 vp
+ * tolerance), so the caller can be noisy without triggering redundant
+ * layout passes.
+ *
+ * Pass `0` on an axis to leave that axis unchanged — e.g. a WebView
+ * usually only wants to update `height`, not `width`.
+ *
+ * Safe to call from any thread; the KMP side hops onto the correct
+ * Kuikly Context Thread via `com_tencent_kuikly_ScheduleContextTask`
+ * before touching the Flex tree.
+ *
+ * @param view   The custom view instance whose size changed. If the
+ *               view has not been attached to the renderer yet
+ *               (`getInstanceId()` returns an empty string) the call is
+ *               a silent no-op.
+ * @param width  New intrinsic width in vp, or `0` to keep the current
+ *               width.
+ * @param height New intrinsic height in vp, or `0` to keep the current
+ *               height.
+ */
+export function notifyA2UICustomViewSizeChanged(
+  view: KuiklyRenderBaseView,
+  width: number,
+  height: number
+): void {
+  const pagerId = view.getInstanceId();
+  const nativeRef = view.getViewTag();
+  if (pagerId.length === 0 || nativeRef <= 0) {
+    return;
+  }
+  a2uiNativeManager.notifyCustomViewResizeInKmp(pagerId, nativeRef, width, height);
 }
 
 // endregion
@@ -1318,6 +1451,47 @@ class A2UIBridgeModule extends KuiklyRenderBaseModule {
         return invokeCustomFunctionLocally(name, argsJson, spec);
       }
       return null;
+    } else if (method === 'calculateCustomViewSize') {
+      // Custom-view intrinsic size resolver. Called synchronously from
+      // KMP (A2UICustomComponentView.measure → A2UIBridgeManager
+      // .calculateCustomViewSize) with syncCall=1 so the measurer runs
+      // inline on the Kuikly Context Thread and the return value lands
+      // back in Flex measurement without a thread hop.
+      //
+      // Payload format: "viewName\nnativeRef\ncw\nch" — plain strings so
+      // we can split without a JSON dependency. The return value is
+      // either `"width|height"` (used verbatim by the KMP measurer) or
+      // an empty string, which signals "no measurer registered → fall
+      // back to parent-cross-axis / 0".
+      //
+      // Note: the measurer does *not* receive the live view instance.
+      // Measurers that need to reference view state should hoist it into
+      // the enclosing closure at registration time; dynamic-size scenarios
+      // belong on the second-pass `notifyA2UICustomViewSizeChanged` path.
+      const paramsStr = params as string;
+      const parts = paramsStr.split('\n');
+      if (parts.length < 4) {
+        return '';
+      }
+      const viewName = parts[0];
+      const cw = parseFloat(parts[2]);
+      const ch = parseFloat(parts[3]);
+      const measurer = a2uiCustomViewMeasurers.get(viewName);
+      if (!measurer) {
+        return '';
+      }
+      try {
+        const size = measurer(cw, ch);
+        if (!size) {
+          return '';
+        }
+        const w = typeof size.width === 'number' ? size.width : 0;
+        const h = typeof size.height === 'number' ? size.height : 0;
+        return `${w}|${h}`;
+      } catch (e) {
+        console.error(`[A2UIBridgeModule] custom view measurer '${viewName}' threw: ${e}`);
+        return '';
+      }
     } else if (method === 'debugLog') {
       // Debug log from Kotlin layer (println doesn't output to hilog on OHOS)
       const msg = params as string;

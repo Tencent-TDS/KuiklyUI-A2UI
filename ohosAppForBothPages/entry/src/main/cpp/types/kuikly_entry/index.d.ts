@@ -14,3 +14,9 @@ export const a2uiUnregisterIcon: (name: string) => void;
 
 // A2UI DateTimeInput picker result writer (Kuikly-page mode).
 export const a2uiNotifyPickerResult: (dslInstanceId: string, tag: number, isoString: string) => void;
+
+// A2UI custom-view second-pass resize writer (Kuikly-page mode) — invoked
+// from the ArkTS-side `notifyA2UICustomViewSizeChanged` helper when a
+// custom component's intrinsic size changes asynchronously (e.g. after a
+// WebView finishes loading its content).
+export const a2uiNotifyCustomViewResize: (pagerId: string, nativeRef: number, width: number, height: number) => void;

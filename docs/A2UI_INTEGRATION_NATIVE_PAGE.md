@@ -342,15 +342,8 @@ export default class MyAbility extends UIAbility {
 ```cpp
 #include "napi/native_api.h"
 #include "thirdparty/biz_entry/libshared_api.h"
-#include "libohos_render/export/KRShadowExportC.h"
 
 static napi_value InitKuikly(napi_env env, napi_callback_info info) {
-    static int initDone = false;
-    if (!initDone) {
-        initDone = true;
-        // 在此使用纯 C API 注册自定义 Shadow（如需）
-        // KRRegisterShadowCreator("A2UIWeb", MyCreate, &myVTable);
-    }
     auto api = libshared_symbols();
     int handler = api->kotlin.root.initKuikly_();
     napi_value result;
@@ -359,7 +352,7 @@ static napi_value InitKuikly(napi_env env, napi_callback_info info) {
 }
 ```
 
-> 使用 `KRShadowExportC.h`（纯 C API）注册 Shadow，避免 `libkuikly.so` 与 `libkuikly_entry.so` 之间的 C++ ABI 兼容问题。
+> 自定义组件通过 ArkTS 侧的 `registerA2UICustomRenderView(...)` 注册即可（见 [A2UI_CUSTOM_COMPONENT_GUIDE.md](A2UI_CUSTOM_COMPONENT_GUIDE.md)），`napi_init.cpp` 不再需要注册 Shadow。Kuikly 会为未显式注册 C++ Shadow 的 viewName 使用内置默认 Shadow 兜底，彻底避免 `libkuikly.so` 与 `libkuikly_entry.so` 之间的 C++ ABI 耦合问题。
 
 ### 5. ArkTS 页面使用
 

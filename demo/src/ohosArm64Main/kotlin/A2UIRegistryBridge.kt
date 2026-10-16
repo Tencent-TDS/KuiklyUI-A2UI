@@ -227,3 +227,90 @@ private object A2UIPickerResultRelay : SynchronizedObject() {
         }
     }
 }
+
+/**
+ * Push an async "custom view size changed" notification from ArkTS into
+ * the KMP layer. Companion to [notifyA2UICustomViewSizeChanged] on the
+ * ArkTS side.
+ *
+ * ## Why this is a top-level bridge
+ *
+ * Same reason as [a2uiNotifyPickerResult]: the Kuikly-page business pager
+ * extends plain `Pager`, so the usual `sendEvent` route cannot carry a
+ * message into A2UI's dispatcher. Instead ArkTS calls this NAPI writer
+ * directly and we land in [A2UIBridgeManager.notifyCustomViewResize]
+ * which looks up the [A2UICustomComponentView] registered under
+ * `(pagerId, nativeRef)` and updates its Flex node.
+ *
+ * ## Thread-safety: Kuikly Context Thread hop
+ *
+ * The actual size update eventually writes `flexNode.styleWidth` /
+ * `styleHeight`, which internally marks the node dirty and expects to
+ * run on the owning pager's Kuikly Context Thread. NAPI callbacks arrive
+ * on the ArkTS main thread, so we schedule onto the Kuikly thread via
+ * `com_tencent_kuikly_ScheduleContextTask` before touching the Flex
+ * tree — identical to the picker-result path.
+ *
+ * @param pagerId   Pager id that owns the target custom view (either the
+ *                  A2UI DSL instance id in native-page mode or the host
+ *                  Kuikly pager id in Kuikly-page-embedded mode).
+ * @param nativeRef Kuikly Core render-view tag of the custom view.
+ * @param width     New intrinsic width in vp, or `0` to keep width.
+ * @param height    New intrinsic height in vp, or `0` to keep height.
+ */
+@OptIn(ExperimentalForeignApi::class)
+public fun a2uiNotifyCustomViewResize(
+    pagerId: String,
+    nativeRef: Int,
+    width: Float,
+    height: Float
+) {
+    A2UICustomViewResizeRelay.enqueue(pagerId, nativeRef, width, height)
+    com_tencent_kuikly_ScheduleContextTask(pagerId, staticCFunction { pagerIdBytes: CPointer<ByteVar>? ->
+        val id = pagerIdBytes?.toKString() ?: return@staticCFunction
+        A2UICustomViewResizeRelay.drainAndDispatch(id)
+    })
+}
+
+/**
+ * Companion relay for [a2uiNotifyCustomViewResize]. Same contract as
+ * [A2UIPickerResultRelay]: the ArkTS main thread enqueues, the Kuikly
+ * Context Thread drains. `staticCFunction` cannot capture a closure, so
+ * the payload lives here between the schedule call and the callback.
+ */
+private object A2UICustomViewResizeRelay : SynchronizedObject() {
+
+    private data class Entry(
+        val nativeRef: Int,
+        val width: Float,
+        val height: Float
+    )
+
+    /** pagerId → pending resize events waiting to hit the Kuikly thread. */
+    private val queues = mutableMapOf<String, MutableList<Entry>>()
+
+    fun enqueue(pagerId: String, nativeRef: Int, width: Float, height: Float) {
+        synchronized(this) {
+            val bucket = queues.getOrPut(pagerId) { mutableListOf() }
+            bucket.add(Entry(nativeRef, width, height))
+        }
+    }
+
+    fun drainAndDispatch(pagerId: String) {
+        val snapshot: List<Entry> = synchronized(this) {
+            val bucket = queues[pagerId] ?: return
+            if (bucket.isEmpty()) return
+            val copy = bucket.toList()
+            bucket.clear()
+            copy
+        }
+        for (entry in snapshot) {
+            A2UIBridgeManager.notifyCustomViewResize(
+                pagerId,
+                entry.nativeRef,
+                entry.width,
+                entry.height
+            )
+        }
+    }
+}

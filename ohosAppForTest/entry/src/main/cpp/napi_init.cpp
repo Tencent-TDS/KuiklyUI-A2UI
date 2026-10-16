@@ -24,95 +24,25 @@
  * Unlike the full Kuikly DSL ohosApp, A2UI doesn't need custom adapters
  * (color, font, image) since it uses standard Kuikly rendering.
  *
- * Custom shadow components use the pure-C API (KRShadowExportC.h) to avoid
- * C++ ABI coupling between libkuikly_entry.so and libkuikly.so.
+ * Custom A2UI components (e.g. `A2UIWeb`, `MyA2UIView`) are registered
+ * **ArkTS-side only** via `registerA2UICustomRenderView(...)`. On OHOS the
+ * KMP side therefore cannot drive measurement through the usual
+ * `IKRRenderShadowExport` C++ registry (which only accepts creators
+ * linked into the host app's own `libxxx_entry.so`). A2UI's
+ * `A2UICustomComponentView` gates on
+ * `isCustomComponentShadowRequired = false` on this platform and relies
+ * on the JSON-side `width` / `height` instead — see
+ * `docs/A2UI_CUSTOM_COMPONENT_GUIDE.md` for the authoring contract.
  */
 
 #include "napi/native_api.h"
 #include "thirdparty/biz_entry/libshared_api.h"
-#include "libohos_render/export/KRShadowExportC.h"
-#include <stdlib.h>
-
-// ============================================================
-// A2UIWeb Shadow (pure C, no C++ classes needed)
-// ============================================================
-
-static KRShadowHandle A2UIWebCreate(void) {
-    // No per-instance state needed for this demo; return a non-NULL sentinel.
-    return (KRShadowHandle)(intptr_t)1;
-}
-
-static void A2UIWebCalculateSize(KRShadowHandle handle,
-                                  double constraint_width,
-                                  double constraint_height,
-                                  double *out_width,
-                                  double *out_height) {
-    (void)handle;
-    (void)constraint_height;
-    *out_width = constraint_width;
-    *out_height = 240.0;
-}
-
-static void A2UIWebDestroy(KRShadowHandle handle) {
-    (void)handle;
-}
-
-static const KRShadowVTable kA2UIWebVTable = {
-    .set_prop = NULL,
-    .calculate_size = A2UIWebCalculateSize,
-    .destroy = A2UIWebDestroy,
-};
-
-// ============================================================
-// MyA2UIView Shadow (pure C, no C++ classes needed)
-// ============================================================
-
-static KRShadowHandle MyA2UIViewCreate(void) {
-    return (KRShadowHandle)(intptr_t)1;
-}
-
-static void MyA2UIViewCalculateSize(KRShadowHandle handle,
-                                     double constraint_width,
-                                     double constraint_height,
-                                     double *out_width,
-                                     double *out_height) {
-    (void)handle;
-    (void)constraint_height;
-    *out_width = constraint_width;
-    *out_height = 200.0;
-}
-
-static void MyA2UIViewDestroy(KRShadowHandle handle) {
-    (void)handle;
-}
-
-static const KRShadowVTable kMyA2UIViewVTable = {
-    .set_prop = NULL,
-    .calculate_size = MyA2UIViewCalculateSize,
-    .destroy = MyA2UIViewDestroy,
-};
-
-// ============================================================
-// Registration
-// ============================================================
-
-static void RegisterCustomComponentShadows(void) {
-    KRRegisterShadowCreator("A2UIWeb", A2UIWebCreate, &kA2UIWebVTable);
-    KRRegisterShadowCreator("MyA2UIView", MyA2UIViewCreate, &kMyA2UIViewVTable);
-}
 
 // ============================================================
 // NAPI entry point
 // ============================================================
 
-static int initDone = false;
-
 static napi_value InitKuikly(napi_env env, napi_callback_info info) {
-    if (!initDone) {
-        initDone = true;
-        RegisterCustomComponentShadows();
-    }
-
     // Kotlin/Native cinterop notes:
     //   `:a2ui` (the runtime-only shared lib) declares
     //   `@CName("initKuikly") fun initKuikly()` in A2UIKuiklyEntry.kt,

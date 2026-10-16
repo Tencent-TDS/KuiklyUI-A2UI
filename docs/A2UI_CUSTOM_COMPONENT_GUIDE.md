@@ -56,25 +56,42 @@ A2UI 自定义组件（Custom Component）是 A2UI 协议的扩展能力，允�
 
 ### 宽高确定机制
 
-自定义组件的最终宽高由 **三层优先级** 决定：
+自定义组件的最终宽高由 **三层优先级** 决定；三端用不同的物理机制承载同一
+语义——"组件自身决定 intrinsic size"：
 
 ```
 Flex 布局约束 (父容器/Surface 宽度)
      │
      ▼
-Shadow.CalculateRenderViewSize(constraintWidth, constraintHeight)
-→ 返回 intrinsic size (如 width=constraintWidth, height=240)
+┌─ Android / iOS ──────────────────────────────────────┐
+│  Shadow.CalculateRenderViewSize(cw, ch)              │
+│  → 返回 intrinsic size (如 width=cw, height=240)      │
+└─────────────────────────────────────────────────────┘
+┌─ HarmonyOS ──────────────────────────────────────────┐
+│  A2UIBridgeModule.calculateCustomViewSize            │
+│  → ArkTS 注册时传入的 measurer(cw, ch)                │
+│  → 返回 { width, height }                             │
+│  → 异步 resize: notifyA2UICustomViewSizeChanged      │
+└─────────────────────────────────────────────────────┘
      │
      ▼
 检查 DSL 显式样式 styleWidth / styleHeight
-→ 如果设置了 → 覆盖 Shadow 返回的值（最高优先级）
-→ 如果未设置 → 使用 Shadow 返回值
+→ 如果设置了 → 覆盖上一层返回的值（最高优先级）
+→ 如果未设置 → 使用上一层返回值；没有 measurer / Shadow 时三端均 fallback
+   到 (width = 父 cross-axis, height = 0)
      │
      ▼
 最终 frame = (finalWidth, finalHeight)
 ```
 
 **优先级：DSL 显式宽高 > Shadow 测量结果 > 父约束**
+
+> **HarmonyOS 例外**：Kuikly OHOS 的 Shadow 创建器注册在 C++ 静态 map 中，ArkTS
+> 不能向其注册；A2UI 选择不引入跨 `.so` 的 C++ ABI 补丁，因此
+> `A2UICustomComponentView` 在 OHOS 上**跳过 Shadow 一步**，`measure()` 的 fallback
+> 直接把父节点传入的 cross-axis 约束作为宽度（相当于"自动撑满父可用宽度"），高度
+> 则需要 JSON 显式指定。实践中只需在 JSON 中为自定义组件写 `height`，不用写
+> `width`。
 
 ---
 
@@ -83,28 +100,25 @@ Shadow.CalculateRenderViewSize(constraintWidth, constraintHeight)
 ```
 libkuikly.so (SDK 公共产物)               libkuikly_entry.so (业务模块)
 ┌──────────────────────────────┐       ┌─────────────────────────────┐
-│ KRShadowExportC.h            │ 纯C   │ napi_init.cpp               │
-│ (公开 C API 头文件)           │<─────│ initKuikly()                 │
-│ ◇ KRRegisterShadowCreator()  │  ABI  │ RegisterCustomComponent     │
-│ ◇ KRShadowHandle             │       │   Shadows()                 │
-│ ◇ KRShadowVTable             │       │                             │
-├──────────────────────────────┤       │ ◆ A2UIWeb: handle=1         │
-│ KRShadowExportBridge.cpp     │       │   calc_sz() → 343×240       │
-│ (C→C++ 适配层)               │       │   destroy() → noop          │
-│ KRShadowCWrapper             │       │ ◆ MyA2UIView: handle=1      │
-│   : IKRRenderShadowExport    │       │   calc_sz() → 343×200       │
+│ KRNativeRender (ArkTS)        │       │ napi_init.cpp               │
+│ ├─ 自定义 View creator 注册表  │<──────│ initKuikly()                 │
+│ │   (ArkTS Map)               │       │ (无需 C++ 侧 Shadow 注册)   │
+│ └─ 无 ArkTS 侧 Shadow 机制    │       │                             │
+├──────────────────────────────┤       │ ArkTS 侧：                  │
+│ IKRRenderShadowExport         │       │ registerA2UICustomRenderView│
+│ (C++ 侧，A2UI 不启用)         │       │   ("A2UIWeb", () => ...)    │
 ├──────────────────────────────┤       └─────────────────────────────┘
-│ IKRRenderShadowExport.cpp    │
-│ (静态注册表)                  │
-│ gRegisterShadowCreator       │
-├──────────────────────────────┤
 │ KRRenderLayerHandler.cpp     │
-│ CreateShadow(tag, name)      │
-│ CalculateRenderViewSize(...) │
+│ CreateShadow(tag, name) ←未命中直接 return "0|0" │
 └──────────────────────────────┘
 ```
 
-> **关键设计**：SDK 通过纯 C ABI (`KRShadowExportC.h`) 暴露接口，业务模块不依赖任何 C++ 类型（`std::shared_ptr`、`std::function`、`std::string` 等），避免了跨 `.so` 的 C++ ABI 脆弱性问题。
+> **关键设计**：业务自定义组件**只需在 ArkTS 侧**通过
+> `registerA2UICustomRenderView(...)` 注册即可；A2UI 的
+> `A2UICustomComponentView` 在 OHOS 上**不创建 Kuikly Shadow**
+> （`isCustomComponentShadowRequired=false`），彻底避免 `libkuikly.so`（SDK）
+> 与 `libkuikly_entry.so`（业务）之间的 C++ ABI 耦合。代价是：OHOS JSON
+> 作者必须为自定义组件显式写 `height`。
 
 ---
 
@@ -620,130 +634,49 @@ class CustomComponentDemoViewController: UIViewController {
 
 ### HarmonyOS (OHOS)
 
-HarmonyOS 的自定义组件注册需要对 **C++ 层**（Shadow 测量）和 **ArkTS 层**（RenderView UI）分别注册。
+HarmonyOS 的自定义组件注册**只需在 ArkTS 层**完成：组件通过
+`registerA2UICustomRenderView(viewName, creator, measurer?)` 注册到全局表，
+`napi_init.cpp` **不需要**任何 Shadow 注册代码。
+
+> **与 Android / iOS 的差异**：A2UI 的 `A2UICustomComponentView` 在 OHOS 上
+> **不走 Shadow 测量路径**（`isCustomComponentShadowRequired=false`，见
+> `a2ui/src/ohosArm64Main/.../Platform.ohos.kt`）。原因是 Kuikly 的 Shadow
+> 创建器注册在 C++ 静态 map 中，ArkTS 无法向其写入，A2UI 不希望引入跨
+> `.so` 的 C++ ABI 补丁。
+>
+> 替代方案：注册时传入可选的 `measurer`——A2UI 会在布局线程同步调用它来
+> 决定自定义组件的 intrinsic size，等价于 Android 的
+> `IKuiklyRenderShadowExport` 和 iOS 的 `+hrv_createShadow`。
+>
+> 对于**异步才知道尺寸**的组件（例如 WebView 内容加载完才知道高度），
+> 业务侧可以在异步回调里调用
+> `notifyA2UICustomViewSizeChanged(view, w, h)` 触发一次二次布局；A2UI
+> 内部会判断新旧尺寸是否真有变化（0.5 vp 容差），只有变了才会 markDirty
+> 重排，避免抖动。
+>
+> 如果既没有注册 `measurer` 也没有调用二次 resize，JSON 中还可以用
+> `width` / `height` 作为硬覆盖（优先级最高）。
 
 #### 架构概览
 
 ```
-ArkTS 层 (libkuikly_entry.so)                 C++ SDK 层 (libkuikly.so)
-┌──────────────────────────┐     纯C ABI    ┌─────────────────────────────┐
-│ napi_init.cpp            │ ──────────────→│ KRShadowExportC.h            │
-│ KRRegisterShadowCreator( │                │ KRShadowExportBridge.cpp     │
-│   "A2UIWeb",             │                │   → KRShadowCWrapper         │
-│   A2UIWebCreate,         │                │     : IKRRenderShadowExport  │
-│   &kA2UIWebVTable)       │                │                             │
-│                          │                │ gRegisterShadowCreator[".."] │
-│ registerA2UICustomRender │                │                             │
-│   View("A2UIWeb", ...)   │                │ KRRenderLayerHandler         │
-│                          │                │   CreateShadow() → 查询注册表 │
-│                          │                │   CalculateRenderViewSize()  │
-└──────────────────────────┘                └─────────────────────────────┘
+ArkTS 层 (libkuikly_entry.so)                 KMP 层 (libshared.so)
+┌──────────────────────────┐                 ┌─────────────────────────────┐
+│ registerA2UICustomRender │                 │ A2UICustomComponentView      │
+│   View(name, creator,    │                 │   measure(cw, ch) →          │
+│         measurer?)        │  ◄──── sync ─── │   A2UIBridgeModule          │
+│                          │   Module call   │     .calculateCustomViewSize │
+│ measurer(cw, ch) =>      │  ────────────►  │                             │
+│   { width, height }      │                 │ Fallback (无 measurer):      │
+│                          │                 │   width = parent cross,      │
+│ notifyA2UICustomViewSize │                 │   height = 0                 │
+│   Changed(view, w, h)    │  ──── async ──► │                             │
+│   (异步 resize)           │   NAPI writer   │ Hard override:               │
+│                          │                 │   JSON width / height always │
+│ KuiklyRenderBaseView      │                 │   wins                       │
+│   setProp / createArkUI   │                 └─────────────────────────────┘
+└──────────────────────────┘
 ```
-
-#### C++ 层：注册 Shadow（参与布局测量）
-
-在 `napi_init.cpp` 中使用纯 C API `KRShadowExportC.h` 注册 Shadow：
-
-```cpp
-#include "napi/native_api.h"
-#include "thirdparty/biz_entry/libshared_api.h"
-#include "libohos_render/export/KRShadowExportC.h"
-#include <stdlib.h>
-
-// ============================================================
-// A2UIWeb Shadow（纯 C 实现，无 C++ 类）
-// ============================================================
-
-static KRShadowHandle A2UIWebCreate(void) {
-    // 返回非 NULL 句柄。如有需要，可 malloc 存放实例状态。
-    return (KRShadowHandle)(intptr_t)1;
-}
-
-static void A2UIWebCalculateSize(KRShadowHandle handle,
-                                  double constraint_width,
-                                  double constraint_height,
-                                  double *out_width,
-                                  double *out_height) {
-    (void)handle;
-    (void)constraint_height;
-    // Width: 使用父约束宽度（填充父容器）
-    // Height: 固定 240 vp（WebView 内在内容高度）
-    *out_width = constraint_width;
-    *out_height = 240.0;
-}
-
-static void A2UIWebDestroy(KRShadowHandle handle) {
-    (void)handle;
-    // 如果 Create 中 malloc 了内存，在这里 free
-}
-
-static const KRShadowVTable kA2UIWebVTable = {
-    .set_prop = NULL,          // 本例不需要属性更新回调
-    .calculate_size = A2UIWebCalculateSize,
-    .destroy = A2UIWebDestroy,
-};
-
-// ============================================================
-// MyA2UIView Shadow
-// ============================================================
-
-static KRShadowHandle MyA2UIViewCreate(void) {
-    return (KRShadowHandle)(intptr_t)1;
-}
-
-static void MyA2UIViewCalculateSize(KRShadowHandle handle,
-                                     double constraint_width,
-                                     double constraint_height,
-                                     double *out_width,
-                                     double *out_height) {
-    (void)handle;
-    (void)constraint_height;
-    *out_width = constraint_width;
-    *out_height = 200.0;
-}
-
-static void MyA2UIViewDestroy(KRShadowHandle handle) {
-    (void)handle;
-}
-
-static const KRShadowVTable kMyA2UIViewVTable = {
-    .set_prop = NULL,
-    .calculate_size = MyA2UIViewCalculateSize,
-    .destroy = MyA2UIViewDestroy,
-};
-
-// ============================================================
-// 统一注册
-// ============================================================
-
-static void RegisterCustomComponentShadows(void) {
-    KRRegisterShadowCreator("A2UIWeb", A2UIWebCreate, &kA2UIWebVTable);
-    KRRegisterShadowCreator("MyA2UIView", MyA2UIViewCreate, &kMyA2UIViewVTable);
-}
-
-static napi_value InitKuikly(napi_env env, napi_callback_info info) {
-    static int initDone = false;
-    if (!initDone) {
-        initDone = true;
-        RegisterCustomComponentShadows();
-    }
-    auto api = libshared_symbols();
-    int handler = api->kotlin.root.initKuikly_();
-    napi_value result;
-    napi_create_int32(env, handler, &result);
-    return result;
-}
-```
-
-#### C API 类型定义
-
-| 类型 | 说明 |
-|------|------|
-| `KRShadowHandle` | 不透明句柄 `void*`，业务层自行管理生命周期 |
-| `KRShadowCreateFunc` | 工厂函数 `() → handle`，每个组件实例调用一次 |
-| `KRShadowCalculateSizeFunc` | 测量回调 `(handle, cw, ch, *w, *h)` |
-| `KRShadowDestroyFunc` | 销毁回调 `(handle)`，释放 Create 分配的资源 |
-| `KRShadowSetPropFunc` | 属性更新回调 `(handle, key, val)`，可选 |
 
 #### ArkTS 层：注册 RenderView（承载 UI 显示）
 
@@ -845,7 +778,12 @@ export class MyA2UIRenderView extends KuiklyRenderBaseView {
 #### 注册 RenderView
 
 ```typescript
-import { registerA2UICustomRenderView, unregisterA2UICustomRenderView } from '@kuikly-open/a2ui-render';
+import {
+  registerA2UICustomRenderView,
+  unregisterA2UICustomRenderView,
+  notifyA2UICustomViewSizeChanged,
+  A2UICustomViewSize
+} from '@kuikly-open/a2ui-render';
 
 @Entry
 @Component
@@ -861,14 +799,20 @@ struct CustomComponentDemoPage {
 
   private registerCustomComponents(): void {
     // 注册 A2UIWeb（Web 组件）
-    registerA2UICustomRenderView('A2UIWeb', (): KuiklyRenderBaseView => {
-      return new A2UIWebRenderView();
-    });
+    //   measurer: 父 cross-axis 宽 + 固定 240vp 高。等价于 Android 的
+    //   IKuiklyRenderShadowExport 和 iOS 的 +hrv_createShadow。
+    registerA2UICustomRenderView(
+      'A2UIWeb',
+      (): KuiklyRenderBaseView => new A2UIWebRenderView(),
+      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 240 })
+    );
 
     // 注册 MyA2UIView（简单文本视图）
-    registerA2UICustomRenderView('MyA2UIView', (): KuiklyRenderBaseView => {
-      return new MyA2UIRenderView();
-    });
+    registerA2UICustomRenderView(
+      'MyA2UIView',
+      (): KuiklyRenderBaseView => new MyA2UIRenderView(),
+      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 200 })
+    );
 
     console.info('✅ All custom components registered: A2UIWeb, MyA2UIView');
   }
@@ -884,6 +828,26 @@ struct CustomComponentDemoPage {
   }
 }
 ```
+
+> **异步尺寸（二次 resize）**：如果组件尺寸要等异步数据才能确定（例如
+> WebView 加载完 HTML 后高度才稳定下来），可以先用 `measurer` 返回一个
+> 占位尺寸，然后在异步回调里调用 `notifyA2UICustomViewSizeChanged`：
+>
+> ```typescript
+> export class A2UIWebRenderView extends KuiklyRenderBaseView {
+>   // ... 省略 setProp / createArkUIView ...
+>
+>   // 由 Web 组件的 onPageEnd 调用
+>   onContentHeightReady(contentHeightVp: number): void {
+>     // 只有新高度和当前布局高度相差 > 0.5vp 时才真正触发 relayout
+>     notifyA2UICustomViewSizeChanged(this, 0, contentHeightVp);
+>   }
+> }
+> ```
+>
+> 其中 `width=0` 表示保持当前宽度不变；`height=0` 同理。KMP 侧的
+> `A2UICustomComponentView.handleNativeResize` 会严格比对新旧值，变化
+> 不显著时直接 no-op，避免抖动。
 
 ---
 
@@ -925,44 +889,18 @@ class MyDynamicShadow : IKuiklyRenderShadowExport {
 }
 ```
 
-#### HarmonyOS (C)
+#### HarmonyOS (ArkTS)
 
-```c
-typedef struct {
-    double customHehght;
-} MyShadowState;
+HarmonyOS 没有 ArkTS 侧的 Shadow 机制，A2UI 也刻意不走 C++ Shadow 通路（见本
+章节上方的 "HarmonyOS (OHOS)" 说明）。因此**组件的宽高完全由 JSON 的
+`width` / `height` 决定**：
 
-static KRShadowHandle MyCreate(void) {
-    MyShadowState *s = malloc(sizeof(MyShadowState));
-    s->customHeight = 200.0;
-    return s;
-}
-
-static void MySetProp(KRShadowHandle handle, const char *key, const char *val) {
-    MyShadowState *s = (MyShadowState *)handle;
-    if (strcmp(key, "displayMode") == 0) {
-        if (strcmp(val, "compact") == 0) s->customHeight = 80.0;
-        else if (strcmp(val, "expanded") == 0) s->customHeight = 320.0;
-    }
-}
-
-static void MyCalcSize(KRShadowHandle handle, double cw, double ch,
-                       double *w, double *h) {
-    MyShadowState *s = (MyShadowState *)handle;
-    *w = cw;
-    *h = s->customHeight;
-}
-
-static void MyDestroy(KRShadowHandle handle) {
-    free(handle);
-}
-
-static const KRShadowVTable kMyVTable = {
-    .set_prop = MySetProp,
-    .calculate_size = MyCalcSize,
-    .destroy = MyDestroy,
-};
-```
+- 内在尺寸固定的组件 → 直接在 JSON 里写死（最常见做法）。
+- 内在尺寸依赖某个属性（例如图片按 URL 决定高度）→ 推荐宿主业务侧在
+  收到数据后更新 JSON 并重发消息流，由 A2UI 的 `styleHeight` 变更触发
+  重新布局；或者在 JSON 中给一个保守的占位 `height`，让 ArkUI 内部
+  用 `.width('100%').height('100%')` 填满（但组件在父容器中的
+  **边界**仍由该占位 `height` 决定）。
 
 ---
 
@@ -986,19 +924,24 @@ static const KRShadowVTable kMyVTable = {
 
 如果自定义组件显示为 0×0，检查以下几点：
 
-1. **Shadow 是否注册成功**：确认 `RegisterShadowCreator` 在 `initKuikly` 中调用，且组件名与 JSON 中一致
-2. **Shadow 是否返回正确尺寸**：`calculateRenderViewSize` 的 `out_width` 和 `out_height` 必须 > 0
+1. **Shadow 是否注册成功**（Android/iOS）：确认 `registerShadow` 调用的组件名与 JSON 中一致
+2. **Shadow 是否返回正确尺寸**（Android/iOS）：`calculateRenderViewSize` 的返回宽/高必须 > 0
 3. **FlexBox 是否触发布局**：确认父容器有正确的布局属性（如 `align: "stretch"`）
 4. **是否显式设置了宽高为 0**：检查 JSON 中是否有 `"width": 0` 或 `"height": 0`
+5. **HarmonyOS 上**：A2UI 不走 Shadow 测量路径，所以**JSON 必须为自定义组件显式写
+   `height`**（父 Column 的 `alignItems=stretch` 已经负责宽度，可省略 `width`）。
+   同时确认 ArkTS 侧 `registerA2UICustomRenderView` 调用的 viewName 与 JSON 中
+   完全一致（区分大小写），且 `createArkUIView` 返回的 ArkUI 组件填满了容器
+   （例如 `.width('100%').height('100%')`）。
 
-### HarmonyOS C++ ABI 安全性
+### 平台特性
 
-由于 `libkuikly.so`（SDK）和 `libkuikly_entry.so`（业务）是分开编译的，为避免 C++ ABI 兼容性问题：
-
-- **使用纯 C API**：`#include "libohos_render/export/KRShadowExportC.h"`，不要直接使用 C++ 类
-- **不要使用 `std::shared_ptr`**：用 `KRShadowHandle`（`void*`）传递实例
-- **不要使用 `std::function`**：用 `KRShadowVTable` 函数指针表
-- **不要使用 `std::string`**：用 `const char*` 传递字符串
+- **HarmonyOS 零 C++ ABI 耦合**：自定义组件通过 ArkTS 侧的
+  `registerA2UICustomRenderView(...)` 注册即可；A2UI 的 `A2UICustomComponentView`
+  在 OHOS 上跳过 Kuikly Shadow 通路（`isCustomComponentShadowRequired=false`），
+  业务 `libkuikly_entry.so` 不需要 `#include` 任何 SDK 的 C++ 头文件，彻底避
+  免了跨 `.so` 的 C++ ABI 脆弱性问题。代价是：**OHOS JSON 必须为自定义组件
+  显式写 `height`**。
 
 ### 同步调用限制
 
@@ -1024,7 +967,6 @@ static const KRShadowVTable kMyVTable = {
 | Android | `a2ui/androidAppForNativePage/src/main/java/com/tencent/kuikly/a2ui/demo/CustomComponentDemoActivity.kt` |
 | iOS | `a2ui/iosShared/Sources/CustomComponentDemoViewController.swift`（`iosAppForNativePage` 与 `iosAppForKuiklyPage` 通过 `iosShared` 共用） |
 | HarmonyOS ArkTS | `a2ui/ohosAppForNativePage/entry/src/main/ets/pages/CustomComponentDemoPage.ets`（Kuikly 页同位于 `ohosAppForKuiklyPage/entry/src/main/ets/pages/KuiklyPageCustomComponentDemoPage.ets`） |
-| HarmonyOS C++ | `a2ui/ohosAppForNativePage/entry/src/main/cpp/napi_init.cpp`（Kuikly 页同位于 `ohosAppForKuiklyPage/entry/src/main/cpp/napi_init.cpp`） |
 
 ### 测试 JSON 文件位置
 
@@ -1034,15 +976,6 @@ a2ui/ohosAppForNativePage/entry/src/main/resources/rawfile/a2ui_custom_component
 │   └── 1_web_source.json         # A2UIWeb 组件测试
 └── 02_my_view/
     └── 1_my_view.json            # MyA2UIView 组件测试
-```
-
-### SDK C API 头文件位置
-
-```
-core-render-ohos/src/main/cpp/libohos_render/export/
-├── KRShadowExportC.h              # 纯 C API 头文件（业务模块引用）
-├── KRShadowExportBridge.cpp       # C→C++ 适配层（编译进 libkuikly.so）
-└── IKRRenderShadowExport.h       # C++ 内部接口（仅 SDK 内部使用）
 ```
 
 ---
@@ -1066,11 +999,34 @@ core-render-ohos/src/main/cpp/libohos_render/export/
 
 ### Q: 自定义组件如何参与 FlexBox 布局？
 
-自定义组件的宽高由 Shadow 的 `calculateRenderViewSize` 返回。返回的尺寸即为组件在 FlexBox 中的占用大小。可以在 JSON 中设置 `flex`、`width`、`height` 等属性来覆盖默认值。
+- **Android / iOS**：组件的宽高由 Shadow 的 `calculateRenderViewSize` 返回，JSON
+  的 `flex` / `width` / `height` 为可选覆盖值。
+- **HarmonyOS**：A2UI 跳过了 Shadow 通路，宽高来源优先级为：
+  1. 注册时传入的 `measurer`（intrinsic size，等价于 Android / iOS 的 Shadow）
+  2. `notifyA2UICustomViewSizeChanged(view, w, h)` 的异步二次 resize
+  3. 父容器 `alignItems=stretch` 分配给自定义组件的 cross-axis 宽度 + 零高度
+  4. JSON 的 `width` / `height`（硬覆盖，优先级最高）
 
-### Q: HarmonyOS 上 Shadow 注册失败？
+### Q: HarmonyOS 上自定义组件为什么是 0×0 ？
 
-确认 `napi_init.cpp` 中 `RegisterCustomComponentShadows()` 在 `initKuikly()` 之前调用，且使用 `KRShadowExportC.h` 的纯 C API，而非直接实现 `IKRRenderShadowExport` 类。
+HarmonyOS 的自定义组件**不**在 C++ 层注册 Shadow，A2UI 也**不**走 Kuikly 的
+Shadow 测量通路（见 `Platform.ohos.kt` 的 `isCustomComponentShadowRequired=false`）。
+如果布局结果看起来是 0×0，依次排查：
+
+1. 注册时是否传入了 `measurer`——这是 Android / iOS 的 Shadow 在 OHOS 的对
+   应物。例如：
+
+   ```typescript
+   registerA2UICustomRenderView(
+     'A2UIWeb',
+     () => new A2UIWebRenderView(),
+     (cw, _ch) => ({ width: cw, height: 240 })
+   );
+   ```
+
+2. 若组件尺寸要等异步数据才能确定（WebView 内容高度等），在异步回调里调
+   用 `notifyA2UICustomViewSizeChanged(view, w, h)` 触发二次布局。
+3. 或者直接在 JSON 条目里写 `"width"` / `"height"` 作为硬覆盖（优先级最高）。
 
 ### Q: 一个自定义组件名可以注册多次吗？
 

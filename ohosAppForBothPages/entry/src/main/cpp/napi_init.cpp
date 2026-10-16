@@ -24,95 +24,27 @@
  * Unlike the full Kuikly DSL ohosApp, A2UI doesn't need custom adapters
  * (color, font, image) since it uses standard Kuikly rendering.
  *
- * Custom shadow components use the pure-C API (KRShadowExportC.h) to avoid
- * C++ ABI coupling between libkuikly_entry.so and libkuikly.so.
+ * Custom A2UI components (e.g. `A2UIWeb`, `MyA2UIView`) are registered
+ * **ArkTS-side only** via `registerA2UICustomRenderView(...)`. On OHOS the
+ * KMP side therefore cannot drive measurement through the usual
+ * `IKRRenderShadowExport` C++ registry (which only accepts creators
+ * linked into the host app's own `libxxx_entry.so`). A2UI's
+ * `A2UICustomComponentView` gates on
+ * `isCustomComponentShadowRequired = false` on this platform and relies
+ * on the JSON-side `width` / `height` instead — see
+ * `docs/A2UI_CUSTOM_COMPONENT_GUIDE.md` for the authoring contract.
  */
 
 #include "napi/native_api.h"
 #include "thirdparty/biz_entry/libshared_api.h"
-#include "libohos_render/export/KRShadowExportC.h"
-#include <stdlib.h>
 
-// ============================================================
-// A2UIWeb Shadow (pure C, no C++ classes needed)
-// ============================================================
-
-static KRShadowHandle A2UIWebCreate(void) {
-    // No per-instance state needed for this demo; return a non-NULL sentinel.
-    return (KRShadowHandle)(intptr_t)1;
-}
-
-static void A2UIWebCalculateSize(KRShadowHandle handle,
-                                  double constraint_width,
-                                  double constraint_height,
-                                  double *out_width,
-                                  double *out_height) {
-    (void)handle;
-    (void)constraint_height;
-    *out_width = constraint_width;
-    *out_height = 240.0;
-}
-
-static void A2UIWebDestroy(KRShadowHandle handle) {
-    (void)handle;
-}
-
-static const KRShadowVTable kA2UIWebVTable = {
-    .set_prop = NULL,
-    .calculate_size = A2UIWebCalculateSize,
-    .destroy = A2UIWebDestroy,
-};
-
-// ============================================================
-// MyA2UIView Shadow (pure C, no C++ classes needed)
-// ============================================================
-
-static KRShadowHandle MyA2UIViewCreate(void) {
-    return (KRShadowHandle)(intptr_t)1;
-}
-
-static void MyA2UIViewCalculateSize(KRShadowHandle handle,
-                                     double constraint_width,
-                                     double constraint_height,
-                                     double *out_width,
-                                     double *out_height) {
-    (void)handle;
-    (void)constraint_height;
-    *out_width = constraint_width;
-    *out_height = 200.0;
-}
-
-static void MyA2UIViewDestroy(KRShadowHandle handle) {
-    (void)handle;
-}
-
-static const KRShadowVTable kMyA2UIViewVTable = {
-    .set_prop = NULL,
-    .calculate_size = MyA2UIViewCalculateSize,
-    .destroy = MyA2UIViewDestroy,
-};
-
-// ============================================================
-// Registration
-// ============================================================
-
-static void RegisterCustomComponentShadows(void) {
-    KRRegisterShadowCreator("A2UIWeb", A2UIWebCreate, &kA2UIWebVTable);
-    KRRegisterShadowCreator("MyA2UIView", MyA2UIViewCreate, &kMyA2UIViewVTable);
-}
+#include <cstdlib>  // malloc / free used by A2UI registry writers below
 
 // ============================================================
 // NAPI entry point
 // ============================================================
 
-static int initDone = false;
-
 static napi_value InitKuikly(napi_env env, napi_callback_info info) {
-    if (!initDone) {
-        initDone = true;
-        RegisterCustomComponentShadows();
-    }
-
     auto api = libshared_symbols();
     int handler = api->kotlin.root.initKuikly();
     napi_value result;
@@ -268,6 +200,32 @@ static napi_value A2UINotifyPickerResult(napi_env env, napi_callback_info info) 
     return nullptr;
 }
 
+// Push an async "custom view size changed" notification from ArkTS into
+// the KMP layer. Companion to [notifyA2UICustomViewSizeChanged] on the
+// ArkTS side; routes through A2UIBridgeManager.notifyCustomViewResize.
+// Arg layout: (pagerId: string, nativeRef: number, width: number, height: number).
+static napi_value A2UINotifyCustomViewResize(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value argv[4];
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 4) {
+        return nullptr;
+    }
+    char* pagerId = GetStringArg(env, argv[0]);
+    int32_t nativeRef = 0;
+    napi_get_value_int32(env, argv[1], &nativeRef);
+    double widthD = 0.0;
+    double heightD = 0.0;
+    napi_get_value_double(env, argv[2], &widthD);
+    napi_get_value_double(env, argv[3], &heightD);
+    if (pagerId) {
+        libshared_symbols()->kotlin.root.a2uiNotifyCustomViewResize(
+            pagerId, nativeRef, (float)widthD, (float)heightD);
+    }
+    if (pagerId) free(pagerId);
+    return nullptr;
+}
+
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports) {
     napi_property_descriptor desc[] = {
@@ -279,6 +237,7 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"a2uiRegisterIcon", nullptr, A2UIRegisterIcon, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"a2uiUnregisterIcon", nullptr, A2UIUnregisterIcon, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"a2uiNotifyPickerResult", nullptr, A2UINotifyPickerResult, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"a2uiNotifyCustomViewResize", nullptr, A2UINotifyCustomViewResize, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

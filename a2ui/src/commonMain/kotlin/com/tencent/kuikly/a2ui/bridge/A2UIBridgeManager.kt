@@ -299,6 +299,102 @@ object A2UIBridgeManager {
         return executeFunctionCallIfNeeded(instanceId, actionJson)
     }
 
+    /**
+     * Ask the host-platform side (currently ArkTS on OHOS) to compute the
+     * intrinsic size of a custom component via the standard Kuikly Module
+     * channel. Returns `null` when:
+     *
+     *   * the current platform does not route A2UI through the Module channel
+     *     (`isModuleBasedPlatform == false` on JVM / unknown targets),
+     *   * no `A2UIBridgeModule` is linked into the process
+     *     (`isA2UIBridgeModuleAvailable() == false` on iOS when the pod is
+     *     missing — a safety net; iOS actually goes through its native
+     *     Shadow path and never calls this),
+     *   * the business side has not registered a `measurer` for `viewName`,
+     *     in which case the ArkTS module returns an empty string,
+     *   * the Module call itself threw.
+     *
+     * On a successful return the payload is `"width|height"` in the same
+     * unit the native renderer expects (vp on OHOS). We parse it into
+     * `(width, height)` and hand it back to [A2UICustomComponentView.measure].
+     *
+     * Called synchronously from the Kuikly layout thread; the Module call is
+     * dispatched with `syncCall = 1` so the ArkTS measurer runs inline on
+     * the same thread and the return value lands here without a thread hop.
+     *
+     * @param instanceId Pager id that owns the custom view — typically this
+     *     is the A2UI DSL instance id in native-page mode or the host Kuikly
+     *     pager id in embedded mode. We pass it straight through to
+     *     [BridgeManager.callModuleMethod] so the module registry resolves
+     *     against the correct `KRNativeInstance`.
+     * @param viewName   The registered custom component name (e.g. "A2UIWeb").
+     * @param nativeRef  The Kuikly Core render-view tag — passed so the
+     *     ArkTS measurer can locate the live view instance it has already
+     *     `setProp`-populated and read any state that influences size.
+     * @param constraintWidth  Cross-axis constraint handed down by the Flex
+     *     engine, in the renderer's native unit.
+     * @param constraintHeight Main-axis constraint handed down by the Flex
+     *     engine; `-1` when unconstrained.
+     */
+    internal fun calculateCustomViewSize(
+        instanceId: String,
+        viewName: String,
+        nativeRef: Int,
+        constraintWidth: Float,
+        constraintHeight: Float
+    ): Pair<Float, Float>? {
+        // Payload format mirrors the other A2UIBridgeModule methods — plain
+        // "\n"-separated strings so ArkTS can split and parse without a
+        // JSON dependency. See `A2UIBridgeModule.call('calculateCustomViewSize')`
+        // in `a2ui-render-ohos/.../A2UISurfaceView.ets`.
+        val payload = "$viewName\n$nativeRef\n$constraintWidth\n$constraintHeight"
+        val raw = dispatchToA2UIBridgeModule(instanceId, "calculateCustomViewSize", payload, 1)
+        val str = raw as? String
+        if (str.isNullOrEmpty()) return null
+        val parts = str.split("|", limit = 2)
+        if (parts.size < 2) return null
+        val w = parts[0].toFloatOrNull() ?: return null
+        val h = parts[1].toFloatOrNull() ?: return null
+        return w to h
+    }
+
+    /**
+     * Entry point for the host-platform (ArkTS on OHOS) to report that a
+     * custom component's intrinsic size has changed asynchronously — e.g. a
+     * WebView finished loading and now knows its content height.
+     *
+     * Locates the [A2UICustomComponentView] registered under
+     * `(pagerId, nativeRef)` and delegates to its [A2UICustomComponentView
+     * .handleNativeResize], which no-ops when the dimensions did not
+     * actually change (so the business side can be noisy without triggering
+     * a redundant second layout pass).
+     *
+     * Must be invoked on the Kuikly Context Thread of the owning pager —
+     * the ArkTS entry point in `A2UIRegistryBridge.kt` hops onto that
+     * thread via `com_tencent_kuikly_ScheduleContextTask` before calling
+     * this function, mirroring the existing [a2uiNotifyPickerResult] path.
+     *
+     * @param pagerId   Pager id that owns the target custom view (either the
+     *     A2UI DSL instance id in native-page mode or the host Kuikly pager
+     *     id in embedded mode — whichever was passed to the measurer call
+     *     that originally made the component appear in the registry).
+     * @param nativeRef Kuikly Core render-view tag of the custom view.
+     * @param newWidth  New intrinsic width in the renderer's native unit, or
+     *     a non-positive value to keep the current width.
+     * @param newHeight New intrinsic height in the renderer's native unit, or
+     *     a non-positive value to keep the current height.
+     */
+    fun notifyCustomViewResize(
+        pagerId: String,
+        nativeRef: Int,
+        newWidth: Float,
+        newHeight: Float
+    ) {
+        val view = com.tencent.kuikly.a2ui.views
+            .A2UICustomComponentViewRegistry.lookup(pagerId, nativeRef) ?: return
+        view.handleNativeResize(newWidth, newHeight)
+    }
+
     // region Private Methods
 
     /**

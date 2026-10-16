@@ -14,7 +14,7 @@
  */
 
 import { router, ComponentContent } from '@kit.ArkUI';
-import { registerA2UICustomRenderView, unregisterA2UICustomRenderView } from '@kuikly-open/a2ui-render';
+import { registerA2UICustomRenderView, unregisterA2UICustomRenderView, A2UICustomViewSize } from '@kuikly-open/a2ui-render';
 import { KuiklyRenderBaseView, KuiklyRenderCallback, KRValue } from '@kuikly-open/render';
 import { UIContext } from '@ohos.arkui.UIContext';
 import { webview } from '@kit.ArkWeb';
@@ -94,24 +94,29 @@ struct CustomComponentDemoPage {
   /**
    * Register all demo custom components.
    * This demonstrates the public API: registerA2UICustomRenderView.
+   *
+   * Each call ships with a `measurer` so the Flex engine learns the
+   * component's intrinsic size on OHOS without needing a hard-coded
+   * `height` in the JSON spec. The same JSON files render identically on
+   * Android / iOS (their native Shadow mechanisms already return the same
+   * numbers from the dedicated Shadow classes).
    */
   private registerCustomComponents(): void {
-    // 1. A2UIWeb: A Web component with "source" property
-    // Note: On HarmonyOS, custom render views are registered with a creator function
-    // that returns a KuiklyRenderBaseView instance. For this demo, we use placeholder
-    // registrations since the actual ArkUI component creation requires builder patterns.
-    // The JSON test files will exercise the registration path.
-    registerA2UICustomRenderView('A2UIWeb', (): KuiklyRenderBaseView => {
-      // In a real implementation, this would return a custom KuiklyRenderBaseView
-      // that wraps a Web component. For demo purposes, we register the name
-      // so the framework recognizes it.
-      return new A2UIWebRenderView();
-    });
+    // 1. A2UIWeb: A Web component with "source" property.
+    //    Intrinsic size: full parent cross-axis width, fixed 240vp height.
+    registerA2UICustomRenderView(
+      'A2UIWeb',
+      (): KuiklyRenderBaseView => new A2UIWebRenderView(),
+      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 240 })
+    );
 
-    // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties
-    registerA2UICustomRenderView('MyA2UIView', (): KuiklyRenderBaseView => {
-      return new MyA2UIRenderView();
-    });
+    // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties.
+    //    Intrinsic size: full parent cross-axis width, fixed 200vp height.
+    registerA2UICustomRenderView(
+      'MyA2UIView',
+      (): KuiklyRenderBaseView => new MyA2UIRenderView(),
+      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 200 })
+    );
 
     console.info('✅ [CustomComponent] All custom components registered: A2UIWeb, MyA2UIView');
   }

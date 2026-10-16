@@ -51,9 +51,14 @@
 
 export { A2UISurfaceView, A2UISurfaceViewController, A2UISurfaceViewListener } from './A2UISurfaceView';
 export { registerA2UICustomFunction, unregisterA2UICustomFunction } from './A2UISurfaceView';
-export { registerA2UICustomRenderView, unregisterA2UICustomRenderView } from './A2UISurfaceView';
+export {
+  registerA2UICustomRenderView,
+  unregisterA2UICustomRenderView,
+  notifyA2UICustomViewSizeChanged
+} from './A2UISurfaceView';
 export { registerA2UIIcons, registerA2UIIcon, unregisterA2UIIcon, A2UI_ICON_FALLBACK_KEY } from './A2UISurfaceView';
 export type { A2UICustomFunctionHandler } from './A2UISurfaceView';
+export type { A2UICustomViewMeasurer, A2UICustomViewSize } from './A2UISurfaceView';
 export {
   A2UIKuiklyRenderViewSupport,
   bindA2UIKuiklyPageController,

@@ -23,7 +23,8 @@ import {
 } from '@kuikly-open/render';
 import {
   registerA2UICustomRenderView,
-  unregisterA2UICustomRenderView
+  unregisterA2UICustomRenderView,
+  A2UICustomViewSize
 } from '@kuikly-open/a2ui-render';
 
 /**
@@ -97,8 +98,16 @@ const GROUPS: ComponentGroup[] = [
 struct KuiklyPageCustomComponentDemoPage {
 
   aboutToAppear(): void {
-    registerA2UICustomRenderView('A2UIWeb', (): KuiklyRenderBaseView => new A2UIWebRenderView());
-    registerA2UICustomRenderView('MyA2UIView', (): KuiklyRenderBaseView => new MyA2UIRenderView());
+    registerA2UICustomRenderView(
+      'A2UIWeb',
+      (): KuiklyRenderBaseView => new A2UIWebRenderView(),
+      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 240 })
+    );
+    registerA2UICustomRenderView(
+      'MyA2UIView',
+      (): KuiklyRenderBaseView => new MyA2UIRenderView(),
+      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 200 })
+    );
   }
 
   aboutToDisappear(): void {
