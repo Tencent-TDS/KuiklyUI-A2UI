@@ -41,14 +41,15 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * Wire format (identical across platforms)
  * ----------------------------------------
- * | method                 | params (NSString)                           | sync |
- * |------------------------|---------------------------------------------|------|
- * | contentHeightChanged   | height (NSNumber)                           | 1    |
- * | actionCallback         | "<tag>\n<actionJson>"                       | 1    |
- * | showDateTimePicker     | configJson (contains tag / dslInstanceId)   | 1    |
- * | executeFunctionCall    | "<functionName>\n<argsJson>"                | 1    |
- * | invokeCustomFunction   | "<name>\n<spec>\n<argsJson>"                | 0/1  |
- * | debugLog               | message (NSString)                          | 0    |
+ * | method                   | params (NSString)                           | sync |
+ * |--------------------------|---------------------------------------------|------|
+ * | contentHeightChanged     | height (NSNumber)                           | 1    |
+ * | actionCallback           | "<tag>\n<actionJson>"                       | 1    |
+ * | showDateTimePicker       | configJson (contains tag / dslInstanceId)   | 1    |
+ * | executeFunctionCall      | "<functionName>\n<argsJson>"                | 1    |
+ * | invokeCustomFunction     | "<name>\n<spec>\n<argsJson>"                | 0/1  |
+ * | calculateCustomViewSize  | "<viewName>\n<nativeRef>\n<cw>\n<ch>"       | 1    |
+ * | debugLog                 | message (NSString)                          | 0    |
  */
 @interface A2UIBridgeModule : KRBaseModule
 @end

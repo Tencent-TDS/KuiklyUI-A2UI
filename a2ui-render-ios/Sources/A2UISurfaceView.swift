@@ -714,8 +714,52 @@ public class A2UISurfaceView: UIView {
     /// Factory closure type for creating a custom render view.
     public typealias RenderViewCreator = () -> UIView
 
+    /// Size returned by an [A2UICustomViewMeasurer]. Width and height are
+    /// expressed in points (iOS's native UIKit unit). Return `0` on an
+    /// axis to tell the Flex engine to fall back to the parent-provided
+    /// constraint or the JSON-side `width` / `height` hard override.
+    public struct A2UICustomViewSize {
+        public let width: CGFloat
+        public let height: CGFloat
+        public init(width: CGFloat, height: CGFloat) {
+            self.width = width
+            self.height = height
+        }
+    }
+
+    /// Optional intrinsic-size measurer attached to a custom render view at
+    /// registration time. The framework calls it synchronously on the Kuikly
+    /// Context Queue each time the Flex engine needs an intrinsic size for
+    /// the registered component — the role `+hrv_createShadow` used to fill
+    /// before this project migrated custom-view measurement off the Shadow
+    /// mechanism onto the standard Kuikly Module channel.
+    ///
+    /// Returning `nil` (or omitting the registration entirely) delegates to
+    /// A2UI's default fallback: `width = parent cross-axis constraint`,
+    /// `height = 0`. Authors may still supply `width` / `height` in JSON as
+    /// a hard override; those always win over the measurer result (see
+    /// `A2UICustomComponentView.measure` on the KMP side).
+    ///
+    /// Threading: the closure runs inline on the Kuikly Context Queue, so
+    /// keep it synchronous and fast — do not touch UIKit, do not block on
+    /// IO. If the final size depends on async work (e.g. a WebView's loaded
+    /// content height) use the second-pass path
+    /// [notifyA2UICustomViewSizeChanged] from the async callback.
+    ///
+    /// - Parameters:
+    ///   - constraintWidth:   Cross-axis constraint from the parent (pt).
+    ///   - constraintHeight:  Main-axis constraint from the parent (pt);
+    ///                        `-1` when unconstrained.
+    public typealias A2UICustomViewMeasurer = (
+        _ constraintWidth: CGFloat,
+        _ constraintHeight: CGFloat
+    ) -> A2UICustomViewSize?
+
     /// Global custom render view creator table.
     private static var customViewCreators: [String: RenderViewCreator] = [:]
+    /// Global measurer table — keyed by viewName. Entries are optional; only
+    /// views whose authors want to control intrinsic size appear here.
+    private static var customViewMeasurers: [String: A2UICustomViewMeasurer] = [:]
     private static let viewCreatorsLock = NSLock()
 
     /// Register a custom render view **globally**. Once registered, the
@@ -725,27 +769,51 @@ public class A2UISurfaceView: UIView {
     /// flow. The same `KuiklyRenderViewExportProtocol` implementation used in
     /// Kuikly DSL can be reused here without modification.
     ///
-    /// - Note: On iOS, views are resolved via `NSClassFromString(viewName)`.
-    ///   If your custom view class name matches the viewName (or its K-prefixed
-    ///   variant), it will be discovered automatically without calling this method.
-    ///   Use this method when:
-    ///   - Your class name doesn't match the viewName in the protocol
-    ///   - You want to use a factory pattern for view creation
-    ///   - You want explicit registration for clarity
+    /// ### Optional `measurer`
+    ///
+    /// Supply `measurer` when the component's intrinsic size is something
+    /// you can compute from constants or parent constraints — e.g. a
+    /// WebView whose design height is always 240pt. A2UI calls it
+    /// synchronously on the Kuikly Context Queue whenever the Flex engine
+    /// needs an intrinsic size, exactly where `+hrv_createShadow` used to
+    /// run before this project migrated to the Module channel. See
+    /// [A2UICustomViewMeasurer] for the threading / return-value contract.
+    ///
+    /// If `measurer` is omitted, A2UI falls back to
+    /// `width = parent cross-axis constraint`, `height = 0`; authors can
+    /// still pin the size by writing `width` / `height` in the JSON
+    /// component spec, which always wins.
     ///
     /// - Parameters:
     ///   - viewName: The view name as it appears in the A2UI protocol
     ///               (e.g. "KRMyCustomView").
     ///   - creator: A factory closure that creates the view instance.
     ///             The view must conform to `KuiklyRenderViewExportProtocol`.
+    ///   - measurer: Optional intrinsic-size resolver — see
+    ///              [A2UICustomViewMeasurer].
     @objc(registerCustomRenderView:creator:)
     public static func registerCustomRenderView(
         viewName: String,
         creator: @escaping RenderViewCreator
     ) {
+        registerCustomRenderView(viewName: viewName, creator: creator, measurer: nil)
+    }
+
+    /// Register a custom render view **globally** with an optional measurer.
+    /// Swift-only overload (ObjC callers use the two-arg selector above).
+    public static func registerCustomRenderView(
+        viewName: String,
+        creator: @escaping RenderViewCreator,
+        measurer: A2UICustomViewMeasurer?
+    ) {
         guard !viewName.isEmpty else { return }
         viewCreatorsLock.lock()
         customViewCreators[viewName] = creator
+        if let measurer = measurer {
+            customViewMeasurers[viewName] = measurer
+        } else {
+            customViewMeasurers.removeValue(forKey: viewName)
+        }
         viewCreatorsLock.unlock()
         // Also register with the ObjC layer so KuiklyRenderLayerHandler can find it
         A2UIRenderHelper.registerCustomViewCreator({ creator() }, forViewName: viewName)
@@ -753,7 +821,7 @@ public class A2UISurfaceView: UIView {
         // registry immediately so the DSL applier (used by the Kuikly-page
         // embedded mode `A2UISurfaceDSLView`) can distinguish this from
         // an unknown viewName. Mirrors the register path used by
-        // [registerA2UIIcon] and [registerCustomFunction] \u2014 no host-side
+        // [registerA2UIIcon] and [registerCustomFunction] — no host-side
         // `prepareForKuiklyPageHosting()` call is required for this to work.
         A2UICustomViewRegistryBridge.shared?.register(viewName: viewName)
         // Notify every currently-live surface view so its Kotlin core learns
@@ -768,6 +836,7 @@ public class A2UISurfaceView: UIView {
         guard !viewName.isEmpty else { return }
         viewCreatorsLock.lock()
         customViewCreators.removeValue(forKey: viewName)
+        customViewMeasurers.removeValue(forKey: viewName)
         viewCreatorsLock.unlock()
         A2UIRenderHelper.unregisterCustomViewCreator(forViewName: viewName)
         // Mirror the immediate KMP-side write in [registerCustomRenderView].
@@ -783,6 +852,17 @@ public class A2UISurfaceView: UIView {
         return creator
     }
 
+    /// Internal: look up a registered intrinsic-size measurer.
+    ///
+    /// Called from `A2UIBridgeModuleHelper.calculateCustomViewSize` on the
+    /// Kuikly Context Queue when the KMP side issues
+    /// `A2UIBridgeModule.calculateCustomViewSize` for a custom component.
+    internal static func lookupMeasurer(viewName: String) -> A2UICustomViewMeasurer? {
+        viewCreatorsLock.lock()
+        let measurer = customViewMeasurers[viewName]
+        viewCreatorsLock.unlock()
+        return measurer
+    }
     /// Snapshot of all currently-registered custom viewNames. Used to replay the
     /// full set into a freshly-initialised surface's Kotlin core.
     private static func snapshotCustomViewNames() -> [String] {
@@ -1660,7 +1740,36 @@ extension A2UISurfaceView: A2UICoreEntryDelegateProtocol {
                 postToMainThread {
                     A2UIRenderHelper.callMemoryCacheModuleMethod(method, params: params)
                 }
+                return nil
             }
+            if moduleName == "A2UIBridgeModule" {
+                // Native-page mode routing: KMP's
+                // `BridgeManager.callModuleMethod("A2UIBridgeModule", …)` lands
+                // here instead of going through a Kuikly `KuiklyRenderCore`
+                // (independent A2UISurfaceView doesn't own one). Resolving
+                // locally keeps the three-platform "always go through
+                // A2UIBridgeModule" invariant intact without introducing a
+                // separate KMP-side bypass.
+                //
+                // Fresh instance per call is fine — the module is stateless
+                // and the common case is `calculateCustomViewSize`
+                // (syncCall=1) which returns a "w|h" NSString measured by
+                // the registered `measurer`. We hop through
+                // `NSClassFromString` + `-hrv_callWithMethod:params:callback:`
+                // so this Swift file does not need to import the ObjC class
+                // directly.
+                guard let cls = NSClassFromString("A2UIBridgeModule") as? NSObject.Type else {
+                    return nil
+                }
+                let instance = cls.init()
+                let sel = NSSelectorFromString("hrv_callWithMethod:params:callback:")
+                guard instance.responds(to: sel) else { return nil }
+                typealias CallFn = @convention(c) (NSObject, Selector, NSString, Any?, Any?) -> AnyObject?
+                let imp = instance.method(for: sel)
+                let fn = unsafeBitCast(imp, to: CallFn.self)
+                return fn(instance, sel, method as NSString, params, nil)
+            }
+            return nil
 
         case NativeMethod.setTimeout:
             // Timeout handling - not yet needed in A2UI

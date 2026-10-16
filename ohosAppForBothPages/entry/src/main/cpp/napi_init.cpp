@@ -25,14 +25,16 @@
  * (color, font, image) since it uses standard Kuikly rendering.
  *
  * Custom A2UI components (e.g. `A2UIWeb`, `MyA2UIView`) are registered
- * **ArkTS-side only** via `registerA2UICustomRenderView(...)`. On OHOS the
- * KMP side therefore cannot drive measurement through the usual
+ * **ArkTS-side only** via `registerA2UICustomRenderView(...)`. On OHOS
+ * the KMP side therefore cannot drive measurement through the usual
  * `IKRRenderShadowExport` C++ registry (which only accepts creators
- * linked into the host app's own `libxxx_entry.so`). A2UI's
- * `A2UICustomComponentView` gates on
- * `isCustomComponentShadowRequired = false` on this platform and relies
- * on the JSON-side `width` / `height` instead — see
- * `docs/A2UI_CUSTOM_COMPONENT_GUIDE.md` for the authoring contract.
+ * linked into the host app's own `libxxx_entry.so`). Intrinsic size is
+ * instead reported through the ArkTS `measurer` registered alongside
+ * the creator — A2UI picks it up via the standard Kuikly Module channel
+ * (`A2UIBridgeModule.calculateCustomViewSize`, `syncCall=1`); JSON-side
+ * `width` / `height` still act as a hard override. Android and iOS use
+ * the same Module channel against platform-specific measurer tables.
+ * See `docs/A2UI_CUSTOM_COMPONENT_GUIDE.md` for the authoring contract.
  */
 
 #include "napi/native_api.h"

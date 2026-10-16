@@ -39,6 +39,11 @@ import com.tencent.kuikly.core.render.android.IKuiklyRenderView
 import com.tencent.kuikly.core.render.android.KuiklyContextParams
 import com.tencent.kuikly.core.render.android.KuiklyRenderExport
 import com.tencent.kuikly.core.render.android.KuiklyRenderViewContext
+// Note: IKuiklyRenderShadowExport is intentionally no longer imported here.
+// Intrinsic size of A2UI custom views now flows through the Module channel
+// (`A2UIBridgeModule.calculateCustomViewSize`) backed by the `measurer`
+// parameter on [registerCustomRenderView] — see
+// [A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer].
 import com.tencent.kuikly.core.render.android.adapter.IKRColorParserAdapter
 import com.tencent.kuikly.core.render.android.adapter.KuiklyRenderAdapterManager
 import com.tencent.kuikly.core.render.android.context.KuiklyRenderCoreExecuteModeBase
@@ -303,14 +308,22 @@ class A2UISurfaceView @JvmOverloads constructor(
          *                 (e.g. "KRMyCustomView"). Must match the viewName
          *                 used in createView commands.
          * @param creator  A factory lambda that creates the view instance.
-         * @param shadowCreator Optional factory for the corresponding shadow.
+         * @param measurer Optional intrinsic-size resolver. Called synchronously
+         *                 on the Kuikly Context Thread when the Flex engine
+         *                 needs an intrinsic size for the registered component.
+         *                 Both inputs and outputs are in **pixels**. Omit to
+         *                 fall back to `width = parent cross-axis constraint`,
+         *                 `height = 0`; JSON-side `width` / `height` always
+         *                 win over the measurer result. See
+         *                 [A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer]
+         *                 for the full contract.
          */
         @JvmStatic
         @JvmOverloads
         fun registerCustomRenderView(
             viewName: String,
             creator: (Context) -> IKuiklyRenderViewExport,
-            shadowCreator: (() -> IKuiklyRenderShadowExport)? = null
+            measurer: A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer? = null
         ) {
             if (viewName.isEmpty()) return
             // Delegate to the shared registry. The registry's ChangeListener
@@ -318,7 +331,7 @@ class A2UISurfaceView @JvmOverloads constructor(
             // every currently-live surface so its Kotlin core learns about
             // the new viewName without waiting for its own init cycle.
             ensureCustomViewListenerInstalled()
-            A2UIAndroidCustomViewRegistry.register(viewName, creator, shadowCreator)
+            A2UIAndroidCustomViewRegistry.register(viewName, creator, measurer)
         }
 
         /**
@@ -1017,6 +1030,20 @@ class A2UISurfaceView @JvmOverloads constructor(
                             // is available when KRImageView.getBase64Image() retrieves it.
                             return memoryCacheModule.call(method, params, null)
                         }
+                        if (moduleName == A2UIBridgeModule.MODULE_NAME) {
+                            // Native-page mode routing: KMP's
+                            // `BridgeManager.callModuleMethod("A2UIBridgeModule", …)`
+                            // lands here instead of going through a Kuikly
+                            // KRNativeInstance (independent surfaces don't own
+                            // one). Resolving locally keeps the three-platform
+                            // "always go through A2UIBridgeModule" invariant
+                            // intact without introducing a separate KMP-side
+                            // bypass. Fresh instance per call is fine — the
+                            // module is stateless and the common case here is
+                            // `calculateCustomViewSize` (syncCall=1) which
+                            // returns the measured size as a `"w|h"` string.
+                            return A2UIBridgeModule().call(method, params, null)
+                        }
                     }
                     A2UINativeMethod.SET_TIMEOUT -> {
                         // Timeout handling - not yet needed in A2UI
@@ -1200,8 +1227,10 @@ class A2UISurfaceView @JvmOverloads constructor(
         entry: A2UIAndroidCustomViewRegistry.Entry
     ) {
         // Install into this surface's own render export. `renderViewExport`
-        // is a plain map.put; safe to call after init.
-        renderExportInstance.renderViewExport(viewName, entry.creator, entry.shadowCreator)
+        // is a plain map.put; safe to call after init. We no longer forward
+        // any shadow creator — intrinsic size flows through the measurer /
+        // Module channel instead (see [A2UIBridgeModule.calculateCustomViewSize]).
+        renderExportInstance.renderViewExport(viewName, entry.creator, null)
         val core = coreEntry ?: return
         KuiklyRenderCoreContextScheduler.scheduleTask {
             core.callKotlinMethod(
@@ -1280,11 +1309,23 @@ class A2UISurfaceView @JvmOverloads constructor(
             renderViewExport(KRVideoView.VIEW_NAME, { context -> KRVideoView(context) })
             renderViewExport(KRAudioView.VIEW_NAME, { context -> KRAudioView(context) })
             renderViewExport(KRModalView.VIEW_NAME, { context -> KRModalView(context) })
+            // Note: A2UIBridgeModule is NOT installed via `moduleExport` on
+            // this surface's render export — independent A2UISurfaceView does
+            // not host a Kuikly `KuiklyRenderCore`, so `moduleExport` would
+            // never be consulted. KMP's
+            // `BridgeManager.callModuleMethod("A2UIBridgeModule", …)` is
+            // intercepted directly in `callNative`'s CALL_MODULE_METHOD
+            // branch (above), which constructs an `A2UIBridgeModule`
+            // instance locally. This keeps the three-platform
+            // "KMP always goes through A2UIBridgeModule" invariant intact.
             // Register custom render views from the process-global registry.
             // Uses the shared A2UIAndroidCustomViewRegistry so that native-page
-            // and Kuikly-page-embedded modes see the same table.
+            // and Kuikly-page-embedded modes see the same table. Shadow creators
+            // are intentionally no longer wired here — A2UI drives custom-view
+            // intrinsic size through [A2UIBridgeModule.calculateCustomViewSize]
+            // backed by the registered `measurer`.
             for ((name, entry) in A2UIAndroidCustomViewRegistry.snapshot()) {
-                renderViewExport(name, entry.creator, entry.shadowCreator)
+                renderViewExport(name, entry.creator, null)
             }
         }
     }

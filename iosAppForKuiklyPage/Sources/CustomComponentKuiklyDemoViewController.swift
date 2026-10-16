@@ -91,12 +91,20 @@ final class CustomComponentKuiklyDemoViewController: UIViewController,
         // iosShared/CustomComponentDemoViewController.swift and shared
         // with the NativePage app; the classes are visible to this
         // target through the shared Sources compile group.
-        A2UISurfaceView.registerCustomRenderView(viewName: "A2UIWeb") {
-            A2UIWebView()
-        }
-        A2UISurfaceView.registerCustomRenderView(viewName: "MyA2UIView") {
-            MyA2UIView()
-        }
+        A2UISurfaceView.registerCustomRenderView(
+            viewName: "A2UIWeb",
+            creator: { A2UIWebView() },
+            measurer: { constraintWidth, _ in
+                A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 240)
+            }
+        )
+        A2UISurfaceView.registerCustomRenderView(
+            viewName: "MyA2UIView",
+            creator: { MyA2UIView() },
+            measurer: { constraintWidth, _ in
+                A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 200)
+            }
+        )
         print("✅ [CustomComponentKuikly] All custom components registered: A2UIWeb, MyA2UIView")
     }
 

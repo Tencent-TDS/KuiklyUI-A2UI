@@ -72,6 +72,9 @@
     if ([method isEqualToString:@"invokeCustomFunction"]) {
         return [self p_invokeCustomFunctionWithPayload:params];
     }
+    if ([method isEqualToString:@"calculateCustomViewSize"]) {
+        return [self p_calculateCustomViewSizeWithPayload:params];
+    }
     if ([method isEqualToString:@"contentHeightChanged"]) {
         // No-op on iOS: the host Kuikly page already drives
         // A2UISurfaceDSLView's intrinsic height through its Flex engine, and
@@ -178,6 +181,31 @@
     NSString *(*fn)(id, SEL, NSString *, NSString *, NSString *) =
         (NSString *(*)(id, SEL, NSString *, NSString *, NSString *))imp;
     return fn(helperCls, sel, name, argsJson, spec);
+}
+
+#pragma mark - calculateCustomViewSize
+
+/*
+ * Payload: `"<viewName>\n<nativeRef>\n<constraintWidth>\n<constraintHeight>"`.
+ * Called synchronously (syncCall=1) on the Kuikly Context Queue; the KMP
+ * side ([A2UICustomComponentView measure] via
+ * [A2UIBridgeManager calculateCustomViewSize]) consumes the "<width>|<height>"
+ * return string verbatim. An empty string means "no measurer registered",
+ * which the KMP side interprets as "fall back to parent cross-axis / 0".
+ *
+ * Mirror of the Android and OHOS counterparts \u2014 see
+ * `A2UIBridgeModule.handleCalculateCustomViewSize` and
+ * `A2UIBridgeModule.call('calculateCustomViewSize')` respectively.
+ */
+- (nullable NSString *)p_calculateCustomViewSizeWithPayload:(nullable NSString *)payload {
+    if (![payload isKindOfClass:[NSString class]]) { return nil; }
+    Class helperCls = objc_lookUpClass("A2UIBridgeModuleHelper");
+    if (helperCls == Nil) { return nil; }
+    SEL sel = NSSelectorFromString(@"calculateCustomViewSizeWithPayload:");
+    if (![helperCls respondsToSelector:sel]) { return nil; }
+    IMP imp = [helperCls methodForSelector:sel];
+    NSString *(*fn)(id, SEL, NSString *) = (NSString *(*)(id, SEL, NSString *))imp;
+    return fn(helperCls, sel, payload);
 }
 
 @end

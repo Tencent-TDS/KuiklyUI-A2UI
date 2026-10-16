@@ -16,8 +16,8 @@
 package com.tencent.kuikly.a2ui.render.android
 
 import android.content.Context
+import android.util.SizeF
 import com.tencent.kuikly.core.render.android.IKuiklyRenderExport
-import com.tencent.kuikly.core.render.android.export.IKuiklyRenderShadowExport
 import com.tencent.kuikly.core.render.android.export.IKuiklyRenderViewExport
 import java.util.Collections
 import java.util.WeakHashMap
@@ -39,6 +39,8 @@ import java.util.concurrent.ConcurrentHashMap
  *  - [A2UIAndroidNativeMethodHandler] — bridges register / unregister events
  *    into the KMP-side [com.tencent.kuikly.a2ui.dsl.A2UICustomViewRegistry] so
  *    that the DSL applier can distinguish custom components in both modes.
+ *  - [A2UIBridgeModule] — resolves `measurer` by name when the KMP side asks
+ *    for an intrinsic size via `calculateCustomViewSize`.
  *
  * Registration is process-global and idempotent; every host sees the same
  * table so an app only needs to register a custom view once during startup.
@@ -50,12 +52,47 @@ import java.util.concurrent.ConcurrentHashMap
 object A2UIAndroidCustomViewRegistry {
 
     /**
-     * A single registration entry — the view factory plus an optional shadow
-     * factory (for text-like components that need JVM-side measurement).
+     * Intrinsic-size resolver attached to a custom render view at
+     * registration time. Called synchronously on the Kuikly Context Thread
+     * each time the Flex engine needs an intrinsic size for the registered
+     * component — exactly the role an `IKuiklyRenderShadowExport` used to
+     * fill before this project migrated custom-view measurement off the
+     * Shadow mechanism onto the standard Kuikly Module channel.
+     *
+     * Return `null` on an axis (via `SizeF(0f, 0f)` or similar) and A2UI
+     * will fall back to `width = parent cross-axis constraint`,
+     * `height = 0`. JSON-side `width` / `height` always win over the
+     * measurer result.
+     *
+     * Units: both inputs and outputs are in Kuikly's **logical unit (dp)**
+     * — the same unit the KMP-side
+     * `A2UICustomComponentView.measure` receives and writes back to
+     * `measureOutput`. **Do NOT multiply by `displayMetrics.density` here**:
+     * the Kuikly native render handler converts dp → px on its own when
+     * laying the Android view out, so pre-scaling would make the component
+     * render at `density` × its intended size (a very easy footgun).
+     *
+     * (Historical note: Kuikly's old `IKuiklyRenderShadowExport
+     * .calculateRenderViewSize` worked in px because it sat on the native
+     * side of the dp→px conversion. The A2UI measurer sits on the KMP
+     * side, upstream of that conversion, so the convention is now dp.)
+     *
+     * Threading: runs inline on the Kuikly Context Thread; must not block
+     * on UI work. Dynamic-size scenarios (content height arriving after
+     * an async load) belong on the second-pass
+     * `A2UIBridgeManager.notifyCustomViewResize` path.
+     */
+    fun interface A2UICustomViewMeasurer {
+        fun measure(constraintWidthPx: Float, constraintHeightPx: Float): SizeF
+    }
+
+    /**
+     * A single registration entry — the view factory plus an optional
+     * intrinsic-size measurer.
      */
     data class Entry(
         val creator: (Context) -> IKuiklyRenderViewExport,
-        val shadowCreator: (() -> IKuiklyRenderShadowExport)?
+        val measurer: A2UICustomViewMeasurer?
     )
 
     /** viewName → entry. */
@@ -93,10 +130,10 @@ object A2UIAndroidCustomViewRegistry {
     fun register(
         viewName: String,
         creator: (Context) -> IKuiklyRenderViewExport,
-        shadowCreator: (() -> IKuiklyRenderShadowExport)? = null
+        measurer: A2UICustomViewMeasurer? = null
     ) {
         if (viewName.isEmpty()) return
-        val entry = Entry(creator, shadowCreator)
+        val entry = Entry(creator, measurer)
         entries[viewName] = entry
         // Fan-out to every already-attached host [IKuiklyRenderExport]. Doing
         // this here (rather than only inside ChangeListener) means an
@@ -135,6 +172,10 @@ object A2UIAndroidCustomViewRegistry {
     fun get(viewName: String): Entry? = entries[viewName]
 
     fun isRegistered(viewName: String): Boolean = entries.containsKey(viewName)
+
+    /** Look up the measurer registered for [viewName], or `null` when absent. */
+    fun lookupMeasurer(viewName: String): A2UICustomViewMeasurer? =
+        entries[viewName]?.measurer
 
     fun addChangeListener(listener: ChangeListener) {
         listeners.add(listener)
@@ -180,8 +221,10 @@ object A2UIAndroidCustomViewRegistry {
 
     private fun installEntry(export: IKuiklyRenderExport, name: String, entry: Entry) {
         // IKuiklyRenderExport is a plain map wrapper: put is safe to call at
-        // any time and lookups by createRenderView / createRenderShadow are
-        // per-request. Duplicated puts simply replace the previous factory.
-        export.renderViewExport(name, entry.creator, entry.shadowCreator)
+        // any time and lookups by createRenderView are per-request.
+        // Duplicated puts simply replace the previous factory. We no longer
+        // forward any shadow creator — intrinsic size now flows through the
+        // measurer / Module channel instead.
+        export.renderViewExport(name, entry.creator, null)
     }
 }

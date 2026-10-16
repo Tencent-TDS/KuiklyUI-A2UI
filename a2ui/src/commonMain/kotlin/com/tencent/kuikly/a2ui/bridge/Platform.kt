@@ -8,8 +8,9 @@ package com.tencent.kuikly.a2ui.bridge
  * "A2UIBridgeModule", …)` can reach — i.e. the platforms that handle
  * A2UI-specific native requests (showDateTimePicker, executeFunctionCall,
  * invokeCustomFunction, contentHeightChanged, actionCallback, openUrl,
- * …) through the standard Kuikly module bus instead of a platform-local
- * methodId extension point or a KMP-side singleton hook.
+ * `calculateCustomViewSize`, …) through the standard Kuikly module bus
+ * instead of a platform-local methodId extension point or a KMP-side
+ * singleton hook.
  *
  * On platforms where this is `false`, `BridgeManager.callModuleMethod(
  * "A2UIBridgeModule", …)` would either throw a Kotlin exception (loggy
@@ -44,56 +45,3 @@ internal expect val isModuleBasedPlatform: Boolean
  * matters.
  */
 internal expect fun isA2UIBridgeModuleAvailable(): Boolean
-
-/**
- * Platform gate controlling whether [com.tencent.kuikly.a2ui.views.A2UICustomComponentView]
- * creates a Kuikly [com.tencent.kuikly.core.base.Shadow] to drive measurement.
- *
- * Why this exists:
- *
- * The Kuikly `Shadow` mechanism is a renderer-side object that lets the Flex
- * engine ask the native (JVM / ObjC / C++) runtime for a view's *intrinsic*
- * size. Each platform wires it up differently:
- *
- *  - Android: `IKuiklyRenderShadowExport` is a plain Kotlin interface. The
- *    renderer resolves it against the custom-view registry — no extra ABI.
- *  - iOS:     Objective-C runtime looks up `+hrv_createShadow` on the class
- *    returned by `NSClassFromString(viewName)` — again no extra ABI.
- *  - OHOS:    Shadow creators live in a **C++ static map**
- *    (`IKRRenderShadowExport::gRegisterShadowCreator`). ArkTS has no
- *    equivalent lookup, so the only way for a business app's custom
- *    component to appear there is to add a C++ translation unit to its
- *    `libxxx_entry.so` that calls `IKRRenderShadowExport::RegisterShadowCreator`.
- *    That couples business code to Kuikly's C++ ABI — exactly what the
- *    Module-channel refactor in this project set out to avoid.
- *
- * Resolution:
- *
- * On OHOS we **skip Shadow creation** in [A2UICustomComponentView] and
- * instead drive measurement through the standard Kuikly Module channel
- * (`A2UIBridgeModule.calculateCustomViewSize`, `syncCall=1`):
- *
- *  - Authors register an optional `measurer` alongside their custom-view
- *    creator (ArkTS: `registerA2UICustomRenderView(name, creator, measurer)`).
- *    When present, A2UI calls it on the Kuikly Context Thread each measure
- *    pass. Its return value drives Flex measurement, mirroring what the
- *    native Shadow does on Android / iOS.
- *  - For async-sized components, authors call the second-pass helper
- *    (ArkTS: `notifyA2UICustomViewSizeChanged(view, w, h)`); A2UI only
- *    triggers a relayout when dimensions actually changed.
- *  - When no measurer is registered the fallback is
- *    `width = parent cross-axis constraint`, `height = 0`; JSON-side
- *    `width` / `height` act as a hard override at any point.
- *
- * On Android / iOS the long-standing Shadow mechanism remains the single
- * source of intrinsic size and the JSON-side `width` / `height` are
- * **optional overrides** (merged in [A2UICustomComponentView.measure]
- * after the shadow result).
- *
- * Resolved per source set:
- * - `androidMain`     → `true`
- * - `iosMain`         → `true`
- * - `ohosArm64Main`   → `false` (shadow path is impossible without a C++ ABI patch; uses the Module-measurer channel instead)
- * - `jvmMain`         → `false` (there is no native renderer at all)
- */
-internal expect val isCustomComponentShadowRequired: Boolean

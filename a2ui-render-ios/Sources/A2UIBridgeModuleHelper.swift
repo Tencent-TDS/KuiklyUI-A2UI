@@ -165,6 +165,42 @@ public final class A2UIBridgeModuleHelper: NSObject {
         return Self.encodeInvokeResult(raw)
     }
 
+    // MARK: - calculateCustomViewSize
+
+    /// Resolve the business-side `measurer` registered for a custom view
+    /// via `A2UISurfaceView.registerCustomRenderView(viewName:creator:measurer:)`
+    /// and run it inline on the current (Kuikly Context) queue, returning
+    /// `"<width>|<height>"` back to the KMP core.
+    ///
+    /// Payload: `"<viewName>\n<nativeRef>\n<constraintWidth>\n<constraintHeight>"`,
+    /// matching the wire format of the Android / OHOS counterparts byte-
+    /// for-byte so the KMP side `A2UIBridgeManager.calculateCustomViewSize`
+    /// stays on a single implementation.
+    ///
+    /// Return value is a plain `"<width>|<height>"` string. An empty
+    /// NSString signals "no measurer registered / malformed payload /
+    /// measurer returned nil" \u2014 the KMP side interprets it as
+    /// "fall back to parent-cross-axis / 0" (JSON `width` / `height` still
+    /// win over this).
+    ///
+    /// Threading: `A2UIBridgeModule.m` keeps us on the Kuikly Context
+    /// Queue (syncCall=1); the measurer runs inline, so authors must keep
+    /// it synchronous and avoid UIKit mutations (see
+    /// `A2UISurfaceView.A2UICustomViewMeasurer` for the contract).
+    @objc public static func calculateCustomViewSizeWithPayload(_ payload: String) -> NSString {
+        let parts = payload.components(separatedBy: "\n")
+        guard parts.count >= 4 else { return "" }
+        let viewName = parts[0]
+        guard let cw = Double(parts[2]), let ch = Double(parts[3]) else { return "" }
+        guard let measurer = A2UISurfaceView.lookupMeasurer(viewName: viewName) else {
+            return ""
+        }
+        guard let size = measurer(CGFloat(cw), CGFloat(ch)) else {
+            return ""
+        }
+        return "\(size.width)|\(size.height)" as NSString
+    }
+
     // MARK: - Private helpers
 
     /// Hop to the Kuikly Context Queue (via the same `A2UIRenderHelper`

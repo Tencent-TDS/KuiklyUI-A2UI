@@ -17,7 +17,6 @@ package com.tencent.kuikly.a2ui.demo
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -37,8 +36,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.tencent.kuikly.a2ui.render.android.A2UIAndroidCustomViewRegistry
 import com.tencent.kuikly.a2ui.render.android.A2UISurfaceView
-import com.tencent.kuikly.core.render.android.export.IKuiklyRenderShadowExport
 import com.tencent.kuikly.core.render.android.export.IKuiklyRenderViewExport
 
 /**
@@ -107,20 +106,31 @@ class CustomComponentDemoActivity : AppCompatActivity() {
      * This demonstrates the public API: [A2UISurfaceView.registerCustomRenderView].
      */
     private fun registerCustomComponents() {
-        // 1. A2UIWeb: A WebView component with "source" property
-        //    Shadow reports intrinsic height = 240dp so the flex engine can size the card.
+        // Both inputs and outputs of the measurer are in Kuikly's
+        // *logical* unit (dp on Android), matching what
+        // `A2UICustomComponentView.measure` receives and writes back to
+        // `measureOutput`. Do NOT multiply by `displayMetrics.density` here:
+        // the Kuikly native render handler converts dp → px on its own.
+        //
+        // 1. A2UIWeb: A WebView component with "source" property.
+        //    Measurer reports intrinsic height = 240dp. Width is driven by
+        //    the parent cross-axis constraint.
         A2UISurfaceView.registerCustomRenderView(
             viewName = "A2UIWeb",
             creator = { context -> A2UIWebView(context) },
-            shadowCreator = { A2UIWebShadow() }
+            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+                SizeF(cwDp, 240f)
+            }
         )
 
-        // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties
-        //    Shadow reports intrinsic height = 200dp.
+        // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties.
+        //    Measurer reports intrinsic height = 200dp.
         A2UISurfaceView.registerCustomRenderView(
             viewName = "MyA2UIView",
             creator = { context -> MyA2UIView(context) },
-            shadowCreator = { MyA2UIViewShadow() }
+            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+                SizeF(cwDp, 200f)
+            }
         )
 
         Log.i(TAG, "✅ All custom components registered: A2UIWeb, MyA2UIView")
@@ -442,47 +452,11 @@ class MyA2UIView(context: Context) : FrameLayout(context), IKuiklyRenderViewExpo
 }
 
 // ============================================================
-// Shadow Implementations (for intrinsic size measurement)
+// Note:
+//   Intrinsic size for A2UI custom components is reported through the
+//   `measurer` registered alongside the creator in [registerCustomComponents]
+//   above — that path hits [com.tencent.kuikly.a2ui.render.android.A2UIBridgeModule]
+//   .calculateCustomViewSize on the Kuikly Context Thread. The old
+//   `IKuiklyRenderShadowExport`-based Shadow classes are no longer needed
+//   or wired up by A2UI.
 // ============================================================
-
-/**
- * Shadow for A2UIWebView.
- * Reports intrinsic size: width = constraint width (fill parent), height = 240dp (in px).
- * This allows the Flex engine to correctly size the card without specifying
- * height in the JSON protocol.
- *
- * Note: IKuiklyRenderShadowExport.calculateRenderViewSize receives constraintSize in px
- * and must return the result in px. The framework converts px -> dp automatically.
- */
-class A2UIWebShadow : IKuiklyRenderShadowExport {
-
-    override fun setProp(propKey: String, propValue: Any) {
-        // No-op: A2UIWebView handles props directly
-    }
-
-    override fun calculateRenderViewSize(constraintSize: SizeF): SizeF {
-        // 240dp converted to px
-        val heightPx = 240f * Resources.getSystem().displayMetrics.density
-        return SizeF(constraintSize.width, heightPx)
-    }
-}
-
-/**
- * Shadow for MyA2UIView.
- * Reports intrinsic size: width = constraint width (fill parent), height = 200dp (in px).
- *
- * Note: IKuiklyRenderShadowExport.calculateRenderViewSize receives constraintSize in px
- * and must return the result in px. The framework converts px -> dp automatically.
- */
-class MyA2UIViewShadow : IKuiklyRenderShadowExport {
-
-    override fun setProp(propKey: String, propValue: Any) {
-        // No-op: MyA2UIView handles props directly
-    }
-
-    override fun calculateRenderViewSize(constraintSize: SizeF): SizeF {
-        // 200dp converted to px
-        val heightPx = 200f * Resources.getSystem().displayMetrics.density
-        return SizeF(constraintSize.width, heightPx)
-    }
-}

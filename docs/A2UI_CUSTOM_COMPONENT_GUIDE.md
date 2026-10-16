@@ -8,8 +8,8 @@ A2UI 自定义组件（Custom Component）是 A2UI 协议的扩展能力，允�
 
 - **组件可扩展**：不修改 A2UI 协议本身，即可添加全新的原生 UI 组件（如 WebView、地图、图表等）
 - **原生渲染**：自定义组件由平台原生视图承载，与 A2UI 标准组件共享同一套渲染管道
-- **自动布局**：通过 Shadow 机制参与 Kuikly FlexBox 布局计算，自动获得正确的宽高
-- **跨平台一致**：三端（Android / iOS / HarmonyOS）使用统一的注册 API 和 JSON 引用语法
+- **自动布局**：三端统一走 Kuikly Module 通道上报 intrinsic size，自动参与 FlexBox 布局
+- **跨平台一致**：三端（Android / iOS / HarmonyOS）使用统一的注册 API（`creator + 可选 measurer`）和同一条 `A2UIBridgeModule.calculateCustomViewSize` 通道
 
 ### 工作原理
 
@@ -29,69 +29,77 @@ A2UI 自定义组件（Custom Component）是 A2UI 协议的扩展能力，允�
 │                                                          │
 │  1. A2UIApplier.createDSLView("A2UIWeb")                  │
 │     → 未命中已知组件 → 创建 A2UICustomComponentView        │
-│  2. A2UICustomComponentView.willInit()                    │
-│     → 创建 Kotlin Shadow 对象                              │
-│     → BridgeManager.createShadow(tag, "A2UIWeb")          │
-│        → Native 层注册的 Shadow Creator 创建 C++ 实例      │
-│  3. FlexBox 布局时调用 measure()                           │
-│     → Kotlin Shadow.calculateRenderViewSize(cw, ch)      │
-│        → Native Shadow.CalculateRenderViewSize(cw, ch)   │
-│        → 返回 intrinsic size (如 343×240)                 │
-│  4. 布局完成后 sync frame 到原生视图                       │
+│  2. FlexBox 布局时调用 measure(cw, ch)                     │
+│     → A2UIBridgeManager.calculateCustomViewSize           │
+│        → BridgeManager.callModuleMethod                    │
+│            ("A2UIBridgeModule",                            │
+│             "calculateCustomViewSize",                     │
+│             "viewName\nnativeRef\ncw\nch",                  │
+│             syncCall=1)                                    │
+│        → 三端的 A2UIBridgeModule 查注册的 measurer 并同步    │
+│          返回 "width|height"                                │
+│  3. 布局完成后 sync frame 到原生视图                       │
+│  4. 异步 resize：业务侧随时可调                             │
+│     A2UIBridgeManager.notifyCustomViewResize（Android/iOS   │
+│     内部封装为 notifyA2UICustomViewSizeChanged），          │
+│     只有新旧值差 > 0.5 时才会 markDirty 触发重新布局        │
 └─────────────────────────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────┐
 │            Native Render Layer (平台渲染层)                │
 │                                                          │
-│  ┌─────────────────┐  ┌─────────────────┐               │
-│  │  Shadow (测量)    │  │  RenderView     │               │
-│  │  • 参与 FlexBox  │  │  (原生视图)      │               │
-│  │  • 返回内在尺寸   │  │  • 显示 UI 内容   │               │
-│  │  • 接收属性更新   │  │  • 处理 setProp  │               │
-│  └─────────────────┘  └─────────────────┘               │
+│  ┌──────────────────────┐  ┌─────────────────┐          │
+│  │ A2UIBridgeModule      │  │  RenderView     │          │
+│  │  .calculateCustomView │  │  (原生视图)      │          │
+│  │   Size → measurer     │  │  • 显示 UI 内容  │          │
+│  │  • 参与 FlexBox 测量    │  │  • 处理 setProp │          │
+│  │  • 返回 intrinsic size │  │                 │          │
+│  └──────────────────────┘  └─────────────────┘          │
 │           ↑ 同一个 viewName (e.g. "A2UIWeb")              │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### 宽高确定机制
 
-自定义组件的最终宽高由 **三层优先级** 决定；三端用不同的物理机制承载同一
-语义——"组件自身决定 intrinsic size"：
+自定义组件的最终宽高由 **三层优先级** 决定；三端用**同一条** Kuikly Module
+通道承载同一语义——"组件自身决定 intrinsic size"：
 
 ```
 Flex 布局约束 (父容器/Surface 宽度)
      │
      ▼
-┌─ Android / iOS ──────────────────────────────────────┐
-│  Shadow.CalculateRenderViewSize(cw, ch)              │
-│  → 返回 intrinsic size (如 width=cw, height=240)      │
-└─────────────────────────────────────────────────────┘
-┌─ HarmonyOS ──────────────────────────────────────────┐
-│  A2UIBridgeModule.calculateCustomViewSize            │
-│  → ArkTS 注册时传入的 measurer(cw, ch)                │
-│  → 返回 { width, height }                             │
-│  → 异步 resize: notifyA2UICustomViewSizeChanged      │
-└─────────────────────────────────────────────────────┘
+A2UIBridgeModule.calculateCustomViewSize   （三端统一，syncCall=1）
+  Android ──► A2UIAndroidCustomViewRegistry.lookupMeasurer(name)
+  iOS     ──► A2UISurfaceView.lookupMeasurer(viewName)
+  OHOS    ──► a2uiCustomViewMeasurers.get(viewName)
+  → 返回业务侧注册的 measurer(cw, ch) = { width, height }
+  → 没有 measurer 时返回空串，走下方 fallback
+     │
+     ▼
+异步 resize（可选）：业务侧随时可通过
+  Android/iOS：A2UIBridgeManager.notifyCustomViewResize（内部封装）
+  OHOS      ：notifyA2UICustomViewSizeChanged(view, w, h)
+  → 新旧值绝对差 > 0.5 时才 markDirty 触发重新布局
      │
      ▼
 检查 DSL 显式样式 styleWidth / styleHeight
-→ 如果设置了 → 覆盖上一层返回的值（最高优先级）
-→ 如果未设置 → 使用上一层返回值；没有 measurer / Shadow 时三端均 fallback
+→ 如果设置了 → 覆盖以上所有层（**最高优先级**）
+→ 如果未设置 → 使用 measurer 返回值；没有 measurer 时三端均 fallback
    到 (width = 父 cross-axis, height = 0)
      │
      ▼
 最终 frame = (finalWidth, finalHeight)
 ```
 
-**优先级：DSL 显式宽高 > Shadow 测量结果 > 父约束**
+**优先级：DSL 显式宽高 > 二次 resize > measurer > 父约束 fallback**
 
-> **HarmonyOS 例外**：Kuikly OHOS 的 Shadow 创建器注册在 C++ 静态 map 中，ArkTS
-> 不能向其注册；A2UI 选择不引入跨 `.so` 的 C++ ABI 补丁，因此
-> `A2UICustomComponentView` 在 OHOS 上**跳过 Shadow 一步**，`measure()` 的 fallback
-> 直接把父节点传入的 cross-axis 约束作为宽度（相当于"自动撑满父可用宽度"），高度
-> 则需要 JSON 显式指定。实践中只需在 JSON 中为自定义组件写 `height`，不用写
-> `width`。
+> **三端统一通道**：三端的自定义组件 intrinsic size 现在**都**通过标准
+> Kuikly Module 通道上报（`BridgeManager.callModuleMethod("A2UIBridgeModule",
+> "calculateCustomViewSize", payload, syncCall=1)`）。Android / iOS 不再
+> 依赖 Kuikly 的 Shadow 机制；OHOS 没有 ArkTS 侧 Shadow 可用，所以这条通
+> 道从一开始就是它唯一的实现方式——三端对齐之后，业务开发者的心智完全
+> 一致：**注册时提供 creator，可选同时提供 measurer**。
 
 ---
 
@@ -106,19 +114,21 @@ libkuikly.so (SDK 公共产物)               libkuikly_entry.so (业务模块)
 │ └─ 无 ArkTS 侧 Shadow 机制    │       │                             │
 ├──────────────────────────────┤       │ ArkTS 侧：                  │
 │ IKRRenderShadowExport         │       │ registerA2UICustomRenderView│
-│ (C++ 侧，A2UI 不启用)         │       │   ("A2UIWeb", () => ...)    │
-├──────────────────────────────┤       └─────────────────────────────┘
-│ KRRenderLayerHandler.cpp     │
-│ CreateShadow(tag, name) ←未命中直接 return "0|0" │
+│ (C++ 侧，A2UI 不启用)         │       │   ("A2UIWeb",               │
+├──────────────────────────────┤       │    () => new …,              │
+│ KRRenderLayerHandler.cpp     │       │    (cw, ch) => ({ ... }))    │
+│ CreateShadow(tag, name) ←未  │       └─────────────────────────────┘
+│ 命中直接 return "0|0"         │
 └──────────────────────────────┘
 ```
 
 > **关键设计**：业务自定义组件**只需在 ArkTS 侧**通过
 > `registerA2UICustomRenderView(...)` 注册即可；A2UI 的
-> `A2UICustomComponentView` 在 OHOS 上**不创建 Kuikly Shadow**
-> （`isCustomComponentShadowRequired=false`），彻底避免 `libkuikly.so`（SDK）
-> 与 `libkuikly_entry.so`（业务）之间的 C++ ABI 耦合。代价是：OHOS JSON
-> 作者必须为自定义组件显式写 `height`。
+> `A2UICustomComponentView` 在所有平台上都**不创建 Kuikly Shadow**，
+> intrinsic size 完全由业务 `measurer` 通过 `A2UIBridgeModule.calculateCustomViewSize`
+> 上报——三端 KMP ↔ Native 的通信都走同一条标准 Kuikly Module 通道，
+> 不再依赖任何平台专属机制（Android 的 `IKuiklyRenderShadowExport`、
+> iOS 的 `+hrv_createShadow`），也完全避开 OHOS 的 C++ ABI 耦合。
 
 ---
 
@@ -209,7 +219,7 @@ JSON props
 | 属性名自由 | 自定义属性名无限制，由业务层自行处理 |
 | 属性类型 | 目前支持 `String`、`Number`、`Boolean` 等基本类型 |
 | 布局属性 | `width`、`height` 等布局属性与标准组件一致，走 FlexBox 计算 |
-| 宽高默认值 | 未指定宽高时，由 Shadow 返回 intrinsic size（如 A2UIWeb 高度默认 240） |
+| 宽高默认值 | 未指定宽高时，由 `measurer` 返回 intrinsic size（如 A2UIWeb 高度默认 240） |
 
 ---
 
@@ -362,20 +372,29 @@ a2ui/androidAppForNativePage/src/main/assets/a2ui_custom_components/
 #### 注册自定义组件
 
 ```kotlin
+import android.util.SizeF
+import com.tencent.kuikly.a2ui.render.android.A2UIAndroidCustomViewRegistry
 import com.tencent.kuikly.a2ui.render.android.A2UISurfaceView
 
-// 1. 注册 RenderView（承载 UI 显示）
-// 2. 注册 Shadow（参与布局测量，返回 intrinsic size）
+// 注册 RenderView，并可选传入 measurer 来返回 intrinsic size。
+// measurer 的输入和输出都是 Kuikly 的**逻辑单位（dp）**，和
+// `A2UICustomComponentView.measure` 收到和写回 FlexNode 的单位一致。
+// **不要**在这里乘 `displayMetrics.density`——Kuikly native render
+// handler 会在布局到 Android View 时自己把 dp 转 px。
 A2UISurfaceView.registerCustomRenderView(
     viewName = "A2UIWeb",
     creator = { context -> A2UIWebView(context) },
-    shadowCreator = { A2UIWebShadow() }
+    measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+        SizeF(cwDp, 240f)  // 宽：父约束（dp）；高：240dp
+    }
 )
 
 A2UISurfaceView.registerCustomRenderView(
     viewName = "MyA2UIView",
     creator = { context -> MyA2UIView(context) },
-    shadowCreator = { MyA2UIViewShadow() }
+    measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
+        SizeF(cwPx, 200f * density)
+    }
 )
 ```
 
@@ -391,10 +410,11 @@ A2UISurfaceView.unregisterCustomRenderView("MyA2UIView")
 ```kotlin
 companion object {
     @JvmStatic
+    @JvmOverloads
     fun registerCustomRenderView(
         viewName: String,
-        creator: (Context) -> View,
-        shadowCreator: () -> IKuiklyRenderShadowExport
+        creator: (Context) -> IKuiklyRenderViewExport,
+        measurer: A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer? = null
     )
 
     @JvmStatic
@@ -402,34 +422,44 @@ companion object {
 }
 ```
 
-#### Shadow 实现
+#### Measurer 实现
 
-Shadow 负责返回组件的内在尺寸（intrinsic size），供 FlexBox 布局引擎使用：
+`measurer` 负责返回组件的内在尺寸（intrinsic size），供 FlexBox 布局引擎使用。
+它运行在 **Kuikly Context Thread**（布局线程）。**输入输出单位均为
+逻辑单位 dp**（Android），**不要**乘 `density`：
 
 ```kotlin
 import android.util.SizeF
-import com.tencent.kuikly.core.render.android.export.IKuiklyRenderShadowExport
 
-class A2UIWebShadow : IKuiklyRenderShadowExport {
-    override fun setProp(propKey: String, propValue: Any) {
-        // 可根据属性动态调整尺寸
-    }
-
-    override fun calculateRenderViewSize(constraintSize: SizeF): SizeF {
-        // Width: 使用约束宽度（填充父容器）
-        // Height: 固定 240dp（WebView 内在内容高度）
-        return SizeF(constraintSize.width, 240f)
-    }
+// 返回固定宽高的 measurer
+val webMeasurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _chDp ->
+    SizeF(cwDp, 240f)
 }
 
-class MyA2UIViewShadow : IKuiklyRenderShadowExport {
-    override fun setProp(propKey: String, propValue: Any) {}
+// 如果尺寸依赖属性（如样式模式），将所需状态 hoist 到闭包里即可：
+class A2UIWebRegistrar {
+    private var displayMode: String = "normal"
 
-    override fun calculateRenderViewSize(constraintSize: SizeF): SizeF {
-        return SizeF(constraintSize.width, 200f)
+    fun register() {
+        A2UISurfaceView.registerCustomRenderView(
+            viewName = "A2UIWeb",
+            creator = { context -> A2UIWebView(context).also { it.registrar = this } },
+            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+                val height = when (displayMode) {
+                    "compact" -> 80f
+                    "expanded" -> 320f
+                    else -> 200f
+                }
+                SizeF(cwDp, height)
+            }
+        )
     }
 }
 ```
+
+> **异步尺寸**：对于异步才知道尺寸的场景（如 WebView 内容高度），在异步回调
+> 里调用 `A2UIBridgeManager.notifyCustomViewResize(pagerId, nativeRef, w, h)`
+> 触发二次布局，内部会在新旧值绝对差 > 0.5f 时才 markDirty，避免抑抑。
 
 #### RenderView 实现
 
@@ -473,18 +503,23 @@ class CustomComponentDemoActivity : AppCompatActivity() {
     }
 
     private fun registerCustomComponents() {
-        // A2UIWeb: WebView 组件
+        val density = Resources.getSystem().displayMetrics.density
+        // A2UIWeb：WebView 组件
         A2UISurfaceView.registerCustomRenderView(
             viewName = "A2UIWeb",
             creator = { context -> A2UIWebView(context) },
-            shadowCreator = { A2UIWebShadow() }
+            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
+                SizeF(cwPx, 240f * density)
+            }
         )
 
-        // MyA2UIView: 简单自定义视图
+        // MyA2UIView：简单自定义视图
         A2UISurfaceView.registerCustomRenderView(
             viewName = "MyA2UIView",
             creator = { context -> MyA2UIView(context) },
-            shadowCreator = { MyA2UIViewShadow() }
+            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
+                SizeF(cwPx, 200f * density)
+            }
         )
 
         Log.i(TAG, "✅ All custom components registered")
@@ -506,16 +541,28 @@ class CustomComponentDemoActivity : AppCompatActivity() {
 ```swift
 import UIKit
 
-// 注册 A2UIWeb 自定义组件
-A2UISurfaceView.registerCustomRenderView(viewName: "A2UIWeb") {
-    A2UIWebView()
-}
+// 注册 A2UIWeb 自定义组件，并传入 measurer 返回 intrinsic size（输入输出单位均为 pt）。
+A2UISurfaceView.registerCustomRenderView(
+    viewName: "A2UIWeb",
+    creator: { A2UIWebView() },
+    measurer: { constraintWidth, _constraintHeight in
+        A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 240)
+    }
+)
 
 // 注册 MyA2UIView 自定义组件
-A2UISurfaceView.registerCustomRenderView(viewName: "MyA2UIView") {
-    MyA2UIView()
-}
+A2UISurfaceView.registerCustomRenderView(
+    viewName: "MyA2UIView",
+    creator: { MyA2UIView() },
+    measurer: { constraintWidth, _constraintHeight in
+        A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 200)
+    }
+)
 ```
+
+> `measurer` 是可选的。若不传，则 iOS 和 Android 一样回落到
+> `width = 父 cross-axis, height = 0`，JSON 中的 `width` / `height` 仍是最
+> 高优先级的硬覆盖。
 
 #### 注销自定义组件
 
@@ -524,36 +571,43 @@ A2UISurfaceView.unregisterCustomRenderView(viewName: "A2UIWeb")
 A2UISurfaceView.unregisterCustomRenderView(viewName: "MyA2UIView")
 ```
 
-#### Shadow 实现
+#### Measurer 实现
 
-iOS 端的 Shadow 是一个 `NSObject` 子类，通过 `@objc` 暴露测量方法给渲染层调用（协议约定，不需要显式 conform 具体 protocol）：
+iOS 端的 `measurer` 是一个 Swift 闭包。运行在 **Kuikly Context Queue**，
+**不要**访问 UIKit，也不要执行耗时操作；将所需状态 hoist 到闭包外部即可：
 
 ```swift
-import UIKit
+// 尺寸依赖属性时的典型写法
+final class A2UIWebRegistrar {
+    var displayMode: String = "normal"
 
-/// Shadow for A2UIWebView.
-/// Reports intrinsic size: width = constraint width, height = 240pt.
-class A2UIWebShadow: NSObject {
-
-    @objc func hrv_setPropWithKey(_ propKey: String, propValue: Any) {
-        // 可根据属性动态调整尺寸；本示例不依赖属性
-    }
-
-    @objc func hrv_calculateRenderViewSize(withConstraintSize constraintSize: CGSize) -> CGSize {
-        // Width: 使用约束宽度（填充父容器）
-        // Height: 固定 240pt（WebView 内在内容高度）
-        return CGSize(width: constraintSize.width, height: 240)
-    }
-
-    @objc func hrv_call(withMethod method: String, params: String?) -> String? {
-        return nil
+    func register() {
+        A2UISurfaceView.registerCustomRenderView(
+            viewName: "A2UIWeb",
+            creator: { A2UIWebView() },
+            measurer: { [weak self] constraintWidth, _ in
+                let height: CGFloat
+                switch self?.displayMode {
+                case "compact":  height = 80
+                case "expanded": height = 320
+                default:         height = 200
+                }
+                return A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: height)
+            }
+        )
     }
 }
 ```
 
+> **异步尺寸**：对于异步才知道尺寸的场景，在异步回调里调用
+> `A2UIBridgeManager.notifyCustomViewResize(pagerId, nativeRef, w, h)` 触发
+> 二次布局。内部会在新旧值绝对差 > 0.5pt 时才 markDirty。
+
 #### RenderView 实现
 
-`RenderView` 是一个 `UIView` 子类，实现 `KuiklyRenderViewExportProtocol`，并通过类方法 `hrv_createShadow` 返回上面定义的 Shadow：
+`RenderView` 是一个 `UIView` 子类，实现 `KuiklyRenderViewExportProtocol`。不
+再需要实现 `+hrv_createShadow`——intrinsic size 完全由注册时传入的
+`measurer` 负责：
 
 ```swift
 import UIKit
@@ -582,12 +636,7 @@ class A2UIWebView: UIView, KuiklyRenderViewExportProtocol {
     }
 
     @objc func hrv_resetPropWithKey(_ propKey: String) { /* ... */ }
-    @objc func hrv_setShadow(_ shadow: Any) { /* Shadow 由渲染层管理，通常无需持有 */ }
-
-    // 关键：注册 Shadow 工厂
-    @objc class func hrv_createShadow() -> NSObject {
-        return A2UIWebShadow()
-    }
+    @objc func hrv_setShadow(_ shadow: Any) { /* A2UI 已不再挂载 Shadow，保留空实现 */ }
 }
 ```
 
@@ -611,14 +660,22 @@ class CustomComponentDemoViewController: UIViewController {
 
     private func registerCustomComponents() {
         // A2UIWeb: WKWebView 组件
-        A2UISurfaceView.registerCustomRenderView(viewName: "A2UIWeb") {
-            A2UIWebView()
-        }
+        A2UISurfaceView.registerCustomRenderView(
+            viewName: "A2UIWeb",
+            creator: { A2UIWebView() },
+            measurer: { constraintWidth, _ in
+                A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 240)
+            }
+        )
 
         // MyA2UIView: 简单自定义视图
-        A2UISurfaceView.registerCustomRenderView(viewName: "MyA2UIView") {
-            MyA2UIView()
-        }
+        A2UISurfaceView.registerCustomRenderView(
+            viewName: "MyA2UIView",
+            creator: { MyA2UIView() },
+            measurer: { constraintWidth, _ in
+                A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 200)
+            }
+        )
 
         print("✅ All custom components registered")
     }
@@ -638,21 +695,22 @@ HarmonyOS 的自定义组件注册**只需在 ArkTS 层**完成：组件通过
 `registerA2UICustomRenderView(viewName, creator, measurer?)` 注册到全局表，
 `napi_init.cpp` **不需要**任何 Shadow 注册代码。
 
-> **与 Android / iOS 的差异**：A2UI 的 `A2UICustomComponentView` 在 OHOS 上
-> **不走 Shadow 测量路径**（`isCustomComponentShadowRequired=false`，见
-> `a2ui/src/ohosArm64Main/.../Platform.ohos.kt`）。原因是 Kuikly 的 Shadow
-> 创建器注册在 C++ 静态 map 中，ArkTS 无法向其写入，A2UI 不希望引入跨
-> `.so` 的 C++ ABI 补丁。
+> **三端通道一致**：A2UI 的 `A2UICustomComponentView` 在所有平台上都
+> **不创建 Kuikly Shadow**，而是通过标准 Kuikly Module 通道
+> （`A2UIBridgeModule.calculateCustomViewSize`）调用注册时传入的 `measurer`
+> 来获取 intrinsic size。这样做的好处：
 >
-> 替代方案：注册时传入可选的 `measurer`——A2UI 会在布局线程同步调用它来
-> 决定自定义组件的 intrinsic size，等价于 Android 的
-> `IKuiklyRenderShadowExport` 和 iOS 的 `+hrv_createShadow`。
+> - OHOS 不需要引入跨 `.so` 的 C++ ABI 补丁（业务 `libkuikly_entry.so` 无需
+>   `#include` 任何 SDK 的 C++ 头文件）；
+> - Android / iOS 废弃 Shadow 中间层，测量逻辑与 creator 在同一表里注册，
+>   心智进一步收敛；
+> - KMP 侧 `A2UICustomComponentView.measure` 只走唯一一条分支。
 >
 > 对于**异步才知道尺寸**的组件（例如 WebView 内容加载完才知道高度），
 > 业务侧可以在异步回调里调用
 > `notifyA2UICustomViewSizeChanged(view, w, h)` 触发一次二次布局；A2UI
-> 内部会判断新旧尺寸是否真有变化（0.5 vp 容差），只有变了才会 markDirty
-> 重排，避免抖动。
+> 内部会判断新旧尺寸是否真有变化（0.5 vp 容差），只有变了才会
+> markDirty 重排，避免抑抑。
 >
 > 如果既没有注册 `measurer` 也没有调用二次 resize，JSON 中还可以用
 > `width` / `height` 作为硬覆盖（优先级最高）。
@@ -661,7 +719,7 @@ HarmonyOS 的自定义组件注册**只需在 ArkTS 层**完成：组件通过
 
 ```
 ArkTS 层 (libkuikly_entry.so)                 KMP 层 (libshared.so)
-┌──────────────────────────┐                 ┌─────────────────────────────┐
+┌─────────────────────────┐                 ┌─────────────────────────────┐
 │ registerA2UICustomRender │                 │ A2UICustomComponentView      │
 │   View(name, creator,    │                 │   measure(cw, ch) →          │
 │         measurer?)        │  ◄──── sync ─── │   A2UIBridgeModule          │
@@ -675,9 +733,16 @@ ArkTS 层 (libkuikly_entry.so)                 KMP 层 (libshared.so)
 │                          │                 │   JSON width / height always │
 │ KuiklyRenderBaseView      │                 │   wins                       │
 │   setProp / createArkUI   │                 └─────────────────────────────┘
-└──────────────────────────┘
+└─────────────────────────┘
 ```
 
+> 三端都走同一条 `A2UIBridgeModule.calculateCustomViewSize` 通道，仅在业务
+> 注册 measurer 的编程语言 (Kotlin / Swift / ArkTS) 上不同。**三端所有
+> 单位都是 Kuikly 的逻辑单位**：
+> `A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer`（输入输出 dp），
+> `A2UISurfaceView.A2UICustomViewMeasurer`（iOS 输入输出 pt），
+> `A2UICustomViewMeasurer`（OHOS 输入输出 vp）。**不要**在 measurer 里
+> 自己乘 density / scale，这是最常见的尺寸超大抑抑来源。
 #### ArkTS 层：注册 RenderView（承载 UI 显示）
 
 ```typescript
@@ -891,16 +956,28 @@ class MyDynamicShadow : IKuiklyRenderShadowExport {
 
 #### HarmonyOS (ArkTS)
 
-HarmonyOS 没有 ArkTS 侧的 Shadow 机制，A2UI 也刻意不走 C++ Shadow 通路（见本
-章节上方的 "HarmonyOS (OHOS)" 说明）。因此**组件的宽高完全由 JSON 的
-`width` / `height` 决定**：
+HarmonyOS 的自定义组件跟 Android / iOS 完全对齐——都通过注册时传入的
+`measurer` 返回 intrinsic size。对于尺寸依赖属性的场景，将所需状态
+命名在闭包外部即可：
 
-- 内在尺寸固定的组件 → 直接在 JSON 里写死（最常见做法）。
-- 内在尺寸依赖某个属性（例如图片按 URL 决定高度）→ 推荐宿主业务侧在
-  收到数据后更新 JSON 并重发消息流，由 A2UI 的 `styleHeight` 变更触发
-  重新布局；或者在 JSON 中给一个保守的占位 `height`，让 ArkUI 内部
-  用 `.width('100%').height('100%')` 填满（但组件在父容器中的
-  **边界**仍由该占位 `height` 决定）。
+```typescript
+let displayMode = 'normal';
+
+registerA2UICustomRenderView(
+  'A2UIWeb',
+  () => new A2UIWebRenderView(),
+  (cw, _ch) => {
+    const height = displayMode === 'compact' ? 80
+                 : displayMode === 'expanded' ? 320
+                 : 200;
+    return { width: cw, height };
+  }
+);
+```
+
+> **异步尺寸**：对于异步才知道尺寸的场景，使用
+> `notifyA2UICustomViewSizeChanged(view, w, h)` 触发二次布局。内部会在
+> 新旧值绝对差 > 0.5 vp 时才 markDirty。
 
 ---
 
@@ -922,32 +999,37 @@ HarmonyOS 没有 ArkTS 侧的 Shadow 机制，A2UI 也刻意不走 C++ Shadow �
 
 ### 宽高未设置时返回 0×0
 
-如果自定义组件显示为 0×0，检查以下几点：
+如果自定义组件显示为 0×0，依次排查：
 
-1. **Shadow 是否注册成功**（Android/iOS）：确认 `registerShadow` 调用的组件名与 JSON 中一致
-2. **Shadow 是否返回正确尺寸**（Android/iOS）：`calculateRenderViewSize` 的返回宽/高必须 > 0
+1. **measurer 是否注册成功**：确认 `registerCustomRenderView` /
+   `registerA2UICustomRenderView` 调用中的 viewName 与 JSON 中一致，且设置了 measurer
+2. **measurer 是否返回正确尺寸**：返回宽/高必须 > 0；**单位是 Kuikly 的逻辑单位**（Android dp、iOS pt、OHOS vp），**不要**自己乘 density / scale（这是最常见的"尺寸超大"来源）
 3. **FlexBox 是否触发布局**：确认父容器有正确的布局属性（如 `align: "stretch"`）
 4. **是否显式设置了宽高为 0**：检查 JSON 中是否有 `"width": 0` 或 `"height": 0`
-5. **HarmonyOS 上**：A2UI 不走 Shadow 测量路径，所以**JSON 必须为自定义组件显式写
-   `height`**（父 Column 的 `alignItems=stretch` 已经负责宽度，可省略 `width`）。
-   同时确认 ArkTS 侧 `registerA2UICustomRenderView` 调用的 viewName 与 JSON 中
-   完全一致（区分大小写），且 `createArkUIView` 返回的 ArkUI 组件填满了容器
-   （例如 `.width('100%').height('100%')`）。
+5. **没有 measurer 时**：没设 measurer 的组件会回落到「父 cross-axis / 0」的
+   fallback，JSON 必须显式写 `height` 做硬覆盖；同时确认注册时传入的
+   viewName 与 JSON 完全一致（区分大小写）。
 
 ### 平台特性
 
+- **三端通道对齐**：Android / iOS / OHOS 的自定义组件 intrinsic size 统一
+  通过 `A2UIBridgeModule.calculateCustomViewSize` Module 通道上报，KMP 侧
+  `A2UICustomComponentView.measure` 只走唯一一条分支，Android 的
+  `IKuiklyRenderShadowExport` 和 iOS 的 `+hrv_createShadow` 对 A2UI 自定义组件
+  已停用。
 - **HarmonyOS 零 C++ ABI 耦合**：自定义组件通过 ArkTS 侧的
   `registerA2UICustomRenderView(...)` 注册即可；A2UI 的 `A2UICustomComponentView`
-  在 OHOS 上跳过 Kuikly Shadow 通路（`isCustomComponentShadowRequired=false`），
-  业务 `libkuikly_entry.so` 不需要 `#include` 任何 SDK 的 C++ 头文件，彻底避
-  免了跨 `.so` 的 C++ ABI 脆弱性问题。代价是：**OHOS JSON 必须为自定义组件
-  显式写 `height`**。
+  在所有平台上都**不创建 Kuikly Shadow**，业务 `libkuikly_entry.so` 无需
+  `#include` 任何 SDK 的 C++ 头文件，彻底避免了跨 `.so` 的 C++ ABI 脆弱性问题。
 
 ### 同步调用限制
 
-- `calculateRenderViewSize` 在 Kuikly Context Thread（布局线程）同步调用
+- `measurer` （或者说 `A2UIBridgeModule.calculateCustomViewSize`）在 Kuikly
+  Context Thread（布局线程）同步调用
 - 必须快速返回，不能执行耗时操作（如网络请求、文件 IO）
-- 如需异步获取尺寸，先返回默认值，后续再触发重新布局
+- 如需异步获取尺寸，先在 measurer 返回占位值，异步就绪后调用
+  `notifyA2UICustomViewSizeChanged` / `A2UIBridgeManager.notifyCustomViewResize`
+  触发二次布局。
 
 ---
 
@@ -991,30 +1073,33 @@ a2ui/ohosAppForNativePage/entry/src/main/resources/rawfile/a2ui_custom_component
 
 ### Q: 自定义组件宽高为 0？
 
-参考上方 "宽高未设置时返回 0×0" 检查清单。最常见的原因是 Shadow 未注册成功。
+参考上方 "宽高未设置时返回 0×0" 检查清单。最常见的原因是 `measurer`
+未注册或注册的 viewName 与 JSON 不一致。
 
-### Q: 能否在 Shadow 中访问网络或执行耗时操作？
+### Q: 能否在 measurer 中访问网络或执行耗时操作？
 
-不可以。`calculateRenderViewSize` 在布局线程同步执行，必须快速返回。如需异步数据，建议在 RenderView 的 `setProp` 中发起异步请求，完成后通知重新布局。
+不可以。`measurer` 在布局线程同步执行，必须快速返回。如需异步数据，
+建议在 RenderView 的 `setProp` 或外部回调中发起异步请求，完成后
+通过 `notifyA2UICustomViewSizeChanged` / `A2UIBridgeManager.notifyCustomViewResize`
+通知重新布局。
 
 ### Q: 自定义组件如何参与 FlexBox 布局？
 
-- **Android / iOS**：组件的宽高由 Shadow 的 `calculateRenderViewSize` 返回，JSON
-  的 `flex` / `width` / `height` 为可选覆盖值。
-- **HarmonyOS**：A2UI 跳过了 Shadow 通路，宽高来源优先级为：
-  1. 注册时传入的 `measurer`（intrinsic size，等价于 Android / iOS 的 Shadow）
-  2. `notifyA2UICustomViewSizeChanged(view, w, h)` 的异步二次 resize
-  3. 父容器 `alignItems=stretch` 分配给自定义组件的 cross-axis 宽度 + 零高度
-  4. JSON 的 `width` / `height`（硬覆盖，优先级最高）
+三端逻辑完全一致，宽高来源优先级为：
+
+1. 注册时传入的 `measurer`（intrinsic size）
+2. `A2UIBridgeManager.notifyCustomViewResize` / OHOS `notifyA2UICustomViewSizeChanged`
+   触发的异步二次 resize
+3. 没有 measurer 时回落到：父容器 `alignItems=stretch` 分配给自定义组件
+   的 cross-axis 宽度 + 零高度
+4. JSON 的 `width` / `height`（硬覆盖，优先级最高）
 
 ### Q: HarmonyOS 上自定义组件为什么是 0×0 ？
 
-HarmonyOS 的自定义组件**不**在 C++ 层注册 Shadow，A2UI 也**不**走 Kuikly 的
-Shadow 测量通路（见 `Platform.ohos.kt` 的 `isCustomComponentShadowRequired=false`）。
-如果布局结果看起来是 0×0，依次排查：
+三端在 KMP 层都走同一条 `A2UIBridgeModule.calculateCustomViewSize` 通道获取
+intrinsic size。如果布局结果看起来是 0×0，依次排查：
 
-1. 注册时是否传入了 `measurer`——这是 Android / iOS 的 Shadow 在 OHOS 的对
-   应物。例如：
+1. 注册时是否传入了 `measurer`。例如：
 
    ```typescript
    registerA2UICustomRenderView(

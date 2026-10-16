@@ -140,7 +140,9 @@ class MyActivity : AppCompatActivity() {
 A2UISurfaceView.registerCustomRenderView(
     viewName = "A2UIWeb",
     creator = { context -> A2UIWebView(context) },
-    shadowCreator = { A2UIWebShadow() }         // 可选
+    measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwPx, _ ->
+        SizeF(cwPx, 240f * context.resources.displayMetrics.density)
+    }                                           // 可选
 )
 
 // 自定义函数

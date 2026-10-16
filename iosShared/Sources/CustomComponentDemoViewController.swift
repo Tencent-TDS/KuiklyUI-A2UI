@@ -85,15 +85,27 @@ class CustomComponentDemoViewController: UIViewController, UITableViewDataSource
     // MARK: - Custom Component Registration
 
     private func registerCustomComponents() {
-        // 1. A2UIWeb: A WKWebView component with "source" property
-        A2UISurfaceView.registerCustomRenderView(viewName: "A2UIWeb") {
-            A2UIWebView()
-        }
+        // 1. A2UIWeb: A WKWebView component with "source" property.
+        //    Measurer reports intrinsic size: width = parent cross-axis
+        //    constraint, height = 240pt.
+        A2UISurfaceView.registerCustomRenderView(
+            viewName: "A2UIWeb",
+            creator: { A2UIWebView() },
+            measurer: { constraintWidth, _ in
+                A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 240)
+            }
+        )
 
-        // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties
-        A2UISurfaceView.registerCustomRenderView(viewName: "MyA2UIView") {
-            MyA2UIView()
-        }
+        // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties.
+        //    Measurer reports intrinsic size: width = parent cross-axis
+        //    constraint, height = 200pt.
+        A2UISurfaceView.registerCustomRenderView(
+            viewName: "MyA2UIView",
+            creator: { MyA2UIView() },
+            measurer: { constraintWidth, _ in
+                A2UISurfaceView.A2UICustomViewSize(width: constraintWidth, height: 200)
+            }
+        )
 
         print("✅ [CustomComponent] All custom components registered: A2UIWeb, MyA2UIView")
     }
@@ -224,8 +236,11 @@ class CustomComponentDemoViewController: UIViewController, UITableViewDataSource
 ///
 /// This class implements `KuiklyRenderViewExportProtocol` by extending UIView
 /// and embedding a WKWebView inside.
-/// It also provides a shadow (via `hrv_createShadow`) that reports an intrinsic
-/// height of 240pt, so the flex engine can correctly size the card.
+/// Intrinsic size (240pt height) is reported through the `measurer` registered
+/// alongside this creator in `registerCustomComponents()` above — A2UI now
+/// relies on the Kuikly Module channel (`A2UIBridgeModule.calculateCustomViewSize`)
+/// instead of the previous `+hrv_createShadow` path, so this class no longer
+/// implements that selector.
 @objc(A2UIWeb)
 class A2UIWebView: UIView, KuiklyRenderViewExportProtocol {
 
@@ -274,12 +289,9 @@ class A2UIWebView: UIView, KuiklyRenderViewExportProtocol {
 
     // KuiklyRenderViewExportProtocol - setShadow
     @objc func hrv_setShadow(_ shadow: Any) {
-        // Shadow is managed by the render layer; no local reference needed.
-    }
-
-    // KuiklyRenderViewExportProtocol - createShadow
-    @objc class func hrv_createShadow() -> NSObject {
-        return A2UIWebShadow()
+        // No shadow is attached by A2UI any more — intrinsic size is
+        // reported through the measurer registered in
+        // `A2UISurfaceView.registerCustomRenderView(...)`.
     }
 }
 
@@ -288,8 +300,11 @@ class A2UIWebView: UIView, KuiklyRenderViewExportProtocol {
 ///
 /// This class implements `KuiklyRenderViewExportProtocol` by extending UIView
 /// and embedding a UILabel inside.
-/// It also provides a shadow (via `hrv_createShadow`) that reports an intrinsic
-/// height of 200pt, so the flex engine can correctly size the card.
+/// Intrinsic size (200pt height) is reported through the `measurer` registered
+/// alongside this creator in `registerCustomComponents()` above — A2UI now
+/// relies on the Kuikly Module channel (`A2UIBridgeModule.calculateCustomViewSize`)
+/// instead of the previous `+hrv_createShadow` path, so this class no longer
+/// implements that selector.
 @objc(MyA2UIView)
 class MyA2UIView: UIView, KuiklyRenderViewExportProtocol {
 
@@ -351,52 +366,9 @@ class MyA2UIView: UIView, KuiklyRenderViewExportProtocol {
 
     // KuiklyRenderViewExportProtocol - setShadow
     @objc func hrv_setShadow(_ shadow: Any) {
-        // Shadow is managed by the render layer; no local reference needed.
-    }
-
-    // KuiklyRenderViewExportProtocol - createShadow
-    @objc class func hrv_createShadow() -> NSObject {
-        return MyA2UIViewShadow()
-    }
-}
-
-// MARK: - Shadow Implementations
-
-/// Shadow for A2UIWebView.
-/// Reports intrinsic size: width = constraint width (fill parent), height = 240pt.
-class A2UIWebShadow: NSObject {
-
-    @objc func hrv_setPropWithKey(_ propKey: String, propValue: Any) {
-        // No props affect measurement for this simple demo
-    }
-
-    @objc func hrv_calculateRenderViewSize(withConstraintSize constraintSize: CGSize) -> CGSize {
-        // Width: use constraint width (fill parent)
-        // Height: fixed 240pt (the intrinsic content height of this WebView component)
-        return CGSize(width: constraintSize.width, height: 240)
-    }
-
-    @objc func hrv_call(withMethod method: String, params: String?) -> String? {
-        return nil
-    }
-}
-
-/// Shadow for MyA2UIView.
-/// Reports intrinsic size: width = constraint width (fill parent), height = 200pt.
-class MyA2UIViewShadow: NSObject {
-
-    @objc func hrv_setPropWithKey(_ propKey: String, propValue: Any) {
-        // No props affect measurement for this simple demo
-    }
-
-    @objc func hrv_calculateRenderViewSize(withConstraintSize constraintSize: CGSize) -> CGSize {
-        // Width: use constraint width (fill parent)
-        // Height: fixed 200pt (the intrinsic content height of this custom view)
-        return CGSize(width: constraintSize.width, height: 200)
-    }
-
-    @objc func hrv_call(withMethod method: String, params: String?) -> String? {
-        return nil
+        // No shadow is attached by A2UI any more — intrinsic size is
+        // reported through the measurer registered in
+        // `A2UISurfaceView.registerCustomRenderView(...)`.
     }
 }
 

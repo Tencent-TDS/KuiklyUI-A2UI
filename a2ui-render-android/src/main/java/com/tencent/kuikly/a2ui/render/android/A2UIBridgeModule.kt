@@ -45,12 +45,13 @@ import com.tencent.kuikly.core.render.android.export.KuiklyRenderCallback
  *
  * | method                 | params                                   | sync |
  * |------------------------|------------------------------------------|------|
- * | contentHeightChanged   | height (Number)                          | 1    |
- * | actionCallback         | "<tag>\n<actionJson>"                    | 1    |
- * | showDateTimePicker     | configJson (contains tag / dslInstanceId)| 1    |
- * | executeFunctionCall    | "<functionName>\n<argsJson>"             | 1    |
- * | invokeCustomFunction   | "<name>\n<spec>\n<argsJson>"             | 0/1  |
- * | debugLog               | message (String)                         | 0    |
+ * | contentHeightChanged     | height (Number)                           | 1    |
+ * | actionCallback           | "<tag>\n<actionJson>"                     | 1    |
+ * | showDateTimePicker       | configJson (contains tag / dslInstanceId) | 1    |
+ * | executeFunctionCall      | "<functionName>\n<argsJson>"              | 1    |
+ * | invokeCustomFunction     | "<name>\n<spec>\n<argsJson>"              | 0/1  |
+ * | calculateCustomViewSize  | "<viewName>\n<nativeRef>\n<cwPx>\n<chPx>" | 1    |
+ * | debugLog                 | message (String)                          | 0    |
  *
  * Threading
  * ---------
@@ -90,6 +91,10 @@ class A2UIBridgeModule : KuiklyRenderBaseModule() {
             METHOD_INVOKE_CUSTOM_FUNCTION -> {
                 val payload = params as? String ?: return null
                 handleInvokeCustomFunction(payload)
+            }
+            METHOD_CALCULATE_CUSTOM_VIEW_SIZE -> {
+                val payload = params as? String ?: return null
+                handleCalculateCustomViewSize(payload)
             }
             METHOD_DEBUG_LOG -> {
                 val msg = params as? String ?: return null
@@ -164,6 +169,42 @@ class A2UIBridgeModule : KuiklyRenderBaseModule() {
         return A2UIAndroidCustomFunctionRegistry.invokeLocally(name, argsJson, spec)
     }
 
+    /**
+     * Payload: `"<viewName>\n<nativeRef>\n<constraintWidthPx>\n<constraintHeightPx>"`.
+     *
+     * Called synchronously (syncCall=1) from the KMP core
+     * ([com.tencent.kuikly.a2ui.views.A2UICustomComponentView.measure] via
+     * [com.tencent.kuikly.a2ui.bridge.A2UIBridgeManager.calculateCustomViewSize])
+     * on the Kuikly Context Thread. Resolves the business-side `measurer`
+     * registered via
+     * [A2UISurfaceView.registerCustomRenderView] (and shared through
+     * [A2UIAndroidCustomViewRegistry]) and runs it inline.
+     *
+     * Return value is the string `"<widthPx>|<heightPx>"`, consumed verbatim
+     * by the KMP side. An empty string signals "no measurer registered /
+     * malformed payload / measurer threw" — the KMP side treats it as
+     * "fall back to parent-cross-axis / 0" (JSON `width` / `height` still win).
+     *
+     * Keeping this method parallel to the OHOS / iOS counterparts (same
+     * payload format, same return shape) is what lets the KMP side stay
+     * on a single call site.
+     */
+    private fun handleCalculateCustomViewSize(payload: String): String {
+        val parts = payload.split('\n')
+        if (parts.size < 4) return ""
+        val viewName = parts[0]
+        val cw = parts[2].toFloatOrNull() ?: return ""
+        val ch = parts[3].toFloatOrNull() ?: return ""
+        val measurer = A2UIAndroidCustomViewRegistry.lookupMeasurer(viewName) ?: return ""
+        return try {
+            val size = measurer.measure(cw, ch)
+            "${size.width}|${size.height}"
+        } catch (e: Exception) {
+            Log.e(TAG, "calculateCustomViewSize: measurer '$viewName' threw: ${e.message}", e)
+            ""
+        }
+    }
+
     companion object {
         private const val TAG = "A2UIBridgeModule"
 
@@ -174,6 +215,7 @@ class A2UIBridgeModule : KuiklyRenderBaseModule() {
         private const val METHOD_SHOW_DATE_TIME_PICKER = "showDateTimePicker"
         private const val METHOD_EXECUTE_FUNCTION_CALL = "executeFunctionCall"
         private const val METHOD_INVOKE_CUSTOM_FUNCTION = "invokeCustomFunction"
+        private const val METHOD_CALCULATE_CUSTOM_VIEW_SIZE = "calculateCustomViewSize"
         private const val METHOD_DEBUG_LOG = "debugLog"
     }
 }

@@ -31,8 +31,3 @@ internal actual fun isA2UIBridgeModuleAvailable(): Boolean {
     // own NSAssert path cannot do on our behalf.
     return objc_lookUpClass("A2UIBridgeModule") != null
 }
-
-// iOS resolves `+hrv_createShadow` via `NSClassFromString(viewName)` so
-// A2UICustomComponentView can drive measurement through the Shadow
-// mechanism exactly as it does on Android.
-internal actual val isCustomComponentShadowRequired: Boolean = true
