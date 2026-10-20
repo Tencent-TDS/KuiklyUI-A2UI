@@ -13,9 +13,10 @@
 > 作用范围：`kuikly.useSource` 开关只影响 Kotlin 2.1.21 的
 > Android / KMP 构建（`settings.gradle.kts` /
 > `settings.2.1.21.gradle.kts`）。HarmonyOS 变体
-> （`settings.2.0.ohos.gradle.kts`）当前仍强制源码模式；iOS CocoaPods
-> 也仍强制源码模式（`:a2ui/build.2.1.21.gradle.kts` 中有显式守卫，
-> 当 `kuikly.useSource=false` 时任何 Pod 任务都会立即报错）。
+> （`settings.2.0.ohos.gradle.kts`）当前仍强制源码模式。iOS CocoaPods
+> 两种模式都支持——`pod 'a2ui'` / `pod 'a2ui_demo'` 既可用
+> `:path =>` 指向本仓库，也可以依赖已发布版本（CocoaPods trunk），
+> 详见 §4 iOS 段。
 
 ## 1. 选择依赖模式：`kuikly.useSource`
 
@@ -79,20 +80,48 @@ Podfile、iOS setup 脚本、HarmonyOS DevEco Studio（通过
 
 推荐：把绝对路径写在 `local.properties`（该文件已被 git ignore）。
 
-## 4. 源码模式下的各平台说明
+## 4. 各平台说明
 
-**iOS** — 在每个 `iosAppFor*/Podfile` 中保持：
+**iOS** — 本仓库中 iOS 侧使用两类 A2UI Pod：
+
+| Pod | 产物 Framework | 内含的 `@ObjCName` 入口类来源 | 典型消费者 |
+|---|---|---|---|
+| `pod 'a2ui'` | `A2UICore.framework`（`:a2ui` 模块产物） | `:a2ui/iosMain` 原件（5 个入口类：`A2UICoreEntry` / `A2UICustomViewRegistryBridge` / `A2UIIconRegistryBridge` / `A2UICustomFunctionRegistryBridge` / `A2UIPickerResultBridge`） | `iosAppForNativePage`、`iosAppForTest` — Native 页接入场景 |
+| `pod 'a2ui_demo'` | `A2UIDemo.framework`（`:demo` 模块产物） | `:demo/iosMain` 自家薄壳（同 5 个 `@ObjCName` 名，内部转调 `:a2ui` 的 commonMain 单例） | `iosAppForKuiklyPage`、`iosAppForBothPages` — Kuikly 页接入场景 |
+
+> **二选一原则**：这两个 Pod 由于都注册同名的 `@ObjCName` 类（如
+> `A2UICoreEntry`），不能同时链接进同一个 App。实际使用上，每个
+> `iosAppFor*` demo 的 Podfile 要么用 `a2ui` 要么用 `a2ui_demo`，不会
+> 两者并存。下游业务通常复刻 `a2ui_demo` 的模式（自建 KMP 业务模块、
+> 自家 iosMain 持有 5 个 `@ObjCName` 薄壳），不直接依赖 `a2ui_demo`。
+
+**在仓库内（本地开发期）** — 不论源码还是产物模式，`iosAppFor*/Podfile`
+中 A2UI 侧 Pod（`a2ui`、`a2ui_demo`、`OpenA2UIIOSRender`）**始终**以
+`:path => '../a2ui'` / `:path => '../demo'` / `:path => '../a2ui-render-ios'`
+方式接入，这是本仓库 Podfile 的既定约定。
+
+**产物模式下集成方（下游 App）** — 可以通过 CocoaPods trunk 拉已发布版本：
+
+```ruby
+pod 'a2ui', '~> 0.9.0'
+pod 'OpenA2UIIOSRender', '~> 0.9.0'
+```
+
+本仓库没有自动发布 iOS Pod 的脚本（与 Kuikly 工程保持一致），如需
+发布请在对应目录执行 `pod trunk push <podspec> --allow-warnings`，
+具体命令见 [publish/README.md](publish/README.md)。其中 `a2ui_demo`
+pod 虽然在仓库内被 `iosAppForKuiklyPage` / `iosAppForBothPages` 以
+`:path => '../demo'` 消费，但它定位是**业务侧示例**而非对外公共 API，
+下游集成方会自行实现对应 KMP 模块并通过 `:path` 方式接入，因此该
+pod 有意不发布到 trunk。
+
+**源码模式下** — 另外在 `iosAppFor*/Podfile` 中保持上游 Kuikly 侧：
 
 ```ruby
 pod 'OpenKuiklyIOSRender', :path => '../.kuikly-external'
 ```
 
-A2UI 侧 pods（`a2ui`、`OpenA2UIIOSRender`）在本地开发期间始终使用
-`:path => 'path'`。本仓库没有自动发布 iOS Pod 的脚本（与 Kuikly
-工程保持一致），如需发布请在对应目录执行 `pod trunk push <podspec>
---allow-warnings`，具体命令见 [publish/README.md](publish/README.md)。
-其中 `a2ui_demo` pod 是**业务侧示例**，下游集成方会自行实现对应 KMP
-模块并通过 `:path` 方式接入，因此该 pod 有意不发布。
+产物模式下 `OpenKuiklyIOSRender` 走已发布版本，无需 `.kuikly-external`。
 
 **HarmonyOS** — 在 `a2ui-render-ohos/oh-package.json5` 中：
 

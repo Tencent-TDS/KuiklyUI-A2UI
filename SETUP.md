@@ -16,9 +16,10 @@ modes** against KuiklyUI; the active mode is chosen by a single switch
 > Scope: the `kuikly.useSource` switch only affects the Kotlin 2.1.21
 > Android / KMP build (`settings.gradle.kts` / `settings.2.1.21.gradle.kts`).
 > The HarmonyOS variant (`settings.2.0.ohos.gradle.kts`) is still
-> source-only for now; iOS CocoaPods is also still source-only (an
-> explicit guard inside `:a2ui/build.2.1.21.gradle.kts` fails any Pod
-> task when `kuikly.useSource=false`).
+> source-only for now. iOS CocoaPods now supports both modes —
+> `pod 'a2ui'` / `pod 'a2ui_demo'` can be consumed either via
+> `:path =>` into this repo or via a published version (CocoaPods
+> trunk). See the iOS section in §4 for the full rundown.
 
 ## 1. Choose dependency mode: `kuikly.useSource`
 
@@ -84,23 +85,57 @@ Resolution order (first hit wins):
 
 Recommended: put an absolute path in `local.properties` (git-ignored).
 
-## 4. Per-platform notes under source mode
+## 4. Per-platform notes
 
-**iOS** — in each `iosAppFor*/Podfile`, keep:
+**iOS** — this repo ships two kinds of A2UI pods:
+
+| Pod | Framework | Source of the five `@ObjCName` entry classes | Typical consumer |
+|---|---|---|---|
+| `pod 'a2ui'` | `A2UICore.framework` (produced by `:a2ui`) | Originals in `:a2ui/iosMain` (`A2UICoreEntry` / `A2UICustomViewRegistryBridge` / `A2UIIconRegistryBridge` / `A2UICustomFunctionRegistryBridge` / `A2UIPickerResultBridge`) | `iosAppForNativePage`, `iosAppForTest` — Native-page embedding |
+| `pod 'a2ui_demo'` | `A2UIDemo.framework` (produced by `:demo`) | Thin shells in `:demo/iosMain` (same five `@ObjCName` names, forwarding to `:a2ui`'s commonMain singletons) | `iosAppForKuiklyPage`, `iosAppForBothPages` — Kuikly-page embedding |
+
+> **Pick-one-pod rule**: both pods register `@ObjCName` classes under
+> the same ObjC names (e.g. `A2UICoreEntry`), so they cannot be linked
+> into the same app. In practice each `iosAppFor*` demo's Podfile uses
+> exactly one of them. Downstream products are expected to mimic the
+> `a2ui_demo` pattern (own KMP business module + its own iosMain
+> shells of the five `@ObjCName` entry classes), rather than depending
+> on `a2ui_demo` itself.
+
+**In-repo local development** — regardless of source/artifact mode,
+`iosAppFor*/Podfile` consumes the A2UI-side pods (`a2ui`, `a2ui_demo`,
+`OpenA2UIIOSRender`) via `:path => '../a2ui'` / `:path => '../demo'` /
+`:path => '../a2ui-render-ios'`. This is a fixed convention of this
+repo's Podfiles.
+
+**Artifact-mode downstream integrators** — may pull published versions
+from the CocoaPods trunk instead:
+
+```ruby
+pod 'a2ui', '~> 0.9.0'
+pod 'OpenA2UIIOSRender', '~> 0.9.0'
+```
+
+This repository does not ship an automated iOS pod publish script
+(aligned with the upstream Kuikly project); to publish, run
+`pod trunk push <podspec> --allow-warnings` manually from each pod's
+directory. See [publish/README.md](publish/README.md) for the exact
+commands. `a2ui_demo` — while consumed inside this repo by
+`iosAppForKuiklyPage` / `iosAppForBothPages` via `:path => '../demo'`
+— is positioned as a **business-side sample** rather than a public
+API; downstream integrators are expected to implement their own
+equivalent KMP module and integrate it via `:path`, so this pod is
+intentionally not published to the trunk.
+
+**Source mode only** — additionally keep the upstream Kuikly pod
+linked against the local checkout:
 
 ```ruby
 pod 'OpenKuiklyIOSRender', :path => '../.kuikly-external'
 ```
 
-A2UI-side pods (`a2ui`, `OpenA2UIIOSRender`) always use `:path => 'path'`
-during local development. This repository does not ship an automated
-iOS pod publish script (aligned with the upstream Kuikly project); to
-publish, run `pod trunk push <podspec> --allow-warnings` manually from
-each pod's directory. See [publish/README.md](publish/README.md) for
-the exact commands. Among them, `a2ui_demo` is a **business-side
-sample** pod — downstream integrators are expected to implement their
-own equivalent KMP module and integrate it via `:path`, so this pod is
-intentionally not published.
+Under artifact mode, `OpenKuiklyIOSRender` resolves to the published
+version and `.kuikly-external` is not needed.
 
 **HarmonyOS** — in `a2ui-render-ohos/oh-package.json5`:
 

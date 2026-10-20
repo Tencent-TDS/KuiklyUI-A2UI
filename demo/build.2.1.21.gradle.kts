@@ -95,33 +95,7 @@ kotlin {
         framework {
             baseName = "A2UIDemo"
             isStatic = true
-            // Export the `:a2ui` module so that A2UIDemo.framework's
-            // public ObjC surface includes the iosMain Bridge classes
-            // (`A2UICoreEntry`, `A2UICustomViewRegistryBridge`,
-            // `A2UIIconRegistryBridge`, `A2UICustomFunctionRegistryBridge`).
-            //
-            // Why this is required:
-            //   The render pod (`OpenA2UIIOSRender`) reaches those classes
-            //   through `NSClassFromString(...)`, which only works if the
-            //   Kotlin/Native `@ObjCName` classes are actually emitted into
-            //   the linked framework's public ObjC metadata. With plain
-            //   `implementation(project(":a2ui"))` the Kotlin bytecode
-            //   is embedded but the ObjC selectors are stripped from the
-            //   umbrella header AND — critically — the class-metadata
-            //   symbols themselves are not exported. That leaves the
-            //   Kuikly-page hosting path (which links only A2UIDemo, not
-            //   A2UICore) unable to resolve the Bridge classes at runtime,
-            //   so features like `registerCustomFunction` /
-            //   `registerCustomRenderView` / `registerA2UIIcon` silently
-            //   no-op inside `A2UISurfaceDSLView`.
-            //
-            // Duplicate-symbol safety:
-            //   `iosAppForKuiklyPage` links exactly one A2UI pod
-            //   (`a2ui_demo` → A2UIDemo.framework) and never `a2ui` at the
-            //   same time, so exporting is safe. If a future app links
-            //   both, it must pick one — the same rule that already
-            //   applies to Kotlin stdlib caches.
-            export(project(":a2ui"))
+
         }
     }
 
@@ -130,12 +104,14 @@ kotlin {
             dependencies {
                 implementation(KuiklyDep.core(project))
                 implementation(KuiklyDep.coreAnnotations(project))
-                // Must be `api` (not `implementation`) because the framework
-                // block above `export(project(":a2ui"))`s it — the
-                // Kotlin/Native Cocoapods plugin refuses to export a project
-                // that isn't part of the `api` classpath. See the framework
-                // block for the full rationale.
-                api(project(":a2ui"))
+                // `implementation` is sufficient now that the framework
+                // block no longer `export`s `:a2ui`. The five
+                // `@ObjCName` entry classes needed by the render pod
+                // live as thin shells in `:demo/iosMain` and forward
+                // to `:a2ui`'s commonMain singletons — none of
+                // `:a2ui`'s symbols need to appear on `:demo`'s API
+                // surface for downstream Kotlin consumers.
+                implementation(project(":a2ui"))
                 // For the "Compose Page integration" example page. Consumed
                 // by `:androidAppForKuiklyPage` at runtime; unused apps
                 // let R8 strip the Compose entry classes.

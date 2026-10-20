@@ -556,8 +556,9 @@ sealed class A2UIValue {
 
 ##### 三端 `A2UICoreEntry`
 
-- [`androidMain/…/A2UICoreEntry.kt`](../a2ui/src/androidMain/kotlin/com/tencent/kuikly/a2ui/bridge/A2UICoreEntry.kt) / [`iosMain/…/A2UICoreEntry.kt`](../a2ui/src/iosMain/kotlin/com/tencent/kuikly/a2ui/bridge/A2UICoreEntry.kt)（含 iOS 侧 `A2UICustomFunctionRegistryBridge` / `A2UICustomViewRegistryBridge` / `A2UIIconRegistryBridge` 三个 K/N export 类，给 Swift 调用）
+- [`androidMain/…/A2UICoreEntry.kt`](../a2ui/src/androidMain/kotlin/com/tencent/kuikly/a2ui/bridge/A2UICoreEntry.kt) / [`iosMain/…/A2UICoreEntry.kt`](../a2ui/src/iosMain/kotlin/com/tencent/kuikly/a2ui/bridge/A2UICoreEntry.kt)（含 iOS 侧 `A2UICustomFunctionRegistryBridge` / `A2UICustomViewRegistryBridge` / `A2UIIconRegistryBridge` 三个 `@ObjCName` 类，给 Swift 调用）
 - 每实例一个 entry：把 Native delegate 包装为 `NativeBridge.NativeBridgeDelegate` 注册到 `BridgeManager`，把 Kotlin 方法转给 `A2UIBridgeManager.callKotlinMethod`。
+- iOS 侧额外说明：`:demo` 模块的 iosMain 另持有同 `@ObjCName` 名的薄壳一份（[`demo/src/iosMain/.../A2UIDemoCoreEntry.kt`](../demo/src/iosMain/kotlin/com/tencent/kuikly/a2ui/demo/bridge/A2UIDemoCoreEntry.kt)），全部转调到 `:a2ui` 的 commonMain 单例。目的是让 `A2UIDemo.framework`（`pod 'a2ui_demo'`）在不 `export(project(":a2ui"))` 的情况下，仍能向 Swift 暴露这些入口类；对齐 Kuikly `:demo` 自家持有 `KuiklyCoreEntry` 的做法。两份薄壳永远不会被同一个 app 同时链接（`pod 'a2ui'` 与 `pod 'a2ui_demo'` 二选一）。
 
 #### 5.6 平台壳（Native 页接入通道）
 
