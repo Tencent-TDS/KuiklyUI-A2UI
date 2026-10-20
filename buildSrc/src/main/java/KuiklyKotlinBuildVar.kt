@@ -22,33 +22,20 @@ import java.io.FileInputStream
 import java.util.Properties
 
 /**
- * Created by kam on 2022/6/28.
+ * Build-script helpers for the KuiklyUI-A2UI repository.
+ *
+ * Scope (kept intentionally narrow):
+ *   - [BuildPlugin]        — Gradle plugin classpath coordinates (Kotlin / AGP).
+ *   - [MavenConfig]        — Maven Central publication group + credential helpers.
+ *   - [Version]            — Kotlin / AGP toolchain versions consumed by [BuildPlugin].
+ *   - [configureMavenCentralMetadata] / [signPublicationIfKeyPresent] /
+ *     [getSensitiveProperty] — publication POM + signing helpers.
+ *
+ * Note: Kuikly artifact coordinates (group / module / version) are **not**
+ * declared here. They are owned entirely by [KuiklyDep] (see
+ * `buildSrc/src/main/java/KuiklyDep.kt`), which is the single source of
+ * truth for `kuikly.version` resolution and source/artifact mode switching.
  */
-object Dependencies {
-    val kotlinpoet by lazy {
-        "com.squareup:kotlinpoet:${Version.KOTLINPOET_VERSION}"
-    }
-
-    val kspApi by lazy {
-        "com.google.devtools.ksp:symbol-processing-api:${Version.getKSPVersion()}"
-    }
-
-    val androidxAppcompat by lazy {
-        "androidx.appcompat:appcompat:${Version.ANDROIDX_APPCOMPAT_VERSION}"
-    }
-
-    val material by lazy {
-        "com.google.android.material:material:${Version.MATERIAL_VERSION}"
-    }
-
-    val androidXCoreKtx by lazy {
-        "androidx.core:core-ktx:1.7.0"
-    }
-
-    val kspSymbolProcessingGradlePlugin by lazy {
-        "com.google.devtools.ksp:symbol-processing-gradle-plugin:${Version.getKSPVersion()}"
-    }
-}
 
 object BuildPlugin {
     val kotlin by lazy {
@@ -58,16 +45,6 @@ object BuildPlugin {
     val android by lazy {
         "com.android.tools.build:gradle:${Version.getAGPVersion()}"
     }
-
-    val kuikly by lazy {
-        "com.tencent.kuikly-open:core-gradle-plugin:2.14.1-2.0.21"
-    }
-}
-
-object Output {
-    const val name = "nativevue2"
-    const val KEY_PACK_LOCAL_JS_BUNDLE = "packLocalJsBundle"
-    const val KEY_PACK_LOCAL_AAR_BUNDLE = "packLocalAarBundle"
 }
 
 object MavenConfig {
@@ -130,42 +107,16 @@ object MavenConfig {
 
 object Version {
 
-    const val KOTLINPOET_VERSION = "1.10.2"
-    const val ANDROIDX_APPCOMPAT_VERSION = "1.3.1"
-    const val MATERIAL_VERSION = "1.4.0"
-    const val SNAPSHOT_SUFFIX = "-SNAPSHOT"
-
-    private const val DEFAULT_KUIKLY_VERSION = "2.0.0"
     private const val DEFAULT_KOTLIN_VERSION = "2.1.21"
     private const val DEFAULT_AGP_VERSION = "7.4.2"
 
-    private const val KEY_KUIKLY_VERSION = "KUIKLY_VERSION"
     private const val KEY_KOTLIN_VERSION = "KUIKLY_KOTLIN_VERSION"
     private const val KEY_AGP_VERSION = "KUIKLY_AGP_VERSION"
-    private const val KEY_CI_BUILD_NUM = "KUIKLY_CI_BUILD_NUM"
-    private const val KEY_RENDER_SUFFIX = "KUIKLY_RENDER_SUFFIX"
-    private const val OHOS_KOTLIN_SUFFIX = "KBA-010"
-    private const val KUIKLY_OHOS_KOTLIN_SUFFIX = "ohos"
 
     /**
-     * 获取 Kuikly 版本号
-     */
-    fun getKuiklyVersion() : String {
-        var kuiklyVersion = System.getenv(KEY_KUIKLY_VERSION)
-        if (kuiklyVersion != null && kuiklyVersion.isNotEmpty()) {
-            return kuiklyVersion
-        }
-        kuiklyVersion = DEFAULT_KUIKLY_VERSION
-        // 流水席构建，版本号增加 snapshot
-        val buildNum = System.getenv(KEY_CI_BUILD_NUM)
-        if (buildNum != null && buildNum.isNotEmpty()) {
-            kuiklyVersion += ".$buildNum"
-        }
-        return "$kuiklyVersion$SNAPSHOT_SUFFIX"
-    }
-
-    /**
-     * 获取 kotlin 版本号
+     * Resolve the Kotlin toolchain version.
+     * Honours `KUIKLY_KOTLIN_VERSION` (same env var name as Kuikly Core)
+     * and falls back to [DEFAULT_KOTLIN_VERSION].
      */
     fun getKotlinVersion() : String {
         var kotlinVersion = System.getenv(KEY_KOTLIN_VERSION)
@@ -176,7 +127,8 @@ object Version {
     }
 
     /**
-     * 获取 AGP 版本号
+     * Resolve the Android Gradle Plugin version.
+     * Honours `KUIKLY_AGP_VERSION` and falls back to [DEFAULT_AGP_VERSION].
      */
     fun getAGPVersion() : String {
         var agpVersion = System.getenv(KEY_AGP_VERSION)
@@ -185,73 +137,6 @@ object Version {
         }
         return agpVersion
     }
-
-    /**
-     * 获取 render 后缀
-     */
-    fun getRenderSuffix() : String {
-        var renderSuffix = System.getenv(KEY_RENDER_SUFFIX)
-        if (renderSuffix == null || renderSuffix.isEmpty()) {
-            renderSuffix = ""
-        }
-        return renderSuffix
-    }
-
-    /**
-     * 获取 core 版本号，版本号规则：${shortVersion}-${kotlinVersion}
-     * 适用于 core、core-ksp、core-annotation 三个库
-     */
-    fun getCoreVersion() : String{
-        val kuiklyVersion = getKuiklyVersion()
-        var coreVersion = "${getKuiklyVersion()}-${getKotlinVersion()}"
-        if (kuiklyVersion.endsWith(SNAPSHOT_SUFFIX)) {
-            // -SNAPSHOT 前插入 kotlin 版本号
-            coreVersion = StringBuilder(kuiklyVersion).insert(
-                kuiklyVersion.indexOf(SNAPSHOT_SUFFIX), "-${getKotlinVersion()}").toString()
-        }
-        if (coreVersion.contains(OHOS_KOTLIN_SUFFIX)) {
-            coreVersion = coreVersion.replace(OHOS_KOTLIN_SUFFIX, KUIKLY_OHOS_KOTLIN_SUFFIX)
-        }
-        return coreVersion
-    }
-
-    fun getPrefetchComposeVersion(): String =
-        formatPrefetchComposeVersion(getKuiklyVersion(), getKotlinVersion())
-
-    internal fun formatPrefetchComposeVersion(kuiklyVersion: String, kotlinVersion: String): String {
-        val isSnapshot = kuiklyVersion.endsWith(SNAPSHOT_SUFFIX)
-        val baseVersion = kuiklyVersion.removeSuffix(SNAPSHOT_SUFFIX)
-        val snapshotSuffix = if (isSnapshot) SNAPSHOT_SUFFIX else ""
-        return "$baseVersion-prefetch-$kotlinVersion$snapshotSuffix"
-    }
-
-    /**
-     * 获取 render 版本号
-     */
-    fun getRenderVersion() : String {
-        val renderVersion = getCoreVersion()
-        // 用于区分 androidx、support 版本
-        val renderSuffix = getRenderSuffix()
-        if (renderSuffix.isNotEmpty()) {
-            return "${renderVersion}-${renderSuffix}"
-        }
-        return renderVersion
-    }
-
-    fun getKSPVersion() : String {
-        return when (getKotlinVersion()) {
-            "1.6.21" -> "1.6.21-1.0.6"
-            "1.7.20" -> "1.7.20-1.0.7"
-            "1.8.21" -> "1.8.21-1.0.11"
-            "1.9.22" -> "1.9.22-1.0.16"
-            "2.0.21" -> "2.0.21-1.0.27"
-            "2.0.21-KBA-004" -> "2.0.21-1.0.27"
-            "2.0.21-KBA-010" -> "2.0.21-1.0.27"
-            "2.1.21" -> "2.1.21-2.0.1"
-            else -> "${getKotlinVersion()}-2.0.1" // 默认版本
-        }
-    }
-
 }
 
 fun MavenPom.configureMavenCentralMetadata() {

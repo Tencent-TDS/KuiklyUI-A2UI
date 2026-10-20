@@ -9,6 +9,18 @@ java -version
 
 CONFIG_FILE="publish/compatible/2.1.21.yaml"
 
+# ─────────────────────────────────────────────────────────────────────
+# Enforce artifact mode for publishing.
+#
+# `:a2ui` and `:a2ui-render-android` must be published against the
+# already-released Kuikly artifacts (`com.tencent.kuikly-open:core:…`,
+# etc.) so the generated POMs carry Maven coordinates \u2014 not local
+# `project(":core")` references. Overriding this via env is intentionally
+# disabled; developer-side source-mode validation should go through a
+# plain `./gradlew publishToMavenLocal` run without this script.
+# ─────────────────────────────────────────────────────────────────────
+export KUIKLY_USE_SOURCE=false
+
 # 兼容性替换
 java publish/FileReplacer.java replace "$CONFIG_FILE"
 

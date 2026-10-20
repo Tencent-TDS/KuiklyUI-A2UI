@@ -37,7 +37,7 @@ dependencies {
     implementation(project(":a2ui-render-android"))
     // Kuikly render engine — required for KRImage adapter (Native View path
     // still uses core-render Kuikly adapters for image/audio/video).
-    implementation(project(":core-render-android"))
+    implementation(KuiklyDep.coreRenderAndroid(project))
     implementation("androidx.appcompat:appcompat:1.4.2")
     implementation("androidx.core:core-ktx:1.7.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")

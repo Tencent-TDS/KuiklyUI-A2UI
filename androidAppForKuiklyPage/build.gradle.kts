@@ -43,10 +43,10 @@ dependencies {
     implementation(project(":demo"))
     // Kuikly render engine — required to host the DSL page inside a native
     // Android Activity (provides KuiklyBaseView / KuiklyRenderView).
-    implementation(project(":core-render-android"))
+    implementation(KuiklyDep.coreRenderAndroid(project))
     // Kuikly Compose module — used by the "Compose Page integration" entry to
     // showcase embedding A2UI inside a Kuikly Compose page.
-    implementation(project(":compose"))
+    implementation(KuiklyDep.compose(project))
     implementation("androidx.appcompat:appcompat:1.4.2")
     implementation("androidx.core:core-ktx:1.7.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")

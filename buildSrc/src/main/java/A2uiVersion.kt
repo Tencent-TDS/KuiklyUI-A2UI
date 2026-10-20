@@ -36,8 +36,9 @@
  *      Why the Kotlin suffix? KMP `.klib` / metadata binaries are NOT
  *      compatible across Kotlin compiler versions, so every supported
  *      Kotlin toolchain must publish its own Maven coordinate — the
- *      exact same convention Kuikly Core uses (`2.0.0-2.1.21-SNAPSHOT`,
- *      etc.). Without this, the two build files
+ *      exact same convention Kuikly Core uses (see
+ *      `KuiklyDep.kuiklyCoordinateVersion`, e.g. `2.29.2-2.1.21-SNAPSHOT`).
+ *      Without this, the two build files
  *      (`build.2.1.21.gradle.kts` vs `build.2.0.ohos.gradle.kts`) would
  *      overwrite each other in the local/remote Maven repo.
  *
@@ -54,11 +55,13 @@
  *   1. Environment var   `A2UI_VERSION=<x.y.z>`
  *   2. Default          [DEFAULT_A2UI_SEMANTIC] below.
  *
- * This mirrors Kuikly Core's `Version.getKuiklyVersion()` which likewise
- * reads a single `KUIKLY_VERSION` env var (no Gradle property fallback).
+ * This mirrors how `KuiklyDep.kuiklyBaseVersion` resolves the upstream
+ * Kuikly coordinate (though that one additionally honours a Gradle
+ * property + `local.properties` + `gradle.properties`). A2UI's own
+ * semantic version is deliberately kept env-only to match CI expectations.
  *
  * The Kotlin component consumed by [getArtifactVersion] is *always* read
- * from `Version.getKotlinVersion()` (which honours `KUIKLY_KOTLIN_VERSION`),
+ * from [Version.getKotlinVersion] (which honours `KUIKLY_KOTLIN_VERSION`),
  * so switching Kotlin toolchains only requires flipping that one env var —
  * artifact coordinates then follow automatically.
  *
@@ -91,11 +94,11 @@ object A2uiVersion {
     private const val SNAPSHOT_SUFFIX = "-SNAPSHOT"
 
     /**
-     * Kotlin version identifier that signals a HarmonyOS-only Kuikly build
-     * (mirrors `Version.OHOS_KOTLIN_SUFFIX`). When present in the resolved
-     * Kotlin version, we replace it with a shorter, human-friendly `ohos`
-     * marker in the final artifact coordinate — same convention as
-     * `Version.getCoreVersion()` in Kuikly Core.
+     * Kotlin version identifier that signals a HarmonyOS-only Kuikly build.
+     * When present in the resolved Kotlin version, we replace it with a
+     * shorter, human-friendly `ohos` marker in the final artifact
+     * coordinate — same convention used by
+     * [KuiklyDep.kuiklyCoordinateVersion].
      */
     private const val OHOS_KOTLIN_MARKER = "KBA-010"
     private const val OHOS_ARTIFACT_SUFFIX = "ohos"
@@ -107,7 +110,8 @@ object A2uiVersion {
      * HarmonyOS ohpm packages, and any user-facing display (README,
      * publish logs).
      *
-     * Resolution order (mirrors Kuikly Core's `Version.getKuiklyVersion()`):
+     * Resolution order (env-only, deliberately simpler than
+     * [KuiklyDep.kuiklyBaseVersion]):
      *   1. `A2UI_VERSION` environment variable
      *   2. [DEFAULT_A2UI_SEMANTIC] fallback
      *
@@ -124,9 +128,9 @@ object A2uiVersion {
     /**
      * Resolve the **Maven artifact** version for Android / KMP publications.
      * Composes [getSemantic] with the Kotlin version resolved by
-     * `Version.getKotlinVersion()`.
+     * [Version.getKotlinVersion].
      *
-     * Layout rules — kept identical to Kuikly Core's `getCoreVersion()`
+     * Layout rules — kept identical to [KuiklyDep.kuiklyCoordinateVersion]
      * so that upstream and downstream artifact coordinates stay visually
      * aligned:
      *

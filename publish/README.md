@@ -102,9 +102,12 @@ pod trunk push a2ui.podspec --allow-warnings
 
 ## 通用前置
 
-1. **依赖 KuiklyUI Core 源码**：见 [`../SETUP-zh_CN.md`](../SETUP-zh_CN.md)。所有发版脚本都会走 `gradle.properties` 中的 `kuikly.projectDir` 解析 `:core` / `:core-render-android` / `:compose` / `:core-render-ohos` 等模块。
+1. **依赖 KuiklyUI**：默认走 **产物模式**（`kuikly.useSource=false`），从 Maven 仓读取 `com.tencent.kuikly-open:core` 等坐标，无需 Kuikly 源码；需要和 Kuikly 一起源码调试时，参见 [`../SETUP-zh_CN.md`](../SETUP-zh_CN.md) 开启源码模式（`kuikly.useSource=true` + `kuikly.projectDir`）。
 2. **JDK 17+**：`java -version` 需 ≥ 17。
 3. **Kotlin / AGP 工具链**：由各脚本内 `KUIKLY_AGP_VERSION` / `KUIKLY_KOTLIN_VERSION` 环境变量固定——`2.1.21_publish.sh` 使用 Kotlin 2.1.21，`2.0_ohos_publish.sh` 使用 Kotlin `2.0.21-KBA-010`。AGP 统一为 7.4.2。
+4. **Kuikly 产物版本**：由 `kuikly.version` 决定（默认 `2.29.2`，拼上 Kotlin 后缀形如 `2.29.2-2.1.21`）。可通过 `-Pkuikly.version=` / `KUIKLY_VERSION` env / `local.properties` 覆盖，详见下文。
+
+> `2.1.21_publish.sh` 强制 `KUIKLY_USE_SOURCE=false`：发布态必须用 Maven 坐标依赖已发布的 Kuikly 产物，这样 POM 中记录的也是坐标而非 `project(":core")` 引用。本地源码调试请直接用 `./gradlew publishToMavenLocal`，不要走此脚本。
 
 ## 版本号
 
@@ -127,3 +130,25 @@ A2UI_VERSION=1.0.0 bash publish/2.0_ohos_publish.sh
 - 语义版本：`0.9.0-SNAPSHOT`（iOS pod / ohpm 包直接使用）
 - Maven artifact（Kotlin 2.1.21 主线，`2.1.21_publish.sh`）：`0.9.0-2.1.21-SNAPSHOT`
 - Maven artifact（HarmonyOS 2.0 兼容构建，Kotlin `2.0.21-KBA-010`，`2.0_ohos_publish.sh`）：`0.9.0-2.0.21-ohos-SNAPSHOT`
+
+## 上游 Kuikly 产物版本（`kuikly.version`）
+
+A2UI 产物依赖的上游 Kuikly 坐标版本由 [`gradle.properties`](../gradle.properties) 中的 `kuikly.version` 决定（默认 `2.29.2`），实际拼接规则对齐 Kuikly Core 发布 core/compose/ksp 时所用的坐标约定（见 [`KuiklyDep.kuiklyCoordinateVersion`](../buildSrc/src/main/java/KuiklyDep.kt)）：
+
+- **值被原样使用**：是否带 `-SNAPSHOT` 必须自己写明（不再自动追加）
+- 在正确位置拼上当前 Kotlin 版本：`2.29.2` × Kotlin 2.1.21 → `com.tencent.kuikly-open:core:2.29.2-2.1.21`；`2.29.2-SNAPSHOT` × Kotlin 2.1.21 → `com.tencent.kuikly-open:core:2.29.2-2.1.21-SNAPSHOT`
+- Kotlin 为 `2.0.21-KBA-010` 时自动把 `KBA-010` 替换为 `ohos`
+
+覆盖优先级（高 → 低）：
+
+```bash
+# 1) Gradle -P
+./gradlew ... -Pkuikly.version=2.29.2
+
+# 2) env
+KUIKLY_VERSION=2.30.0 bash publish/2.1.21_publish.sh
+
+# 3) local.properties / gradle.properties
+```
+
+与 `A2UI_VERSION` 相互独立：前者控制"依赖哪个 Kuikly 产物"，后者控制"A2UI 自身发布什么版本"。

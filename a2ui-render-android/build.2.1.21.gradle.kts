@@ -70,7 +70,7 @@ dependencies {
     // A2UI core module (message parsing, dispatch, surface management, etc.)
     compileOnly(project(":a2ui"))
     // Kuikly native render layer (KuiklyRenderLayerHandler, scheduler, components, etc.)
-    compileOnly(project(":core-render-android"))
+    compileOnly(KuiklyDep.coreRenderAndroid(project))
     // AndroidX
     implementation("androidx.appcompat:appcompat:1.4.2")
 }

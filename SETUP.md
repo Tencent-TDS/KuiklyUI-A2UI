@@ -1,19 +1,78 @@
 # KuiklyUI-A2UI Project — Setup Guide
 
-Running this project depends on KuiklyUI. Before the complete publishing
-pipeline for Maven / CocoaPods / OHPM is ready, this project consumes the
-following modules as source dependencies from a local KuiklyUI checkout:
-`:core`, `:core-render-android`, `:compose`, `:core-annotations`, `:core-ksp`,
-`core-render-ohos`, `core-render-ios`, `OpenKuiklyIOSRender`.
+Running this project depends on KuiklyUI. A2UI supports **two dependency
+modes** against KuiklyUI; the active mode is chosen by a single switch
+`kuikly.useSource` (details below).
 
-## 1. KuiklyUI source-dependency mode: configure the local KuiklyUI path
+- **Artifact mode (default)** — consume published Maven / Pod / OHPM
+  packages from `com.tencent.kuikly-open:*`. No local KuiklyUI checkout
+  required.
+- **Source mode (opt-in)** — consume the following modules as local
+  source from a KuiklyUI checkout: `:core`, `:core-render-android`,
+  `:compose`, `:core-annotations`, `:core-ksp`, `core-render-ohos`,
+  `core-render-ios`, `OpenKuiklyIOSRender`. Useful when you need to
+  co-debug A2UI with KuiklyUI changes.
 
-Set `kuikly.projectDir` to your local KuiklyUI repository path.
-This value is read by **all** build tools (Gradle, Podfiles, iOS setup
-scripts, HarmonyOS DevEco Studio (via the `.kuikly-external` symlink),
-OHOS build scripts).
-So you only need to change **one place** to redirect dependencies for the
-entire project.
+> Scope: the `kuikly.useSource` switch only affects the Kotlin 2.1.21
+> Android / KMP build (`settings.gradle.kts` / `settings.2.1.21.gradle.kts`).
+> The HarmonyOS variant (`settings.2.0.ohos.gradle.kts`) is still
+> source-only for now; iOS CocoaPods is also still source-only (an
+> explicit guard inside `:a2ui/build.2.1.21.gradle.kts` fails any Pod
+> task when `kuikly.useSource=false`).
+
+## 1. Choose dependency mode: `kuikly.useSource`
+
+Default is `false` (artifact mode).
+
+Resolution order (first non-blank wins):
+
+1. `-Pkuikly.useSource=true|false` on the Gradle command line
+2. `KUIKLY_USE_SOURCE=true|false` environment variable
+3. `<project-root>/local.properties` → key `kuikly.useSource`
+4. `<project-root>/gradle.properties` → key `kuikly.useSource`
+
+```bash
+# One-shot: open the IDE / run gradle under source mode
+./gradlew -Pkuikly.useSource=true :androidAppForKuiklyPage:installDebug
+
+# Per-machine persistent (recommended for Kuikly contributors):
+echo "kuikly.useSource=true" >> local.properties
+```
+
+## 2. Configure the upstream Kuikly version — artifact mode
+
+Under artifact mode, A2UI resolves Kuikly modules as
+`com.tencent.kuikly-open:<module>:<coord-version>`. The coordinate
+version is composed by combining `kuikly.version` with the current
+Kotlin toolchain, following the convention Kuikly Core publishes with
+(see [`KuiklyDep.kuiklyCoordinateVersion`](buildSrc/src/main/java/KuiklyDep.kt)):
+
+- `kuikly.version=2.29.2` + Kotlin `2.1.21` → `2.29.2-2.1.21`
+- `kuikly.version=2.29.2-SNAPSHOT` + Kotlin `2.1.21` → `2.29.2-2.1.21-SNAPSHOT`
+- `kuikly.version=2.29.2-SNAPSHOT` + Kotlin `2.0.21-KBA-010` → `2.29.2-2.0.21-ohos-SNAPSHOT`
+
+The value is used **verbatim** — any `-SNAPSHOT` tail must be spelled
+out explicitly. The resolver only inserts the Kotlin toolchain segment
+(and rewrites the `KBA-010` suffix to `ohos` for HarmonyOS builds).
+
+Resolution order of `kuikly.version`:
+
+1. `-Pkuikly.version=…`
+2. `KUIKLY_VERSION` env (shared with Kuikly Core — co-building both
+   repos only needs this single env var)
+3. `local.properties` → `kuikly.version`
+4. `gradle.properties` → `kuikly.version` (default: `2.29.2`)
+
+> The upstream Kuikly artifact must already be published to a Maven repo
+> that your build can resolve. For local co-development without
+> publishing, use source mode (section 3) instead.
+
+## 3. Configure the Kuikly checkout path — source mode
+
+Only required when `kuikly.useSource=true`. Set `kuikly.projectDir` to
+your local KuiklyUI repository path. This value is read by **all**
+build tools (Gradle, Podfiles, iOS setup scripts, HarmonyOS DevEco
+Studio (via the `.kuikly-external` symlink), OHOS build scripts).
 
 Resolution order (first hit wins):
 
@@ -23,99 +82,64 @@ Resolution order (first hit wins):
 3. `kuikly.projectDir=<path>` in `<project-root>/gradle.properties`
    (default: `../KuiklyUI`)
 
-Recommended: put an absolute path in `local.properties` (this file is git-ignored).
+Recommended: put an absolute path in `local.properties` (git-ignored).
 
-## 2. KuiklyUI artefact-dependency mode: published Maven / Pod / OHPM
+## 4. Per-platform notes under source mode
 
-The project currently depends on KuiklyUI Core as **local source** via the
-`kuikly.projectDir` setting above.
-Once the corresponding Kuikly Core artefacts are published (either in your
-own Maven repo, or a CocoaPods spec repo / ohpm registry), you can switch
-per platform.
-
-**Android / KMP** — open [settings.gradle.kts](settings.gradle.kts) (and
-its ohos variant), remove the four `include(":core", ...)` /
-`project(":core").projectDir = ...` lines. Then in each module’s
-`build.*.gradle.kts`, replace `project(":core")` with a Maven coordinate,
-for example:
-
-```kotlin
-// Before (local source):
-api(project(":core"))
-// After (published Maven artefact):
-api("com.tencent.kuikly-open:core:${Version.getCoreVersion()}")
-```
-
-Apply the same replacement for `:core-annotations`, `:core-ksp`,
-`:core-render-android`, `:compose`.
-`Version.getCoreVersion()` in
-[buildSrc/](buildSrc/src/main/java/KuiklyKotlinBuildVar.kt)
-already computes the upstream version according to the rules.
-
-**iOS** — in each `iosAppFor*/Podfile`, replace:
+**iOS** — in each `iosAppFor*/Podfile`, keep:
 
 ```ruby
 pod 'OpenKuiklyIOSRender', :path => '../.kuikly-external'
 ```
 
-with the published pod:
+A2UI-side pods (`a2ui`, `OpenA2UIIOSRender`) always use `:path => 'path'`
+during local development. This repository does not ship an automated
+iOS pod publish script (aligned with the upstream Kuikly project); to
+publish, run `pod trunk push <podspec> --allow-warnings` manually from
+each pod's directory. See [publish/README.md](publish/README.md) for
+the exact commands. Among them, `a2ui_demo` is a **business-side
+sample** pod — downstream integrators are expected to implement their
+own equivalent KMP module and integrate it via `:path`, so this pod is
+intentionally not published.
 
-```ruby
-pod 'OpenKuiklyIOSRender', '~> <upstream-kuikly-version>'
-```
-
-A2UI-side pods (`a2ui`, `OpenA2UIIOSRender`) should still use
-`:path => 'path'` during local development. This repository does not
-ship an automated iOS pod publish script (aligned with the upstream
-Kuikly project); to publish, run `pod trunk push <podspec>
---allow-warnings` manually from each pod's directory. See
-[publish/README.md](publish/README.md) for the exact commands.
-Among them, `a2ui_demo` is a **business-side sample** pod. Downstream
-integrators are expected to implement their own equivalent KMP module and
-integrate it via `:path`, so this pod is intentionally not published.
-
-**HarmonyOS** — in `a2ui-render-ohos/oh-package.json5`, replace:
+**HarmonyOS** — in `a2ui-render-ohos/oh-package.json5`:
 
 ```json5
 "@kuikly-open/render": "file:../.kuikly-external/core-render-ohos"
 ```
 
-with:
+The ohpm package `@kuikly-open/a2ui-render` is not published by any
+script in this repository (aligned with the upstream Kuikly project).
+To publish it, cd into `a2ui-render-ohos/` and run `ohpm pack` /
+`ohpm publish` manually, after flipping the local `file:` dependency
+to a published semver.
 
-```json5
-"@kuikly-open/render": "^<upstream-render-version>"
-```
-
-The ohpm package `@kuikly-open/a2ui-render` is not published by any script
-in this repository (aligned with the upstream Kuikly project). To publish
-it, cd into `a2ui-render-ohos/` and run `ohpm pack` / `ohpm publish`
-manually, after flipping the local `file:` dependency to a published
-semver as shown above.
-
-## 3. A2UI artefact versioning strategy
+## 5. A2UI artefact versioning strategy
 
 This repository includes four types of artefacts and uses **two related but
 different** version schemes:
 
 | Artefact | Scheme | Example | Source |
 |---|---|---|---|
-| Android AAR / KMP klib on Maven (`com.tencent.kuikly:a2ui`, `a2ui-render-android`) | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `0.9.0-2.1.21-SNAPSHOT`, `0.9.0-2.0.21-ohos-SNAPSHOT` | `A2uiVersion.getArtifactVersion(project)` |
+| Android AAR / KMP klib on Maven (`com.tencent.kuikly-open:a2ui`, `a2ui-render-android`) | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `0.9.0-2.1.21-SNAPSHOT`, `0.9.0-2.0.21-ohos-SNAPSHOT` | `A2uiVersion.getArtifactVersion(project)` |
 | iOS pods (`a2ui`, `OpenA2UIIOSRender`) | `${semantic}` (plain SemVer, required by CocoaPods) | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic(project)` |
 | HarmonyOS ohpm (`@kuikly-open/a2ui-render`) | `${semantic}` (plain SemVer, required by OHPM) | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic(project)` |
 | README / display usage | `${semantic}` | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic()` |
 
 The Kotlin suffix in Maven coordinates follows the Kuikly Core convention
-(`com.tencent.kuikly:core:2.0.0-2.1.21-SNAPSHOT`) — KMP `.klib` and metadata
-binaries are not binary-compatible across Kotlin compiler versions,
-so each supported toolchain must publish under its own coordinate.
+(`com.tencent.kuikly-open:core:2.29.2-2.1.21-SNAPSHOT`) — KMP `.klib` and
+metadata binaries are not binary-compatible across Kotlin compiler
+versions, so each supported toolchain must publish under its own
+coordinate.
 
 Both APIs for fetching A2UI artefact versions are located in
 [`buildSrc/src/main/java/A2uiVersion.kt`](buildSrc/src/main/java/A2uiVersion.kt).
 
-### Override semantic version
+### Override A2UI semantic version
 
 Priority order (`getSemantic` and `getArtifactVersion` share the same
-semantic base; mirrors Kuikly Core's `Version.getKuiklyVersion()`):
+semantic base; env-only, deliberately simpler than
+[`KuiklyDep.kuiklyBaseVersion`](buildSrc/src/main/java/KuiklyDep.kt)):
 
 1. `A2UI_VERSION=1.0.0 ./gradlew ...` (environment variable)
 2. Otherwise fallback to `DEFAULT_A2UI_SEMANTIC` in `A2uiVersion.kt`
@@ -133,23 +157,28 @@ HarmonyOS builds triggered via `2.0_a2ui_ohos_build.sh` automatically set
 
 ### CI one-liners
 
-The three Gradle-based publish scripts (`2.1.21_publish.sh`,
+The two Gradle-based publish scripts (`2.1.21_publish.sh`,
 `2.0_ohos_publish.sh`) are aligned with the Kuikly project: they take
 `$1 = MODULE` (default `all`) and `$2 = PUBLISH_TASK` (default
 `publishToMavenLocal`) as positional arguments, read `KUIKLY_AGP_VERSION`
 / `KUIKLY_KOTLIN_VERSION` for toolchain, and leave Maven Central
-credentials to the Gradle publish plugin itself. The semantic version
-can be overridden on the fly via the `A2UI_VERSION` env var (same
-convention as Kuikly `KUIKLY_VERSION`):
+credentials to the Gradle publish plugin itself. `2.1.21_publish.sh`
+forces `KUIKLY_USE_SOURCE=false` so that the generated POMs always
+record upstream Kuikly as Maven coordinates (not `project(":core")`
+references). The A2UI semantic version and the Kuikly coordinate
+version can be overridden on the fly via env vars:
 
 ```bash
+# Override A2UI's own release version
 A2UI_VERSION=1.0.0 bash publish/2.1.21_publish.sh
-A2UI_VERSION=1.0.0 bash publish/2.0_ohos_publish.sh
+
+# Override which Kuikly coordinate A2UI depends on
+KUIKLY_VERSION=2.30.0 bash publish/2.1.21_publish.sh
 ```
 
 But the recommended release path is to edit `DEFAULT_A2UI_SEMANTIC` in
-`A2uiVersion.kt` directly, so that the version is reproducible across
-environments.
+`A2uiVersion.kt` and `kuikly.version` in `gradle.properties` directly,
+so that the version is reproducible across environments.
 
 iOS pods have no publish script — run `pod trunk push` manually (see
 [publish/README.md](publish/README.md)).
@@ -157,7 +186,6 @@ iOS pods have no publish script — run `pod trunk push` manually (see
 In the end, all artefacts share the same **semantic** version tag;
 Maven coordinates additionally carry the Kotlin/ohos suffix.
 
-Note: the **upstream Kuikly Core dependency version** is a separate config
-item (see `Version.getKuiklyVersion()` in
-[`KuiklyKotlinBuildVar.kt`](buildSrc/src/main/java/KuiklyKotlinBuildVar.kt)),
-and is not affected by `A2UI_VERSION`.
+Note: the **upstream Kuikly Core dependency version** is a separate
+config item (`kuikly.version` in `gradle.properties`), and is not
+affected by `A2UI_VERSION`.

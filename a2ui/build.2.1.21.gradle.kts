@@ -73,7 +73,14 @@ kotlin {
         framework {
             baseName = "A2UICore"
             isStatic = true
-            export(project(":core"))
+            // `export(project(":core"))` only works under source mode —
+            // the Kotlin/Native CocoaPods plugin cannot export a Maven
+            // coordinate. In artifact mode we deliberately disable the
+            // CocoaPods tasks below (see `tasks.matching { ... }`), so
+            // iOS builds must set `kuikly.useSource=true`.
+            if (KuiklyDep.useSource(project)) {
+                export(project(":core"))
+            }
         }
     }
 
@@ -81,7 +88,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-                api(project(":core"))
+                api(KuiklyDep.core(project))
             }
         }
         val commonTest by getting {
@@ -114,5 +121,46 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Fail-fast guard for the artifact-mode × iOS CocoaPods combination.
+//
+// The `cocoapods { framework { export(project(":core")) } }` block above
+// requires `:core` to exist as a Gradle sub-project — only available when
+// `kuikly.useSource=true`. Under artifact mode (default), the KMP module
+// still *configures* the CocoaPods extension (so `./gradlew` can resolve
+// Android/KMP tasks fine), but any pod-related task would silently drop
+// the Kuikly symbols from `A2UICore.framework` and crash at runtime.
+//
+// Instead of letting that happen, disable + loudly fail those tasks when
+// invoked under artifact mode. Developers can opt-in with
+// `-Pkuikly.useSource=true` / `KUIKLY_USE_SOURCE=true`.
+// ─────────────────────────────────────────────────────────────────────────
+if (!KuiklyDep.useSource(project)) {
+    tasks.matching { t ->
+        val n = t.name
+        n == "podspec" ||
+            n == "podspecCleanUp" ||
+            n == "generateDummyFramework" ||
+            n.startsWith("podInstall") ||
+            n.startsWith("podPublish") ||
+            n.startsWith("podImport") ||
+            n.startsWith("podSetupBuild") ||
+            n.startsWith("podBuild") ||
+            n.startsWith("syncFramework") ||
+            n.startsWith("syncPodFramework")
+    }.configureEach {
+        enabled = false
+        doFirst {
+            throw GradleException(
+                "[A2UI] CocoaPods task '${this@configureEach.path}' is disabled " +
+                    "because `kuikly.useSource=false` (artifact mode). The " +
+                    "`:a2ui` framework exports `:core`, which only exists as a " +
+                    "Gradle sub-project under source mode. Re-run with " +
+                    "`-Pkuikly.useSource=true` or set `KUIKLY_USE_SOURCE=true`."
+            )
+        }
     }
 }

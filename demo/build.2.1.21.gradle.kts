@@ -128,8 +128,8 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":core"))
-                implementation(project(":core-annotations"))
+                implementation(KuiklyDep.core(project))
+                implementation(KuiklyDep.coreAnnotations(project))
                 // Must be `api` (not `implementation`) because the framework
                 // block above `export(project(":a2ui"))`s it — the
                 // Kotlin/Native Cocoapods plugin refuses to export a project
@@ -139,7 +139,7 @@ kotlin {
                 // For the "Compose Page integration" example page. Consumed
                 // by `:androidAppForKuiklyPage` at runtime; unused apps
                 // let R8 strip the Compose entry classes.
-                implementation(project(":compose"))
+                implementation(KuiklyDep.compose(project))
             }
         }
 
@@ -175,11 +175,12 @@ ksp {
 }
 
 dependencies {
-    compileOnly(project(":core-ksp"))
-    add("kspAndroid", project(":core-ksp"))
-    add("kspIosArm64", project(":core-ksp"))
-    add("kspIosX64", project(":core-ksp"))
-    add("kspIosSimulatorArm64", project(":core-ksp"))
+    val coreKsp = KuiklyDep.coreKsp(project)
+    compileOnly(coreKsp)
+    add("kspAndroid", coreKsp)
+    add("kspIosArm64", coreKsp)
+    add("kspIosX64", coreKsp)
+    add("kspIosSimulatorArm64", coreKsp)
 }
 
 android {

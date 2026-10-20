@@ -35,7 +35,7 @@ android {
 dependencies {
     implementation(project(":a2ui"))
     implementation(project(":a2ui-render-android"))
-    implementation(project(":core-render-android"))
+    implementation(KuiklyDep.coreRenderAndroid(project))
     implementation("androidx.appcompat:appcompat:1.4.2")
     implementation("androidx.core:core-ktx:1.7.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
