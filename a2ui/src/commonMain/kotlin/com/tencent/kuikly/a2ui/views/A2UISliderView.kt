@@ -61,7 +61,7 @@ import com.tencent.kuikly.core.views.Slider
  * and all events (progressDidChanged / beginDragSlider / endDragSlider) are 1:1 forwarded
  * to the inner [SliderView].
  */
-class A2UISliderView : ComposeView<A2UISliderAttr, A2UISliderEvent>() {
+internal class A2UISliderView : ComposeView<A2UISliderAttr, A2UISliderEvent>() {
 
     override fun createAttr(): A2UISliderAttr = A2UISliderAttr()
     override fun createEvent(): A2UISliderEvent = A2UISliderEvent()
@@ -152,7 +152,7 @@ class A2UISliderView : ComposeView<A2UISliderAttr, A2UISliderEvent>() {
  * normal Attr.width()/height() path still produces a sized wrapper, and the measured
  * values will converge to that same number after layout.
  */
-class A2UISliderAttr : ComposeAttr() {
+internal class A2UISliderAttr : ComposeAttr() {
     internal var progressColor: Color by observable(Color.BLUE)
     internal var trackColor: Color by observable(Color.GRAY)
     internal var thumbColor: Color by observable(Color.WHITE)
@@ -209,7 +209,7 @@ class A2UISliderAttr : ComposeAttr() {
 /**
  * Mirrors [com.tencent.kuikly.core.views.SliderEvent].
  */
-class A2UISliderEvent : ComposeEvent() {
+internal class A2UISliderEvent : ComposeEvent() {
     internal var progressDidChangedHandlerFn: ((progress: Float) -> Unit)? = null
     internal var beginDragSliderHandlerFn: ((params: PanGestureParams) -> Unit)? = null
     internal var endDragSliderHandlerFn: ((params: PanGestureParams) -> Unit)? = null
@@ -233,6 +233,6 @@ class A2UISliderEvent : ComposeEvent() {
 /**
  * DSL function to create an [A2UISliderView].
  */
-fun ViewContainer<*, *>.A2UISlider(init: A2UISliderView.() -> Unit) {
+internal fun ViewContainer<*, *>.A2UISlider(init: A2UISliderView.() -> Unit) {
     addChild(A2UISliderView(), init)
 }

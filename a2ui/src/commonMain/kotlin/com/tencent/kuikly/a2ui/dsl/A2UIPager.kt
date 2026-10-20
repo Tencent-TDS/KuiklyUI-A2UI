@@ -45,7 +45,7 @@ import com.tencent.kuikly.core.pager.Pager
  * Threading: All operations must run on the Kuikly Context Thread.
  */
 @Suppress("DEPRECATION")
-class A2UIPager : Pager(), A2UIHost {
+internal class A2UIPager : Pager(), A2UIHost {
 
     /**
      * Registry that maps A2UI protocol tags ↔ Kuikly DSL views.

@@ -69,7 +69,7 @@ import com.tencent.kuikly.core.views.DivView
  *
  * @param customViewName The registered custom component name (e.g., "A2UIWeb", "MyA2UIView")
  */
-class A2UICustomComponentView(private val customViewName: String) : DivView(), MeasureFunction {
+internal class A2UICustomComponentView(private val customViewName: String) : DivView(), MeasureFunction {
 
     /**
      * Snapshot of the most recently applied cross/main-axis dimensions. Used

@@ -40,7 +40,7 @@ import com.tencent.kuikly.core.views.ScrollerView
  * The main-axis dimension is left unconstrained so contentView can grow beyond
  * ScrollerView's bounds, enabling native scrolling via KRScrollView's contentSize sync.
  */
-open class A2UIScrollerView : ScrollerView<ScrollerAttr, ScrollerEvent>(), IPagerLayoutEventObserver {
+internal open class A2UIScrollerView : ScrollerView<ScrollerAttr, ScrollerEvent>(), IPagerLayoutEventObserver {
 
     private var didInitContentViewConstraint = false
 
