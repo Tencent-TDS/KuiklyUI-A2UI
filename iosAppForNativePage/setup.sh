@@ -18,7 +18,15 @@ cd "$SCRIPT_DIR"
 echo "=== A2UI iOS Demo Setup ==="
 
 # Ensure the .kuikly-external symlink is present so Podfile `:path => .kuikly-external` resolves.
-bash "$SCRIPT_DIR/../scripts/link-kuikly.sh"
+# Only needed under source mode (`kuikly.useSource=true`); artifact mode
+# (default) pulls OpenKuiklyIOSRender from CocoaPods trunk instead.
+# shellcheck source=../scripts/lib/kuikly-mode.sh
+source "$SCRIPT_DIR/../scripts/lib/kuikly-mode.sh"
+if kuikly_use_source; then
+    bash "$SCRIPT_DIR/../scripts/link-kuikly.sh"
+else
+    echo "→ Skipping link-kuikly.sh (artifact mode: kuikly.useSource=false)"
+fi
 
 # Step 1: Generate dummy framework for CocoaPods (required for pod install)
 echo "→ Generating dummy A2UICore framework for pod install..."

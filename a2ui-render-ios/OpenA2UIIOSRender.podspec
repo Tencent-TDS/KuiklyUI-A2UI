@@ -35,7 +35,18 @@ Pod::Spec.new do |spec|
   spec.source_files     = 'Sources/**/*.{h,m,mm,swift}'
   spec.public_header_files = 'Sources/**/*.h'
 
-  spec.dependency 'OpenKuiklyIOSRender'
+  # Pin to the Kuikly Core version this A2UI release was built against.
+  # Keep in sync with:
+  #   - `KuiklyDep.DEFAULT_KUIKLY_VERSION` in
+  #     `buildSrc/src/main/java/KuiklyDep.kt` (Android/KMP side)
+  #   - `A2UI::KuiklyCocoapods::DEFAULT_KUIKLY_VERSION` in
+  #     `scripts/lib/kuikly_cocoapods.rb` (Podfile side)
+  # Override via `KUIKLY_VERSION=x.y.z pod trunk push …` at publish time.
+  # `OpenKuiklyIOSRender` ships to CocoaPods trunk with plain SemVer tags
+  # (no Kotlin suffix — it's a pure ObjC/C++ pod), so we strip any
+  # `-SNAPSHOT` tail if the env var carries one.
+  _kuikly_version = (ENV['KUIKLY_VERSION'] || '2.29.2').sub(/-SNAPSHOT\z/, '')
+  spec.dependency 'OpenKuiklyIOSRender', _kuikly_version
 
   # Keep ObjC-only classes (notably `A2UIBridgeModule`, discovered by
   # `KuiklyRenderLayerHandler` via `NSClassFromString` at runtime) alive

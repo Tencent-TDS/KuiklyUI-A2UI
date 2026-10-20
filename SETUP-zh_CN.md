@@ -10,13 +10,14 @@
   `:core-ksp`、`core-render-ohos`、`core-render-ios`、
   `OpenKuiklyIOSRender`。用于与 KuiklyUI 一起源码联调。
 
-> 作用范围：`kuikly.useSource` 开关只影响 Kotlin 2.1.21 的
+> 作用范围：`kuikly.useSource` 开关影响 Kotlin 2.1.21 的
 > Android / KMP 构建（`settings.gradle.kts` /
-> `settings.2.1.21.gradle.kts`）。HarmonyOS 变体
-> （`settings.2.0.ohos.gradle.kts`）当前仍强制源码模式。iOS CocoaPods
-> 两种模式都支持——`pod 'a2ui'` / `pod 'a2ui_demo'` 既可用
-> `:path =>` 指向本仓库，也可以依赖已发布版本（CocoaPods trunk），
-> 详见 §4 iOS 段。
+> `settings.2.1.21.gradle.kts`），以及 iOS CocoaPods 层对
+> `OpenKuiklyIOSRender` 的消费方式（源码模式用 `:path => <kuikly.projectDir>`，
+> 产物模式用 CocoaPods trunk 的 `'<kuikly.version>'`）。HarmonyOS 变体
+> （`settings.2.0.ohos.gradle.kts`）当前仍强制源码模式。A2UI 自身的
+> iOS Pod（`pod 'a2ui'` / `pod 'a2ui_demo'` / `pod 'OpenA2UIIOSRender'`）
+> 在仓库内 `iosAppFor*` 示例中始终以 `:path =>` 接入，详见 §4 iOS 段。
 
 ## 1. 选择依赖模式：`kuikly.useSource`
 
@@ -96,15 +97,35 @@ Podfile、iOS setup 脚本、HarmonyOS DevEco Studio（通过
 > 自家 iosMain 持有 5 个 `@ObjCName` 薄壳），不直接依赖 `a2ui_demo`。
 
 **在仓库内（本地开发期）** — 不论源码还是产物模式，`iosAppFor*/Podfile`
-中 A2UI 侧 Pod（`a2ui`、`a2ui_demo`、`OpenA2UIIOSRender`）**始终**以
+中 **A2UI 侧** Pod（`a2ui`、`a2ui_demo`、`OpenA2UIIOSRender`）**始终**以
 `:path => '../a2ui'` / `:path => '../demo'` / `:path => '../a2ui-render-ios'`
-方式接入，这是本仓库 Podfile 的既定约定。
+方式接入，这是本仓库 Podfile 的既定约定——A2UI 自身的 Kotlin
+`.framework` 必须随 Xcode 构建触发 Gradle `syncFramework` 实时生成，
+无法通过 trunk 消费。
+
+**上游 Kuikly 侧** Pod（`OpenKuiklyIOSRender`）则由 `kuikly.useSource`
+开关决定，与 Gradle 侧 [`KuiklyDep`](buildSrc/src/main/java/KuiklyDep.kt)
+的行为完全对齐，具体映射规则：
+
+| 模式 | `iosAppFor*/Podfile` 中 `OpenKuiklyIOSRender` 的声明 |
+|---|---|
+| 产物模式（默认，`kuikly.useSource=false`） | `pod 'OpenKuiklyIOSRender', '2.29.2'`（从 CocoaPods trunk 拉已发布版本） |
+| 源码模式（`kuikly.useSource=true`） | `pod 'OpenKuiklyIOSRender', :path => <kuikly.projectDir>`（本地源码，用于与 Kuikly 一起联调） |
+
+版本号解析顺序与 Gradle 侧 `kuikly.version` 完全一致（env /
+`local.properties` / `gradle.properties` / 默认 `2.29.2`，详见
+[`scripts/lib/kuikly_cocoapods.rb`](scripts/lib/kuikly_cocoapods.rb)）。
+`OpenKuiklyIOSRender` 作为纯 ObjC/C++ Pod，trunk 上的 tag 使用纯
+SemVer（无 Kotlin 后缀），所以 Podfile 侧只取 `kuikly.version` 的
+SemVer 段，有 `-SNAPSHOT` 后缀会被剥去。
 
 **产物模式下集成方（下游 App）** — 可以通过 CocoaPods trunk 拉已发布版本：
 
 ```ruby
 pod 'a2ui', '~> 0.9.0'
 pod 'OpenA2UIIOSRender', '~> 0.9.0'
+# OpenKuiklyIOSRender 通过 OpenA2UIIOSRender 的 spec.dependency 自动引入
+# （版本号已在 OpenA2UIIOSRender.podspec 中锚定为 Kuikly 2.29.2）
 ```
 
 本仓库没有自动发布 iOS Pod 的脚本（与 Kuikly 工程保持一致），如需
@@ -114,14 +135,6 @@ pod 虽然在仓库内被 `iosAppForKuiklyPage` / `iosAppForBothPages` 以
 `:path => '../demo'` 消费，但它定位是**业务侧示例**而非对外公共 API，
 下游集成方会自行实现对应 KMP 模块并通过 `:path` 方式接入，因此该
 pod 有意不发布到 trunk。
-
-**源码模式下** — 另外在 `iosAppFor*/Podfile` 中保持上游 Kuikly 侧：
-
-```ruby
-pod 'OpenKuiklyIOSRender', :path => '../.kuikly-external'
-```
-
-产物模式下 `OpenKuiklyIOSRender` 走已发布版本，无需 `.kuikly-external`。
 
 **HarmonyOS** — 在 `a2ui-render-ohos/oh-package.json5` 中：
 

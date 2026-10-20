@@ -1,5 +1,9 @@
-require_relative '../scripts/lib/kuikly_path'
-kuikly_root = A2UI::KuiklyPath.resolve!(__dir__)
+require_relative '../scripts/lib/kuikly_cocoapods'
+
+# Resolve Kuikly render pod source depending on `kuikly.useSource`.
+# See `scripts/lib/kuikly_cocoapods.rb` for the resolution order.
+kuikly_pod_version = A2UI::KuiklyCocoapods.render_pod_version(__dir__)
+kuikly_pod_options = A2UI::KuiklyCocoapods.render_pod_options(__dir__)
 
 platform :ios, '15.0'
 
@@ -10,9 +14,14 @@ target 'A2UIDemoApp' do
   # This triggers Gradle syncFramework on each Xcode build (debug/release follows Xcode config)
   pod 'a2ui', :path => '../a2ui'
 
-  # Kuikly iOS Render (core-render-ios) — resolved from the external
-  # KuiklyUI checkout (single source of truth: `kuikly.projectDir`).
-  pod 'OpenKuiklyIOSRender', :path => kuikly_root
+  # Kuikly iOS Render (core-render-ios).
+  # Dual-mode via `kuikly.useSource`: either local `:path` (source
+  # debugging alongside KuiklyUI) or published CocoaPods trunk version.
+  if kuikly_pod_version
+    pod 'OpenKuiklyIOSRender', kuikly_pod_version
+  else
+    pod 'OpenKuiklyIOSRender', **kuikly_pod_options
+  end
 
   # A2UI iOS Render - local podspec
   pod 'OpenA2UIIOSRender', :path => '../a2ui-render-ios/'
