@@ -69,9 +69,9 @@ Android / iOS / HarmonyOS 三端 Demo 已内置：
   <img src="docs/a2ui_demo_apk.png" alt="Kuikly A2UI demo apk" width="200">
 </div>
 
-iPhone 和 HarmonyOS 手机请按如下步骤源码编译体验：
+iPhone 和 HarmonyOS 手机请按如下步骤本地编译 Demo 体验。
 
-**先决条件**：本工程依赖 KuiklyUI Core 仓库，默认配置位置为 `../KuiklyUI`，所以当前最简单的源码依赖方式是：直接 clone [KuiklyUI](https://github.com/Tencent-TDS/KuiklyUI) main 分支代码到和 KuiklyUI-A2UI 并列的目录。详细配置依赖可阅读 [`SETUP.md`](https://github.com/Tencent-TDS/KuiklyUI-A2UI/SETUP-zh_CN.md)。
+**先决条件**：**无需**本地 clone KuiklyUI 源码。Android / iOS / HarmonyOS 三端默认都从已发布的 **Maven / CocoaPods trunk / ohpm registry** 消费 Kuikly（默认 `kuikly.version=2.29.2`）。只有和 KuiklyUI 本地源码联调时才需要开启源码模式，详见 [`SETUP-zh_CN.md`](https://github.com/Tencent-TDS/KuiklyUI-A2UI/SETUP-zh_CN.md)。
 
 ```bash
 # iOS
@@ -83,7 +83,7 @@ cd iosAppForNativePage && bash setup.sh && open A2UIDemoApp.xcworkspace
 # ohosAppForNativePage
 ```
 
-更多场景的 Demo，可按项目 [README](https://github.com/Tencent-TDS/KuiklyUI-A2UI/README-zh_CN.md) 文档里步骤源码编译体验。
+更多场景的 Demo，可按项目 [README](https://github.com/Tencent-TDS/KuiklyUI-A2UI/README-zh_CN.md) 文档里步骤本地编译体验。
 
 ---
 

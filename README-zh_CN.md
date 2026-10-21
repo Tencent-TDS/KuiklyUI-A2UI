@@ -187,7 +187,7 @@ KuiklyUI-A2UI/                             # 工程根目录（本仓库）
 ├── buildSrc/                              # Gradle plugin & 常量（版本号等）
 ├── scripts/                               # 工程脚手架脚本（含 link-kuikly.sh）
 ├── publish/                               # 发版脚本、兼容性 patch 配置
-├── gradle.properties                      # kuikly.projectDir 等工程全局配置
+├── gradle.properties                      # 工程全局配置（kuikly.useSource / kuikly.version / kuikly.projectDir 等）
 ├── local.properties.example               # 每台机器可覆盖的本地配置模板
 ├── settings.gradle.kts                    # 2.1.21 主线 settings
 ├── settings.2.0.ohos.gradle.kts           # HarmonyOS 2.0 兼容 settings
@@ -195,7 +195,7 @@ KuiklyUI-A2UI/                             # 工程根目录（本仓库）
 └── 2.0_a2ui_ohos_build{,_release}.sh      # HarmonyOS 构建脚本
 ```
 
-> **依赖模式**：默认走本地源码依赖（`kuikly.projectDir` 指向外部 KuiklyUI 仓库，缺省 `../KuiklyUI`），也可切换为 Maven 产物依赖。详见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
+> **依赖模式**：默认走 **Maven / Pod / OHPM 产物依赖**（`kuikly.useSource=false`，Kuikly `2.29.2`），**无需本地 KuiklyUI 源码**；需要和 Kuikly 一起源码联调时再把 `kuikly.useSource` 置为 `true` 并指定 `kuikly.projectDir`。详见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
 
 ---
 
@@ -366,13 +366,13 @@ Android / iOS / HarmonyOS 三端 Demo 已内置：
   <img src="docs/a2ui_demo_apk.png" alt="Kuikly A2UI demo apk" width="200">
 </div>
 
-安卓手机扫码快速体验。iPhone和鸿蒙手机请按下面步骤源码编译 Demo APP 体验。
+安卓手机扫码快速体验。iPhone 和鸿蒙手机请按下面步骤编译 Demo APP 体验。
 
-### 源码编译
+### 编译 Demo
 
 仓库中提供了 3 × 4 = 12 个示例工程，覆盖 3 端（Android / iOS / HarmonyOS）× 4 种（Native 页接入 / Kuikly 页接入 / 两种同时接入 / 协议测试）。
 
-**先决条件**：本工程依赖外部 KuiklyUI Core 仓库，默认配置位置为 `../KuiklyUI`，所以最简单的源码依赖方式是：直接 clone [KuiklyUI](https://github.com/Tencent-TDS/KuiklyUI) main 分支代码到和 KuiklyUI-A2UI 并列的目录。详细配置依赖可阅读 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)，按需修改 `gradle.properties` 中的 `kuikly.projectDir`（或在 `local.properties` 里覆盖）。
+**先决条件**：**无需** clone KuiklyUI 源码。Android / iOS / HarmonyOS 三端默认都从已发布的 **Maven / CocoaPods trunk / ohpm registry** 消费 Kuikly（当前默认 `kuikly.version=2.29.2`），`./gradlew` / `bash setup.sh` / `./2.0_a2ui_ohos_build.sh` 执行时会自动拉取对应产物。只有在想和 KuiklyUI 一起源码联调时才需要 clone KuiklyUI 并在 `local.properties` 中设 `kuikly.useSource=true` + `kuikly.projectDir=…`，具体步骤见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
 
 然后按平台运行任意 demo：
 

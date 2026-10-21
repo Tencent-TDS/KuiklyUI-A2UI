@@ -187,7 +187,7 @@ KuiklyUI-A2UI/                             # Project root (this repo)
 ├── buildSrc/                              # Gradle plugin & constants (version numbers, …)
 ├── scripts/                               # Project scaffolding scripts (incl. link-kuikly.sh)
 ├── publish/                               # Publishing scripts & compatibility patch config
-├── gradle.properties                      # Project-wide config (e.g. kuikly.projectDir)
+├── gradle.properties                      # Project-wide config (kuikly.useSource / kuikly.version / kuikly.projectDir …)
 ├── local.properties.example               # Per-machine override template
 ├── settings.gradle.kts                    # Mainline 2.1.21 settings
 ├── settings.2.0.ohos.gradle.kts           # HarmonyOS 2.0 compatibility settings
@@ -195,7 +195,7 @@ KuiklyUI-A2UI/                             # Project root (this repo)
 └── 2.0_a2ui_ohos_build{,_release}.sh      # HarmonyOS build scripts
 ```
 
-> **Dependency mode**: by default the project consumes KuiklyUI Core as **local source** (`kuikly.projectDir` points at an external KuiklyUI checkout, defaulting to `../KuiklyUI`); switching to Maven artefacts is also supported. See [`SETUP.md`](SETUP.md) for details.
+> **Dependency mode**: by default the project consumes KuiklyUI Core from **published Maven / Pod / OHPM artefacts** (`kuikly.useSource=false`, Kuikly `2.29.2`) — **no local KuiklyUI source checkout is required**. Switch to source mode (set `kuikly.useSource=true` and point `kuikly.projectDir` at a local checkout) only when you want to co-develop with KuiklyUI itself. See [`SETUP.md`](SETUP.md) for details.
 
 ---
 
@@ -366,13 +366,13 @@ Built-in demos are provided for Android / iOS / HarmonyOS:
   <img src="docs/a2ui_demo_apk.png" alt="Kuikly A2UI demo apk" width="200">
 </div>
 
-Android users can scan and try quickly. For iPhone and HarmonyOS phones, follow the source build steps below to run the demo app.
+Android users can scan and try quickly. For iPhone and HarmonyOS phones, follow the build steps below to run the demo app.
 
-### Build from Source
+### Build the Demo
 
 The repository ships 3 × 4 = 12 sample projects covering 3 platforms (Android / iOS / HarmonyOS) × 4 flavours (native-page integration / Kuikly-page integration / both / protocol test).
 
-**Prerequisite**: this project depends on an external KuiklyUI Core checkout, with the default path configured as `../KuiklyUI`. The simplest source-dependency setup is to clone the [KuiklyUI](https://github.com/Tencent-TDS/KuiklyUI) `main` branch into a directory alongside KuiklyUI-A2UI. For detailed dependency configuration, see [`SETUP.md`](SETUP.md), and adjust `kuikly.projectDir` in `gradle.properties` as needed (or override it in `local.properties`).
+**Prerequisite**: **no need** to clone the KuiklyUI source tree. All three platforms (Android / iOS / HarmonyOS) default to consuming Kuikly from the published **Maven / CocoaPods trunk / ohpm registry** (defaulting to `kuikly.version=2.29.2`); `./gradlew` / `bash setup.sh` / `./2.0_a2ui_ohos_build.sh` pull the matching artefacts automatically. Clone KuiklyUI and set `kuikly.useSource=true` + `kuikly.projectDir=…` in `local.properties` only when you want to co-develop against a local KuiklyUI checkout — see [`SETUP.md`](SETUP.md) for the full flow.
 
 Then run any demo per platform:
 
