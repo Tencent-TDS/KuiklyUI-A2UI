@@ -80,9 +80,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":core"))
-                implementation(project(":core-annotations"))
-                implementation(project(":compose"))
+                implementation(KuiklyDep.core(project))
+                implementation(KuiklyDep.coreAnnotations(project))
+                implementation(KuiklyDep.compose(project))
                 // Re-export the A2UI runtime so the resulting libshared.so
                 // contains both the runtime and the demo Pager classes.
                 api(project(":a2ui"))
@@ -102,7 +102,7 @@ kotlin {
 }
 
 dependencies {
-    add("kspOhosArm64", project(":core-ksp"))
+    add("kspOhosArm64", KuiklyDep.coreKsp(project))
 }
 
 ksp {

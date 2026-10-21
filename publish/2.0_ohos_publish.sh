@@ -10,6 +10,19 @@ java -version
 
 CONFIG_FILE="publish/compatible/2.0_ohos.yaml"
 
+# ─────────────────────────────────────────────────────────────────────
+# Enforce artifact mode for publishing.
+#
+# `:a2ui` must be published against the already-released Kuikly
+# artifacts (`com.tencent.kuikly-open:core:…` with the `-ohos` Kotlin
+# segment, resolved by `KuiklyDep.kuiklyCoordinateVersion`) so the
+# generated POMs carry Maven coordinates — not local `project(":core")`
+# references. Overriding this via env is intentionally disabled;
+# developer-side source-mode validation should go through a plain
+# `./gradlew publishToMavenLocal` run without this script.
+# ─────────────────────────────────────────────────────────────────────
+export KUIKLY_USE_SOURCE=false
+
 # 兼容性替换
 java publish/FileReplacer.java replace "$CONFIG_FILE"
 

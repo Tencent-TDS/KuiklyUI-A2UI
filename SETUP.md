@@ -13,14 +13,30 @@ modes** against KuiklyUI; the active mode is chosen by a single switch
   `core-render-ios`, `OpenKuiklyIOSRender`. Useful when you need to
   co-debug A2UI with KuiklyUI changes.
 
-> Scope: the `kuikly.useSource` switch affects the Kotlin 2.1.21
-> Android / KMP build (`settings.gradle.kts` /
-> `settings.2.1.21.gradle.kts`) **and** the iOS CocoaPods layer's
-> consumption of `OpenKuiklyIOSRender` (source mode uses
-> `:path => <kuikly.projectDir>`, artifact mode uses
-> `'<kuikly.version>'` from CocoaPods trunk). The HarmonyOS variant
-> (`settings.2.0.ohos.gradle.kts`) is still source-only for now. The
-> A2UI-side iOS pods themselves (`pod 'a2ui'` / `pod 'a2ui_demo'` /
+> Scope: the `kuikly.useSource` switch drives Kuikly consumption on all
+> three platforms:
+>
+> - **Android / KMP** (Kotlin 2.1.21, `settings.gradle.kts` /
+>   `settings.2.1.21.gradle.kts`) — artifact mode uses
+>   `com.tencent.kuikly-open:*` Maven coordinates; source mode uses
+>   `includeBuild(<kuikly.projectDir>)`.
+> - **iOS CocoaPods** — artifact mode uses
+>   `'<kuikly.version>'` from the CocoaPods trunk; source mode uses
+>   `:path => <kuikly.projectDir>`.
+> - **HarmonyOS** (`settings.2.0.ohos.gradle.kts` + each
+>   `ohosAppFor*/entry/oh-package.json5` + `a2ui-render-ohos/oh-package.json5`
+>   + `ohosAppFor*/build-profile.json5`) — artifact mode consumes
+>   `"@kuikly-open/render": "<kuikly.version>"` from the ohpm registry;
+>   source mode is set up by
+>   [`scripts/apply-ohos-mode.sh`](scripts/apply-ohos-mode.sh), which
+>   rewrites `oh-package.json5` to `"file:../..?/core-render-ohos"`
+>   and re-inserts the `{"name":"render",
+>   "srcPath":"../core-render-ohos"}` entry into
+>   `build-profile.json5`'s `modules` array. The whole flow is driven
+>   by [`scripts/link-kuikly.sh`](scripts/link-kuikly.sh) (see the
+>   HarmonyOS section in §4).
+>
+> The A2UI-side iOS pods themselves (`pod 'a2ui'` / `pod 'a2ui_demo'` /
 > `pod 'OpenA2UIIOSRender'`) are always consumed via `:path =>` inside
 > the in-repo `iosAppFor*` samples. See the iOS section in §4 for the
 > full rundown.
@@ -154,17 +170,73 @@ API; downstream integrators are expected to implement their own
 equivalent KMP module and integrate it via `:path`, so this pod is
 intentionally not published to the trunk.
 
-**HarmonyOS** — in `a2ui-render-ohos/oh-package.json5`:
+**HarmonyOS** — the OHOS side supports **both modes**, driven by the
+same `kuikly.useSource` switch and fully aligned with Android / iOS.
+Mode switching is orchestrated by
+[`scripts/link-kuikly.sh`](scripts/link-kuikly.sh) (which internally
+invokes [`scripts/apply-ohos-mode.sh`](scripts/apply-ohos-mode.sh)):
 
-```json5
-"@kuikly-open/render": "file:../.kuikly-external/core-render-ohos"
+| Mode | `@kuikly-open/render` in `a2ui-render-ohos/oh-package.json5` | `@kuikly-open/render` in `ohosAppFor*/entry/oh-package.json5` | `modules` array in `ohosAppFor*/build-profile.json5` | On-disk layout |
+|---|---|---|---|---|
+| Artifact (default, `kuikly.useSource=false`) | `"@kuikly-open/render": "2.29.2"` (pulled from the ohpm registry) | Same (version matches) | Just `entry` + `a2ui_render`, no `render` block | No `.kuikly-external`, no `core-render-ohos/` |
+| Source (`kuikly.useSource=true`) | `"@kuikly-open/render": "file:../core-render-ohos"` | `"@kuikly-open/render": "file:../../core-render-ohos"` | Adds `{"name":"render", "srcPath":"../core-render-ohos", …}` block | `.kuikly-external` symlinks to `kuikly.projectDir`; `core-render-ohos/` is an rsync mirror of `kuikly.projectDir/core-render-ohos` (git-ignored) |
+
+> The version resolution follows the exact same order as Gradle- /
+> CocoaPods-side `kuikly.version` (env / `local.properties` /
+> `gradle.properties` / default `2.29.2`), and any `-SNAPSHOT` tail is
+> stripped — the ohpm registry, like the CocoaPods trunk, only hosts
+> released versions.
+
+**Unified C/C++ entry point**: each
+`ohosAppFor*/entry/src/main/cpp/CMakeLists.txt` is aligned with the
+upstream Kuikly project — it uses
+`find_package(render REQUIRED CONFIG)` +
+`add_library(kuikly_render ALIAS render::kuikly)` to consume Kuikly's
+headers and `libkuikly.so`. The same CMakeLists works in both modes:
+whether `oh_modules/@kuikly-open/render/` is populated by the source
+mirror or by an ohpm-installed HAR, ohpm emits a CMake Config at the
+same location and `PACKAGE_FIND_FILE` is injected by hvigor.
+
+**Source-mode workflow** (in-repo Kuikly co-debugging):
+
+```bash
+# In local.properties:
+#   kuikly.useSource=true
+#   kuikly.projectDir=/absolute/path/to/KuiklyUI
+bash scripts/link-kuikly.sh
+# ↑ rsyncs kuikly.projectDir/core-render-ohos into
+#   <A2UI-root>/core-render-ohos (excluding build/ oh_modules/
+#   .hvigor/ .cxx/ etc. generated dirs), symlinks .kuikly-external to
+#   kuikly.projectDir, then rewrites the 5 oh-package.json5 files and
+#   4 build-profile.json5 files to source-mode form. Idempotent —
+#   `rsync -a --delete` resynchronises on every run; the source of
+#   truth stays in kuikly.projectDir/core-render-ohos.
 ```
 
-The ohpm package `@kuikly-open/a2ui-render` is not published by any
-script in this repository (aligned with the upstream Kuikly project).
-To publish it, cd into `a2ui-render-ohos/` and run `ohpm pack` /
-`ohpm publish` manually, after flipping the local `file:` dependency
-to a published semver.
+**Switching back to artifact mode from source mode**:
+
+```bash
+# Flip kuikly.useSource back to false in local.properties (or delete it)
+bash scripts/link-kuikly.sh
+# ↑ removes the .kuikly-external symlink and the core-render-ohos/
+#   mirror directory, and rewrites the 5 oh-package.json5 / 4
+#   build-profile.json5 files back to artifact form.
+```
+
+> Why a local `core-render-ohos/` mirror rather than a symlink? hvigor's
+> `build-profile.json5` validator for `modules[].srcPath` rejects any
+> path whose real target lies outside the workspace — this rules out
+> both an absolute path and a symlink pointing at the external Kuikly
+> checkout. So in source mode we must present hvigor with a real,
+> in-workspace directory. The mirror is `.gitignore`d.
+
+**Publishing the ohpm package `@kuikly-open/a2ui-render`** — this
+repository ships no automated publish script (aligned with the upstream
+Kuikly project). Before publishing, make sure the repository is in
+**artifact mode** (i.e. `@kuikly-open/render` in
+`a2ui-render-ohos/oh-package.json5` is in `"<kuikly.version>"` form
+rather than `"file:../core-render-ohos"`); then run `ohpm pack` /
+`ohpm publish` manually from the `a2ui-render-ohos/` directory.
 
 ## 5. A2UI artefact versioning strategy
 

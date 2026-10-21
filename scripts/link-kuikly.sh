@@ -6,7 +6,19 @@
 # iOS project.yml HEADER_SEARCH_PATHS, CocoaPods `:path =>` in Podfiles)
 # can still locate the external KuiklyUI checkout.
 #
-# What this creates:
+# Dual-mode behaviour (driven by `kuikly.useSource`):
+#
+#   source  mode  → creates `.kuikly-external` symlink and rsync-mirrors
+#                   `core-render-ohos/` into the workspace; then
+#                   `apply-ohos-mode.sh` rewrites the ohos manifests to
+#                   point at the local Kuikly checkout.
+#   artifact mode → skips both filesystem links entirely (nothing on-disk
+#                   needs to point at Kuikly — Gradle/CocoaPods/ohpm all
+#                   resolve from registries). Only
+#                   `apply-ohos-mode.sh` runs, to make sure the ohos
+#                   manifests carry the version-pinned deps.
+#
+# What `source` mode creates:
 #
 #   <A2UI-root>/.kuikly-external              → symlink to KUIKLY_PROJECT_DIR
 #   <A2UI-root>/core-render-ohos/             → rsync mirror of
@@ -15,8 +27,7 @@
 #   The `.kuikly-external` symlink is used by:
 #     • iOS Podfiles (`pod 'OpenKuiklyIOSRender', :path => '../.kuikly-external'`)
 #     • ohos entry `oh-package.json5`
-#         ("@kuikly-open/render": "file:../../.kuikly-external/core-render-ohos")
-#     • ohos native cpp CMakeLists include paths.
+#         ("@kuikly-open/render": "file:../../core-render-ohos")
 #
 #   The `core-render-ohos/` real directory is required by HarmonyOS
 #   DevEco Studio / hvigor. hvigor's `build-profile.json5`
@@ -43,62 +54,82 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./lib/kuikly-path.sh
-source "$SCRIPT_DIR/lib/kuikly-path.sh"
-
-LINK_PATH="$A2UI_ROOT/.kuikly-external"
-OHOS_RENDER_MIRROR="$A2UI_ROOT/core-render-ohos"
-OHOS_RENDER_SOURCE="$KUIKLY_PROJECT_DIR/core-render-ohos"
+# shellcheck source=./lib/kuikly-mode.sh
+source "$SCRIPT_DIR/lib/kuikly-mode.sh"
 
 echo "=== A2UI ↔ KuiklyUI link setup ==="
-echo "  A2UI root                     : $A2UI_ROOT"
-echo "  Kuikly checkout               : $KUIKLY_PROJECT_DIR"
-echo "  Symlink (whole checkout)      : $LINK_PATH"
-echo "  Mirror  (core-render-ohos)    : $OHOS_RENDER_MIRROR"
 
-# Remove any pre-existing entry (symlink OR mistakenly-created dir/file).
-if [ -L "$LINK_PATH" ] || [ -e "$LINK_PATH" ]; then
-    rm -rf "$LINK_PATH"
-fi
-ln -s "$KUIKLY_PROJECT_DIR" "$LINK_PATH"
-echo "  ✅ Symlink created: .kuikly-external"
+if kuikly_use_source; then
+    echo "  Mode                          : source  (kuikly.useSource=true)"
+    # Only in source mode do we need to resolve `kuikly.projectDir` and
+    # materialise the symlink + rsync mirror.
+    # shellcheck source=./lib/kuikly-path.sh
+    source "$SCRIPT_DIR/lib/kuikly-path.sh"
 
-# ── core-render-ohos: rsync a read-only mirror into the workspace ──────
-# hvigor's build-profile.json5 modules[].srcPath validator rejects paths
-# whose real target lies outside the workspace (an absolute path and a
-# symlink to the external Kuikly checkout are both rejected as
-# "Path not found"). We therefore materialise a real, in-workspace copy.
-# The mirror stays writable because hvigor writes generated files back
-# into it during the build (BuildProfile.ets, .hvigor/, .cxx/, build/,
-# oh_modules/). It is git-ignored and re-rsynced on every run of this
-# script, so any accidental local edits are transient.
-if [ ! -d "$OHOS_RENDER_SOURCE" ]; then
-    echo "  ⚠️  Skip core-render-ohos mirror: source does not exist:"
-    echo "     $OHOS_RENDER_SOURCE"
-elif [ -L "$OHOS_RENDER_MIRROR" ]; then
-    # Legacy symlink from an earlier iteration — remove it before rsync.
-    rm -f "$OHOS_RENDER_MIRROR"
+    LINK_PATH="$A2UI_ROOT/.kuikly-external"
+    OHOS_RENDER_MIRROR="$A2UI_ROOT/core-render-ohos"
+    OHOS_RENDER_SOURCE="$KUIKLY_PROJECT_DIR/core-render-ohos"
+
+    echo "  A2UI root                     : $A2UI_ROOT"
+    echo "  Kuikly checkout               : $KUIKLY_PROJECT_DIR"
+    echo "  Symlink (whole checkout)      : $LINK_PATH"
+    echo "  Mirror  (core-render-ohos)    : $OHOS_RENDER_MIRROR"
+
+    # Remove any pre-existing entry (symlink OR mistakenly-created dir/file).
+    if [ -L "$LINK_PATH" ] || [ -e "$LINK_PATH" ]; then
+        rm -rf "$LINK_PATH"
+    fi
+    ln -s "$KUIKLY_PROJECT_DIR" "$LINK_PATH"
+    echo "  ✅ Symlink created: .kuikly-external"
+
+    # ── core-render-ohos: rsync a read-only mirror into the workspace ──
+    # hvigor's build-profile.json5 modules[].srcPath validator rejects
+    # paths whose real target lies outside the workspace, so we need a
+    # real, in-workspace copy.
+    if [ ! -d "$OHOS_RENDER_SOURCE" ]; then
+        echo "  ⚠️  Skip core-render-ohos mirror: source does not exist:"
+        echo "     $OHOS_RENDER_SOURCE"
+    elif [ -L "$OHOS_RENDER_MIRROR" ]; then
+        # Legacy symlink from an earlier iteration — remove it before rsync.
+        rm -f "$OHOS_RENDER_MIRROR"
+    fi
+
+    if [ -d "$OHOS_RENDER_SOURCE" ]; then
+        mkdir -p "$OHOS_RENDER_MIRROR"
+        rsync -a --delete \
+            --exclude='build/' \
+            --exclude='oh_modules/' \
+            --exclude='.hvigor/' \
+            --exclude='.cxx/' \
+            --exclude='.idea/' \
+            --exclude='.DS_Store' \
+            --exclude='oh-package-lock.json5' \
+            "$OHOS_RENDER_SOURCE"/ "$OHOS_RENDER_MIRROR"/
+        echo "  ✅ Mirror synced: core-render-ohos"
+        echo "     ↳ Edit the original under \$KUIKLY_PROJECT_DIR and re-run"
+        echo "       scripts/link-kuikly.sh to refresh."
+    fi
+else
+    echo "  Mode                          : artifact (kuikly.useSource=false)"
+    # Artifact mode: tear down any lingering source-mode scaffolding so
+    # DevEco / Gradle / CocoaPods don't accidentally pick up stale local
+    # Kuikly sources after a mode switch.
+    A2UI_ROOT="${A2UI_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+    LINK_PATH="$A2UI_ROOT/.kuikly-external"
+    OHOS_RENDER_MIRROR="$A2UI_ROOT/core-render-ohos"
+    if [ -L "$LINK_PATH" ] || [ -e "$LINK_PATH" ]; then
+        rm -rf "$LINK_PATH"
+        echo "  ✅ Removed stale symlink: .kuikly-external"
+    fi
+    if [ -d "$OHOS_RENDER_MIRROR" ] && [ ! -L "$OHOS_RENDER_MIRROR" ]; then
+        rm -rf "$OHOS_RENDER_MIRROR"
+        echo "  ✅ Removed stale mirror: core-render-ohos/"
+    fi
 fi
 
-if [ -d "$OHOS_RENDER_SOURCE" ]; then
-    mkdir -p "$OHOS_RENDER_MIRROR"
-    # Exclude generated / IDE artefacts to keep the mirror tiny. Build
-    # outputs that hvigor / CMake will regenerate inside the mirror are
-    # intentionally NOT --delete-d (they live under excluded dirs already),
-    # so successive runs stay incremental.
-    rsync -a --delete \
-        --exclude='build/' \
-        --exclude='oh_modules/' \
-        --exclude='.hvigor/' \
-        --exclude='.cxx/' \
-        --exclude='.idea/' \
-        --exclude='.DS_Store' \
-        --exclude='oh-package-lock.json5' \
-        "$OHOS_RENDER_SOURCE"/ "$OHOS_RENDER_MIRROR"/
-    echo "  ✅ Mirror synced: core-render-ohos"
-    echo "     ↳ Edit the original under \$KUIKLY_PROJECT_DIR and re-run"
-    echo "       scripts/link-kuikly.sh to refresh."
-fi
+# Always rewrite ohos oh-package.json5 / build-profile.json5 to match the
+# current mode. Idempotent — safe to run repeatedly.
+bash "$SCRIPT_DIR/apply-ohos-mode.sh"
 
 echo ""
 echo "You can now run pod install / DevEco Studio without extra config."

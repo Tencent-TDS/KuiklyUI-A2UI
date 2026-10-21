@@ -7,6 +7,11 @@
   "license": "KuiklyUI License",
   "dependencies": {
     "@kuikly-open/a2ui-render": "file:../../a2ui-render-ohos",
-    "@kuikly-open/render": "file:../../core-render-ohos"
+    // Default: consume the published @kuikly-open/render HAR from the
+    // ohpm registry (artifact mode). When `kuikly.useSource=true`,
+    // `scripts/apply-ohos-mode.sh` (invoked by `scripts/link-kuikly.sh`)
+    // rewrites this to `"file:../../core-render-ohos"` so DevEco picks
+    // up the local Kuikly checkout mirror.
+    "@kuikly-open/render": "2.29.2"
   }
 }

@@ -10,14 +10,30 @@
   `:core-ksp`、`core-render-ohos`、`core-render-ios`、
   `OpenKuiklyIOSRender`。用于与 KuiklyUI 一起源码联调。
 
-> 作用范围：`kuikly.useSource` 开关影响 Kotlin 2.1.21 的
-> Android / KMP 构建（`settings.gradle.kts` /
-> `settings.2.1.21.gradle.kts`），以及 iOS CocoaPods 层对
-> `OpenKuiklyIOSRender` 的消费方式（源码模式用 `:path => <kuikly.projectDir>`，
-> 产物模式用 CocoaPods trunk 的 `'<kuikly.version>'`）。HarmonyOS 变体
-> （`settings.2.0.ohos.gradle.kts`）当前仍强制源码模式。A2UI 自身的
-> iOS Pod（`pod 'a2ui'` / `pod 'a2ui_demo'` / `pod 'OpenA2UIIOSRender'`）
-> 在仓库内 `iosAppFor*` 示例中始终以 `:path =>` 接入，详见 §4 iOS 段。
+> 作用范围：`kuikly.useSource` 开关同时影响三端的 Kuikly 依赖消费
+> 方式：
+>
+> - **Android / KMP**（Kotlin 2.1.21，`settings.gradle.kts` /
+>   `settings.2.1.21.gradle.kts`）—— 产物模式用
+>   `com.tencent.kuikly-open:*` Maven 坐标；源码模式用
+>   `includeBuild(<kuikly.projectDir>)`。
+> - **iOS CocoaPods** —— 产物模式用 CocoaPods trunk 的
+>   `'<kuikly.version>'`；源码模式用
+>   `:path => <kuikly.projectDir>`。
+> - **HarmonyOS**（`settings.2.0.ohos.gradle.kts` + 各
+>   `ohosAppFor*/entry/oh-package.json5` + `a2ui-render-ohos/oh-package.json5`
+>   + `ohosAppFor*/build-profile.json5`）—— 产物模式从 ohpm registry
+>   消费 `"@kuikly-open/render": "<kuikly.version>"`；源码模式由
+>   [`scripts/apply-ohos-mode.sh`](scripts/apply-ohos-mode.sh) 自动把
+>   `oh-package.json5` 改写为 `"file:../..?/core-render-ohos"` 并在
+>   `build-profile.json5` 的 `modules` 数组中补回 `{"name":"render",
+>   "srcPath":"../core-render-ohos"}` 块，由
+>   [`scripts/link-kuikly.sh`](scripts/link-kuikly.sh) 统一驱动（详见
+>   §4 HarmonyOS 段）。
+>
+> A2UI 自身的 iOS Pod（`pod 'a2ui'` / `pod 'a2ui_demo'` /
+> `pod 'OpenA2UIIOSRender'`）在仓库内 `iosAppFor*` 示例中始终以
+> `:path =>` 接入，详见 §4 iOS 段。
 
 ## 1. 选择依赖模式：`kuikly.useSource`
 
@@ -136,16 +152,64 @@ pod 虽然在仓库内被 `iosAppForKuiklyPage` / `iosAppForBothPages` 以
 下游集成方会自行实现对应 KMP 模块并通过 `:path` 方式接入，因此该
 pod 有意不发布到 trunk。
 
-**HarmonyOS** — 在 `a2ui-render-ohos/oh-package.json5` 中：
+**HarmonyOS** — OHOS 侧**两种模式都支持**，由同一个 `kuikly.useSource`
+开关驱动，与 Android / iOS 完全对齐。切换由
+[`scripts/link-kuikly.sh`](scripts/link-kuikly.sh)（内部调用
+[`scripts/apply-ohos-mode.sh`](scripts/apply-ohos-mode.sh)）统一驱动：
 
-```json5
-"@kuikly-open/render": "file:../.kuikly-external/core-render-ohos"
+| 模式 | `a2ui-render-ohos/oh-package.json5` 中 `@kuikly-open/render` 的声明 | `ohosAppFor*/entry/oh-package.json5` 中 `@kuikly-open/render` 的声明 | `ohosAppFor*/build-profile.json5` 的 `modules` 数组 | 本地文件系统 |
+|---|---|---|---|---|
+| 产物模式（默认，`kuikly.useSource=false`） | `"@kuikly-open/render": "2.29.2"`（从 ohpm registry 拉已发布版本） | 同左（版本一致） | 仅 `entry` + `a2ui_render`，无 `render` 模块块 | 无 `.kuikly-external`，无 `core-render-ohos/` |
+| 源码模式（`kuikly.useSource=true`） | `"@kuikly-open/render": "file:../core-render-ohos"` | `"@kuikly-open/render": "file:../../core-render-ohos"` | 额外包含 `{"name":"render", "srcPath":"../core-render-ohos", …}` 模块块 | `.kuikly-external` 软链指向 `kuikly.projectDir`；`core-render-ohos/` 是 `kuikly.projectDir/core-render-ohos` 的 rsync 本地镜像（git-ignored） |
+
+> 版本号解析顺序与 Gradle / CocoaPods 侧 `kuikly.version` 完全一致
+> （env / `local.properties` / `gradle.properties` / 默认 `2.29.2`，
+> 任何 `-SNAPSHOT` 后缀会被剥去——ohpm registry 和 CocoaPods trunk 一样
+> 只收录正式发布版）。
+
+**C/C++ 侧统一入口**：`ohosAppFor*/entry/src/main/cpp/CMakeLists.txt`
+对齐 Kuikly 工程写法，用
+`find_package(render REQUIRED CONFIG)` + `add_library(kuikly_render
+ALIAS render::kuikly)` 消费 Kuikly 的头文件与 `libkuikly.so`。两种模式
+共用同一份 CMakeLists——无论是源码镜像还是 ohpm 产物，装到
+`oh_modules/@kuikly-open/render/` 之后 ohpm 生成的 CMake Config 导出
+路径一致，`PACKAGE_FIND_FILE` 由 hvigor 注入。
+
+**源码模式工作流**（本仓库内 Kuikly 联调）：
+
+```bash
+# local.properties 中设置：
+#   kuikly.useSource=true
+#   kuikly.projectDir=/absolute/path/to/KuiklyUI
+bash scripts/link-kuikly.sh
+# ↑ 会把 kuikly.projectDir/core-render-ohos 整个 rsync 到
+#   <A2UI-root>/core-render-ohos（排除 build/ oh_modules/ .hvigor/
+#   .cxx/ 等生成目录），同时把 .kuikly-external 软链指向
+#   kuikly.projectDir，然后把 5 份 oh-package.json5 与 4 份
+#   build-profile.json5 改回源码版。镜像幂等，`rsync -a --delete`
+#   每次重新同步；真实源头仍是 kuikly.projectDir/core-render-ohos。
 ```
 
-本仓库当前没有自动发布 ohpm 包 `@kuikly-open/a2ui-render` 的脚本
-（与 Kuikly 工程保持一致）。如需发布请先把本地 `file:` 依赖改回已
-发布的 semver，然后在 `a2ui-render-ohos/` 目录手工执行 `ohpm pack` /
-`ohpm publish`。
+**从源码模式切回产物模式**：
+
+```bash
+# 把 local.properties 中的 kuikly.useSource 改回 false（或删除此行）
+bash scripts/link-kuikly.sh
+# ↑ 会自动清理 .kuikly-external 软链与 core-render-ohos/ 镜像目录，
+#   并把 5 份 oh-package.json5 / 4 份 build-profile.json5 改回产物版。
+```
+
+> 为什么需要 `core-render-ohos/` 本地镜像而不是软链？hvigor 的
+> `build-profile.json5` 的 `modules[].srcPath` 校验器会拒绝任何
+> 真实目标在 workspace 之外的路径（无论绝对路径还是软链）——因此
+> 源码模式下必须以"真实在 workspace 内的目录"方式提供给 hvigor。镜像
+> 已在 `.gitignore` 中过滤。
+
+**ohpm 包 `@kuikly-open/a2ui-render` 的发布** — 本仓库当前没有自动发布
+脚本（与 Kuikly 工程保持一致）。发布前请确保仓库处于**产物模式**
+（即 `a2ui-render-ohos/oh-package.json5` 中 `@kuikly-open/render` 是
+`"<kuikly.version>"` 形式，而不是 `"file:../core-render-ohos"`），然后
+在 `a2ui-render-ohos/` 目录执行 `ohpm pack` / `ohpm publish`。
 
 ## 5. A2UI 产物版本策略
 

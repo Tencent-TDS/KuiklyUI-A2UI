@@ -47,18 +47,6 @@
           ]
         }
       ]
-    },
-    {
-      "name": "render",
-      "srcPath": "../core-render-ohos",
-      "targets": [
-        {
-          "name": "default",
-          "applyToProducts": [
-            "default"
-          ]
-        }
-      ]
     }
   ]
 }

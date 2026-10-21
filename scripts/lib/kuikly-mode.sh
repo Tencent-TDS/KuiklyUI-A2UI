@@ -51,3 +51,30 @@ kuikly_use_source() {
     raw="$(echo "$raw" | tr '[:upper:]' '[:lower:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     [ "$raw" = "true" ]
 }
+
+# ─────────────────────────────────────────────────────────────────────────
+# Resolve `kuikly.version` and echo it on stdout (plain SemVer; any
+# `-SNAPSHOT` tail is stripped, since the ohpm registry — like CocoaPods
+# trunk — only carries released versions). Default: 2.29.2.
+#
+# Mirrors:
+#   - `KuiklyDep.kuiklyVersion` in buildSrc/.../KuiklyDep.kt
+#   - `A2UI::KuiklyCocoapods.version` in scripts/lib/kuikly_cocoapods.rb
+#
+# Resolution order (first non-blank wins):
+#   1. KUIKLY_VERSION env
+#   2. <A2UI-root>/local.properties
+#   3. <A2UI-root>/gradle.properties
+#   4. Default: 2.29.2
+# ─────────────────────────────────────────────────────────────────────────
+kuikly_version() {
+    local raw="${KUIKLY_VERSION:-}"
+    if [ -z "$raw" ]; then
+        raw="$(_km_read_prop "$A2UI_ROOT/local.properties" kuikly.version || true)"
+    fi
+    if [ -z "$raw" ]; then
+        raw="$(_km_read_prop "$A2UI_ROOT/gradle.properties" kuikly.version || true)"
+    fi
+    [ -z "$raw" ] && raw="2.29.2"
+    echo "${raw%-SNAPSHOT}"
+}
