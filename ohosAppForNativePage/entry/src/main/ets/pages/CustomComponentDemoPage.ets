@@ -14,7 +14,7 @@
  */
 
 import { router, ComponentContent } from '@kit.ArkUI';
-import { registerA2UICustomRenderView, unregisterA2UICustomRenderView, A2UICustomViewSize } from '@kuikly-open/a2ui-render';
+import { registerA2UICustomRenderView, unregisterA2UICustomRenderView, A2UICustomViewSize } from '@kuikly-a2ui-open/a2ui-render';
 import { KuiklyRenderBaseView, KuiklyRenderCallback, KRValue } from '@kuikly-open/render';
 import { UIContext } from '@ohos.arkui.UIContext';
 import { webview } from '@kit.ArkWeb';

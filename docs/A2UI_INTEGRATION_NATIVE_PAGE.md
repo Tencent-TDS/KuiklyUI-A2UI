@@ -39,9 +39,9 @@ val a2uiVersion = "1.0.0-2.1.21"
 
 dependencies {
     // A2UI 核心（KMP）
-    implementation("com.tencent.kuikly:a2ui:${a2uiVersion}")
+    implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
     // A2UI Android 渲染层（提供 A2UISurfaceView）
-    implementation("com.tencent.kuikly:a2ui-render-android:${a2uiVersion}")
+    implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
     // Kuikly 渲染层
     implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
     // 图片加载（推荐 Glide）
@@ -174,7 +174,7 @@ target 'MyApp' do
   pod 'OpenKuiklyIOSRender', :path => '<path-to-repo-root>'
 
   # A2UI iOS 渲染层（尚未发布到 Trunk，暂时本地路径）
-  pod 'OpenA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
 
   # A2UI 核心（KMP）——由 Kotlin cocoapods 插件自动生成 podspec，
   # 每次 Xcode Build 会触发 Gradle 编译 A2UICore.framework
@@ -194,7 +194,7 @@ Native 页宿主使用 `pod 'a2ui'`，运行时 Kotlin/Native framework 就是 `
 
 ```swift
 import UIKit
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -216,13 +216,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 ```
 
-> **说明**：`import OpenA2UIIOSRender` 即可，不要 `import A2UICore`。渲染 pod 会用 `NSClassFromString` 在运行时按 `frameworkName` 解析 `A2UICoreEntry`，避免将 KMP 类型泄漏到业务代码。
+> **说明**：`import OpenKuiklyA2UIIOSRender` 即可，不要 `import A2UICore`。渲染 pod 会用 `NSClassFromString` 在运行时按 `frameworkName` 解析 `A2UICoreEntry`，避免将 KMP 类型泄漏到业务代码。
 
 ### 3. UIViewController 使用 `A2UISurfaceView`
 
 ```swift
 import UIKit
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 class MyViewController: UIViewController {
 
@@ -300,7 +300,7 @@ A2UISurfaceView.registerCustomFunction(
 {
   "dependencies": {
     "@kuikly-open/render": "2.0.0",
-    "@kuikly-open/a2ui-render": "file:../../a2ui-render-ohos"
+    "@kuikly-a2ui-open/a2ui-render": "file:../../a2ui-render-ohos"
   }
 }
 ```
@@ -365,7 +365,7 @@ static napi_value InitKuikly(napi_env env, napi_callback_info info) {
 
 ```typescript
 import { A2UISurfaceView, A2UISurfaceViewController, A2UISurfaceViewListener }
-  from '@kuikly-open/a2ui-render';
+  from '@kuikly-a2ui-open/a2ui-render';
 
 @Entry
 @Component
@@ -419,7 +419,7 @@ A2UISurface({
 import {
   registerA2UICustomRenderView,
   registerA2UICustomFunction
-} from '@kuikly-open/a2ui-render';
+} from '@kuikly-a2ui-open/a2ui-render';
 
 registerA2UICustomRenderView('A2UIWeb', () => new A2UIWebRenderView());
 

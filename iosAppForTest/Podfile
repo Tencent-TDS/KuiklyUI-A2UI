@@ -16,7 +16,7 @@ target 'A2UIDemoApp' do
   else
     pod 'OpenKuiklyIOSRender', **kuikly_pod_options
   end
-  pod 'OpenA2UIIOSRender', :path => '../a2ui-render-ios/'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '../a2ui-render-ios/'
 end
 
 post_install do |installer|

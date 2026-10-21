@@ -14,7 +14,7 @@
  */
 
 import UIKit
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 /// Custom Function Demo View Controller — **KuiklyPage variant**.
 ///

@@ -14,7 +14,7 @@
  */
 
 import UIKit
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 /// Official Example View Controller.
 /// Displays all 36 A2UI v0.9 official example cards from the specification.

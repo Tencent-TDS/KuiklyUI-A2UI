@@ -32,7 +32,7 @@
 >   §4 HarmonyOS 段）。
 >
 > A2UI 自身的 iOS Pod（`pod 'a2ui'` / `pod 'a2ui_demo'` /
-> `pod 'OpenA2UIIOSRender'`）在仓库内 `iosAppFor*` 示例中始终以
+> `pod 'OpenKuiklyA2UIIOSRender'`）在仓库内 `iosAppFor*` 示例中始终以
 > `:path =>` 接入，详见 §4 iOS 段。
 
 ## 1. 选择依赖模式：`kuikly.useSource`
@@ -113,7 +113,7 @@ Podfile、iOS setup 脚本、HarmonyOS DevEco Studio（通过
 > 自家 iosMain 持有 5 个 `@ObjCName` 薄壳），不直接依赖 `a2ui_demo`。
 
 **在仓库内（本地开发期）** — 不论源码还是产物模式，`iosAppFor*/Podfile`
-中 **A2UI 侧** Pod（`a2ui`、`a2ui_demo`、`OpenA2UIIOSRender`）**始终**以
+中 **A2UI 侧** Pod（`a2ui`、`a2ui_demo`、`OpenKuiklyA2UIIOSRender`）**始终**以
 `:path => '../a2ui'` / `:path => '../demo'` / `:path => '../a2ui-render-ios'`
 方式接入，这是本仓库 Podfile 的既定约定——A2UI 自身的 Kotlin
 `.framework` 必须随 Xcode 构建触发 Gradle `syncFramework` 实时生成，
@@ -139,9 +139,9 @@ SemVer 段，有 `-SNAPSHOT` 后缀会被剥去。
 
 ```ruby
 pod 'a2ui', '~> 1.0.0'
-pod 'OpenA2UIIOSRender', '~> 1.0.0'
-# OpenKuiklyIOSRender 通过 OpenA2UIIOSRender 的 spec.dependency 自动引入
-# （版本号已在 OpenA2UIIOSRender.podspec 中锚定为 Kuikly 2.29.2）
+pod 'OpenKuiklyA2UIIOSRender', '~> 1.0.0'
+# OpenKuiklyIOSRender 通过 OpenKuiklyA2UIIOSRender 的 spec.dependency 自动引入
+# （版本号已在 OpenKuiklyA2UIIOSRender.podspec 中锚定为 Kuikly 2.29.2）
 ```
 
 本仓库没有自动发布 iOS Pod 的脚本（与 Kuikly 工程保持一致），如需
@@ -205,7 +205,7 @@ bash scripts/link-kuikly.sh
 > 源码模式下必须以"真实在 workspace 内的目录"方式提供给 hvigor。镜像
 > 已在 `.gitignore` 中过滤。
 
-**ohpm 包 `@kuikly-open/a2ui-render` 的发布** — 本仓库当前没有自动发布
+**ohpm 包 `@kuikly-a2ui-open/a2ui-render` 的发布** — 本仓库当前没有自动发布
 脚本（与 Kuikly 工程保持一致）。发布前请确保仓库处于**产物模式**
 （即 `a2ui-render-ohos/oh-package.json5` 中 `@kuikly-open/render` 是
 `"<kuikly.version>"` 形式，而不是 `"file:../core-render-ohos"`），然后
@@ -218,8 +218,8 @@ bash scripts/link-kuikly.sh
 | 产物 | 方案 | 示例 | 来源 |
 |---|---|---|---|
 | Maven 上的 Android AAR / KMP klib（`com.tencent.kuikly-open:a2ui`、`a2ui-render-android`） | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `1.0.0-2.1.21`、`1.0.0-2.0.21-ohos` | `A2uiVersion.getArtifactVersion(project)` |
-| iOS pods（`a2ui`、`OpenA2UIIOSRender`） | `${semantic}`（纯 SemVer，CocoaPods 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
-| HarmonyOS ohpm（`@kuikly-open/a2ui-render`） | `${semantic}`（纯 SemVer，OHPM 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| iOS pods（`a2ui`、`OpenKuiklyA2UIIOSRender`） | `${semantic}`（纯 SemVer，CocoaPods 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| HarmonyOS ohpm（`@kuikly-a2ui-open/a2ui-render`） | `${semantic}`（纯 SemVer，OHPM 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
 | README / 展示用途 | `${semantic}` | `1.0.0` | `A2uiVersion.getSemantic()` |
 
 Maven 坐标中的 Kotlin 后缀遵循 Kuikly Core 约定

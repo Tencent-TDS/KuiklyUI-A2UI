@@ -48,7 +48,22 @@ object BuildPlugin {
 }
 
 object MavenConfig {
+    /**
+     * Kuikly's Maven group — used to reference upstream Kuikly artifacts
+     * (e.g. `:core`, `:compose`, `:core-render-android`). Do NOT reuse this
+     * for A2UI's own publications: A2UI publishes under its own group
+     * ([A2UI_GROUP]) so that A2UI releases and Kuikly releases can rev
+     * independently.
+     */
     const val GROUP = "com.tencent.kuikly-open"
+
+    /**
+     * A2UI's own Maven group — used by **this repository's** publications
+     * (`:a2ui`, `:a2ui-render-android`, `:demo` artifacts). Kept separate
+     * from Kuikly's [GROUP] so the two release trains don't collide.
+     */
+    const val A2UI_GROUP = "com.tencent.kuikly-a2ui-open"
+
     const val GROUP_WEB = "com.tencent.kuikly-open.core-render-web"
     const val REPO_URL = ""
     const val SNAPSHOT_REPO_URL = "https://central.sonatype.com/repository/maven-snapshots/"

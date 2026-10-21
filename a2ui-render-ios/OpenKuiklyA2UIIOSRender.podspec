@@ -1,5 +1,5 @@
 Pod::Spec.new do |spec|
-  spec.name             = "OpenA2UIIOSRender"
+  spec.name             = "OpenKuiklyA2UIIOSRender"
   # KuiklyUI-A2UI standalone project — version resolution order
   # (mirrors A2uiVersion.getSemantic() in buildSrc/):
   #   1. env `A2UI_VERSION`
@@ -11,7 +11,7 @@ Pod::Spec.new do |spec|
   #
   # NOTE: this repository does not ship an automated iOS pod publish
   # script (aligned with the upstream Kuikly project). To publish, run
-  # `pod trunk push OpenA2UIIOSRender.podspec --allow-warnings` manually
+  # `pod trunk push OpenKuiklyA2UIIOSRender.podspec --allow-warnings` manually
   # from this directory (optionally with `A2UI_VERSION=x.y.z` prefixed).
   # The default value above should be kept in sync with
   # `DEFAULT_A2UI_SEMANTIC` in buildSrc/src/main/java/A2uiVersion.kt.

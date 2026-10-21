@@ -25,7 +25,7 @@ import {
   registerA2UICustomRenderView,
   unregisterA2UICustomRenderView,
   A2UICustomViewSize
-} from '@kuikly-open/a2ui-render';
+} from '@kuikly-a2ui-open/a2ui-render';
 
 /**
  * KuiklyPageCustomComponentDemoPage — custom render-view demo list page.

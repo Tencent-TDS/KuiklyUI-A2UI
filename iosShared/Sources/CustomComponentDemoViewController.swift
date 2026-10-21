@@ -14,7 +14,7 @@
  */
 
 import UIKit
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 import WebKit
 
 /// Custom Component Demo View Controller.

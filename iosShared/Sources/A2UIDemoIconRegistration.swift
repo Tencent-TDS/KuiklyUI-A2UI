@@ -14,7 +14,7 @@
  */
 
 import Foundation
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 /// Shared A2UI Icon registration used by every iosAppFor* target.
 ///

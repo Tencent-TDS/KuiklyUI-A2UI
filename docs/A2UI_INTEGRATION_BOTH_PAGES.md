@@ -28,7 +28,7 @@
 |--------|---------|-----|-----------|
 | A2UI 核心 KMP | 一份 `:a2ui` 依赖 | 一个 K/N framework（`a2ui_demo`） | 一份 `libshared.so` |
 | Kuikly 渲染层 | `core-render-android` | `OpenKuiklyIOSRender` | `@kuikly-open/render` |
-| A2UI 渲染层 | `a2ui-render-android` | `OpenA2UIIOSRender` | `@kuikly-open/a2ui-render` |
+| A2UI 渲染层 | `a2ui-render-android` | `OpenKuiklyA2UIIOSRender` | `@kuikly-a2ui-open/a2ui-render` |
 | 业务 KMP 模块 | 必须（用于 Kuikly 页承载） | 必须（用于 Kuikly 页承载） | 必须（用于 Kuikly 页承载） |
 | 全局初始化 | Application 里做 A + K 两侧初始化 | AppDelegate 一次设置 frameworkName | Ability 里做 A + K 两侧初始化 |
 
@@ -49,8 +49,8 @@ Kuikly 页宿主要求业务 KMP 模块（用于承载 `@Page` Pager）：
 // 宿主 App 模块：
 dependencies {
     implementation(project(":mybiz"))                                     // 业务 KMP
-    implementation("com.tencent.kuikly:a2ui:${a2uiVersion}")              // A2UI 核心
-    implementation("com.tencent.kuikly:a2ui-render-android:${a2uiVersion}")
+    implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")              // A2UI 核心
+    implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
     implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
     implementation("com.github.bumptech.glide:glide:4.16.0")
 }
@@ -108,7 +108,7 @@ target 'MyApp' do
   pod 'a2ui_demo', :path => '<path-to-biz-kmp-module>'
 
   pod 'OpenKuiklyIOSRender', :path => '<path-to-repo-root>'
-  pod 'OpenA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
 end
 ```
 
@@ -119,7 +119,7 @@ end
 Both 模式下**必须**显式指定 `frameworkName` 为业务 KMP framework（例如 `A2UIDemo`）——因为渲染 pod 会用它反射解析 `A2UICoreEntry`：
 
 ```swift
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -175,7 +175,7 @@ override func viewDidLoad() {
 {
   "dependencies": {
     "@kuikly-open/render": "2.0.0",
-    "@kuikly-open/a2ui-render": "file:../../a2ui-render-ohos"
+    "@kuikly-a2ui-open/a2ui-render": "file:../../a2ui-render-ohos"
   }
 }
 ```

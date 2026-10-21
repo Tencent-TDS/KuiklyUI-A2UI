@@ -14,7 +14,7 @@
  */
 
 import UIKit
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 /// Component Test View Controller.
     /// Renders all test-case JSON files under `Resources/a2ui_components/<componentDir>/`

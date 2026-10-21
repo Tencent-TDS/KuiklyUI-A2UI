@@ -285,7 +285,7 @@ ohosAppForNativePage/entry/src/main/resources/resfile/a2ui_icons/
 
 ```typescript
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
-import { registerA2UIIcons, A2UI_ICON_FALLBACK_KEY } from '@kuikly-open/a2ui-render';
+import { registerA2UIIcons, A2UI_ICON_FALLBACK_KEY } from '@kuikly-a2ui-open/a2ui-render';
 
 export default class MyAbility extends UIAbility {
 
@@ -310,7 +310,7 @@ export default class MyAbility extends UIAbility {
 #### API
 
 ```typescript
-// 从 @kuikly-open/a2ui-render 导出
+// 从 @kuikly-a2ui-open/a2ui-render 导出
 function registerA2UIIcons(icons: Map<string, string>): void
 function registerA2UIIcon(name: string, uri: string): void
 function unregisterA2UIIcon(name: string): void

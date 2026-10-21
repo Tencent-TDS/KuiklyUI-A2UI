@@ -22,10 +22,9 @@ target 'A2UIDemoApp' do
   # every Kotlin symbol from `:a2ui` (via `implementation(project(":a2ui"))`
   # in demo/build.2.1.21.gradle.kts), so linking both pods would produce two
   # Kotlin/Native static frameworks with duplicate stdlib-cache symbols. The
-  # render pod (`OpenA2UIIOSRender`) resolves `A2UICoreEntry` at runtime via
+  # The render pod (`OpenKuiklyA2UIIOSRender`) resolves `A2UICoreEntry` at runtime via
   # `NSClassFromString`, so it works fine against either framework alone.
   pod 'a2ui_demo', :path => '../demo'
-
   # Kuikly iOS Render (core-render-ios).
   # Dual-mode via `kuikly.useSource`: either local `:path` (source
   # debugging alongside KuiklyUI) or published CocoaPods trunk version.
@@ -36,7 +35,7 @@ target 'A2UIDemoApp' do
   end
 
   # A2UI iOS Render - local podspec
-  pod 'OpenA2UIIOSRender', :path => '../a2ui-render-ios/'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '../a2ui-render-ios/'
 end
 
 post_install do |installer|

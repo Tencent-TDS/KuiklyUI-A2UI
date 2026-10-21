@@ -64,7 +64,7 @@ class A2UICoreEntry {
      * actual delegate is a Swift/ObjC object rather than a Kotlin
      * implementer. Keep the interface nested and unannotated.
      *
-     * The render pod (`OpenA2UIIOSRender`) attaches a runtime-allocated
+     * The render pod (`OpenKuiklyA2UIIOSRender`) attaches a runtime-allocated
      * ObjC protocol named `A2UICoreEntryDelegate` to its Swift
      * `A2UISurfaceView` class (via `class_addProtocol`) so K/N's ObjC
      * conformance check succeeds and dispatch drops down to
@@ -175,7 +175,7 @@ class A2UICoreEntry {
  * ObjC-facing bridge over the commonMain [A2UICustomViewRegistry] singleton.
  *
  * Purpose: expose the KMP-side custom-view registry to iOS native code
- * (specifically the render pod, `OpenA2UIIOSRender`) **without** forcing
+ * (specifically the render pod, `OpenKuiklyA2UIIOSRender`) **without** forcing
  * that pod to `import A2UICore` at compile time. The render pod resolves
  * this class at runtime via `NSClassFromString("A2UICustomViewRegistryBridge")`,
  * so it can work equally well whether the app links `A2UICore.framework`
@@ -222,7 +222,7 @@ class A2UICustomViewRegistryBridge private constructor() {
  * ObjC-facing bridge over the commonMain [A2UIIconRegistry] singleton.
  *
  * Purpose: expose the KMP-side icon registry to iOS native code
- * (specifically the render pod, `OpenA2UIIOSRender`) **without** forcing
+ * (specifically the render pod, `OpenKuiklyA2UIIOSRender`) **without** forcing
  * that pod to `import A2UICore` at compile time. The render pod resolves
  * this class at runtime via `NSClassFromString("A2UIIconRegistryBridge")`,
  * so it can work equally well whether the app links `A2UICore.framework`
@@ -271,7 +271,7 @@ class A2UIIconRegistryBridge private constructor() {
  * ObjC-facing bridge over the commonMain [A2UICustomFunctionRegistry] singleton.
  *
  * Purpose: expose the KMP-side custom-function metadata registry to iOS
- * native code (specifically the render pod, `OpenA2UIIOSRender`) **without**
+ * native code (specifically the render pod, `OpenKuiklyA2UIIOSRender`) **without**
  * forcing that pod to `import A2UICore` at compile time. The render pod
  * resolves this class at runtime via
  * `NSClassFromString("A2UICustomFunctionRegistryBridge")`, so it can work

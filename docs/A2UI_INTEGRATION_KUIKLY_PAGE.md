@@ -63,7 +63,7 @@ DSL 接入的业务代码 = **Kuikly DSL Kotlin 页面**，因此业务方需要
 dependencies {
     commonMainImplementation("com.tencent.kuikly:core:${kuiklyVersion}")
     commonMainImplementation("com.tencent.kuikly:core-annotations:${kuiklyVersion}")
-    commonMainImplementation("com.tencent.kuikly:a2ui:${a2uiVersion}")
+    commonMainImplementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
     add("kspCommonMainMetadata", "com.tencent.kuikly:core-ksp:${kuiklyVersion}")
     // 如需 Compose DSL：
     commonMainImplementation("com.tencent.kuikly:compose:${kuiklyVersion}")
@@ -72,8 +72,8 @@ dependencies {
 // 宿主 App 模块（:myapp）：
 dependencies {
     implementation(project(":mybiz"))                                      // 业务 KMP 页面
-    implementation("com.tencent.kuikly:a2ui:${a2uiVersion}")
-    implementation("com.tencent.kuikly:a2ui-render-android:${a2uiVersion}")
+    implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
+    implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
     implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
     implementation("com.github.bumptech.glide:glide:4.16.0")
 }
@@ -222,7 +222,7 @@ target 'MyApp' do
   pod 'OpenKuiklyIOSRender', :path => '<path-to-repo-root>'
 
   # A2UI 原生渲染层
-  pod 'OpenA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
 
   # ⚠️ 不要再单独引 `pod 'a2ui'`——K/N 静态 framework 会产生
   #    duplicate stdlib-cache symbols
@@ -233,7 +233,7 @@ end
 
 ```swift
 import UIKit
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -259,7 +259,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 ```swift
 import UIKit
 import OpenKuiklyIOSRender
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 final class MyKuiklyPageViewController: UIViewController {
 
@@ -366,7 +366,7 @@ import { KRNativeRenderController, Kuikly } from '@kuikly-open/render';
 import {
   A2UIKuiklyRenderViewSupport,
   a2uiNativeManager
-} from '@kuikly-open/a2ui-render';
+} from '@kuikly-a2ui-open/a2ui-render';
 
 @Entry
 @Component

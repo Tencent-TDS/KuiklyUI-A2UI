@@ -58,7 +58,7 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-group = MavenConfig.GROUP
+group = MavenConfig.A2UI_GROUP
 // Android/KMP Maven coordinate — includes the Kotlin suffix
 // (`1.0.0-2.1.21`) to match Kuikly Core's convention and to
 // keep the two build files (2.1.21 vs 2.0.ohos) from overwriting each

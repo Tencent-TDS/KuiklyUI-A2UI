@@ -750,7 +750,7 @@ ArkTS 层 (libkuikly_entry.so)                 KMP 层 (libshared.so)
 
 ```typescript
 import { KuiklyRenderBaseView } from '@kuikly-open/render';
-import { registerA2UICustomRenderView, unregisterA2UICustomRenderView } from '@kuikly-open/a2ui-render';
+import { registerA2UICustomRenderView, unregisterA2UICustomRenderView } from '@kuikly-a2ui-open/a2ui-render';
 import { webview } from '@kit.ArkWeb';
 
 // ============================================================
@@ -851,7 +851,7 @@ import {
   unregisterA2UICustomRenderView,
   notifyA2UICustomViewSizeChanged,
   A2UICustomViewSize
-} from '@kuikly-open/a2ui-render';
+} from '@kuikly-a2ui-open/a2ui-render';
 
 @Entry
 @Component

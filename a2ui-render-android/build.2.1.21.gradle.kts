@@ -5,7 +5,7 @@ plugins {
     signing
 }
 
-group = MavenConfig.GROUP
+group = MavenConfig.A2UI_GROUP
 // Android/KMP Maven coordinate — keeps the Kotlin suffix so that this
 // AAR aligns with the coordinate scheme of `:a2ui` and Kuikly Core.
 version = A2uiVersion.getArtifactVersion(project)
@@ -30,7 +30,7 @@ afterEvaluate {
 
         publications {
             create<MavenPublication>("maven") {
-                groupId = MavenConfig.GROUP
+                groupId = MavenConfig.A2UI_GROUP
                 artifactId = "a2ui-render-android"
                 version = A2uiVersion.getArtifactVersion(project)
                 from(components["release"])

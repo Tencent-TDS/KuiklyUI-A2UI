@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform")
 }
 
-group = "com.tencent.kuikly.a2ui"
+group = MavenConfig.A2UI_GROUP
 // Android/KMP-style Maven coordinate. When triggered via
 // `2.0_a2ui_ohos_build.sh` the `KUIKLY_KOTLIN_VERSION=2.0.21-KBA-010`
 // export causes `getArtifactVersion` to emit e.g.

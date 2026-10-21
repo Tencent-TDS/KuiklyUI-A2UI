@@ -24,7 +24,7 @@ target 'A2UIDemoApp' do
   end
 
   # A2UI iOS Render - local podspec
-  pod 'OpenA2UIIOSRender', :path => '../a2ui-render-ios/'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '../a2ui-render-ios/'
 end
 
 post_install do |installer|

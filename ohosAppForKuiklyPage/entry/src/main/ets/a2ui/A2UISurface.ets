@@ -14,7 +14,7 @@
  */
 
 /**
- * Re-export A2UISurfaceView from @kuikly-open/a2ui-render module.
+ * Re-export A2UISurfaceView from @kuikly-a2ui-open/a2ui-render module.
  *
  * This file serves as a convenience wrapper for the demo app pages.
  * The actual implementation lives in a2ui-render-ohos module, which uses
@@ -25,7 +25,7 @@ import {
   A2UISurfaceView,
   A2UISurfaceViewController,
   A2UISurfaceViewListener
-} from '@kuikly-open/a2ui-render';
+} from '@kuikly-a2ui-open/a2ui-render';
 
 export { A2UISurfaceView, A2UISurfaceViewController, A2UISurfaceViewListener };
 

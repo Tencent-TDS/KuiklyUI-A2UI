@@ -18,7 +18,7 @@ import { KRNativeRenderController, Kuikly } from '@kuikly-open/render';
 import {
   A2UIKuiklyRenderViewSupport,
   a2uiNativeManager
-} from '@kuikly-open/a2ui-render';
+} from '@kuikly-a2ui-open/a2ui-render';
 
 /**
  * KuiklyPageCardDemoPage — the DSL / Compose-embedding integration path.

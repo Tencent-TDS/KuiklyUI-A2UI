@@ -100,9 +100,9 @@ val a2uiVersion = "1.0.0-2.1.21"
 
 dependencies {
     // A2UI 核心（KMP）
-    implementation("com.tencent.kuikly:a2ui:${a2uiVersion}")
+    implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
     // A2UI Android 渲染层（提供 A2UISurfaceView）
-    implementation("com.tencent.kuikly:a2ui-render-android:${a2uiVersion}")
+    implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
     // Kuikly 渲染层
     implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
     // 图片加载

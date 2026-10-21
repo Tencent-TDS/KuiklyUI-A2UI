@@ -14,7 +14,7 @@
  */
 
 import Foundation
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 /// Demo-only helpers for feeding A2UI messages into `A2UISurfaceView`.
 ///

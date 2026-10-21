@@ -15,7 +15,7 @@
 
 import UIKit
 import OpenKuiklyIOSRender
-import OpenA2UIIOSRender
+import OpenKuiklyA2UIIOSRender
 
 /// iOS mirror of `androidAppForBothPages/KuiklyPageCardActivity`.
 ///

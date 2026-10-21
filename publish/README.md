@@ -4,11 +4,11 @@
 
 | 目标产物 | 通道 | 脚本 |
 |---------|------|------|
-| **Android AAR + KMP klib**（`com.tencent.kuikly:a2ui` / `com.tencent.kuikly:a2ui-render-android`，Kotlin 2.1.21 主线） | 本地 `~/.m2` / Sonatype Maven Central | [`2.1.21_publish.sh`](2.1.21_publish.sh) |
-| **HarmonyOS KMP klib**（`com.tencent.kuikly:a2ui`，Kotlin `2.0.21-KBA-010` / `-ohos` 坐标） | 本地 `~/.m2` / Sonatype Maven Central | [`2.0_ohos_publish.sh`](2.0_ohos_publish.sh) |
-| **iOS Pod**（`a2ui` / `OpenA2UIIOSRender`；`a2ui_demo` 属业务示例代码不发布） | pod trunk / 私有 spec repo | 无脚本，手工发布（见下文） |
+| **Android AAR + KMP klib**（`com.tencent.kuikly-a2ui-open:a2ui` / `com.tencent.kuikly-a2ui-open:a2ui-render-android`，Kotlin 2.1.21 主线） | 本地 `~/.m2` / Sonatype Maven Central | [`2.1.21_publish.sh`](2.1.21_publish.sh) |
+| **HarmonyOS KMP klib**（`com.tencent.kuikly-a2ui-open:a2ui`，Kotlin `2.0.21-KBA-010` / `-ohos` 坐标） | 本地 `~/.m2` / Sonatype Maven Central | [`2.0_ohos_publish.sh`](2.0_ohos_publish.sh) |
+| **iOS Pod**（`a2ui` / `OpenKuiklyA2UIIOSRender`；`a2ui_demo` 属业务示例代码不发布） | pod trunk / 私有 spec repo | 无脚本，手工发布（见下文） |
 
-> HarmonyOS ohpm 包（`@kuikly-open/a2ui-render`）与 iOS Pod 当前都不在本仓库脚本范围内发布，与 Kuikly 工程保持一致。iOS Pod 请在对应目录手工执行 `pod trunk push`，ohpm 包请在 `a2ui-render-ohos/` 目录下手工执行 `ohpm pack` / `ohpm publish`。
+> HarmonyOS ohpm 包（`@kuikly-a2ui-open/a2ui-render`）与 iOS Pod 当前都不在本仓库脚本范围内发布，与 Kuikly 工程保持一致。iOS Pod 请在对应目录手工执行 `pod trunk push`，ohpm 包请在 `a2ui-render-ohos/` 目录下手工执行 `ohpm pack` / `ohpm publish`。
 
 其中 [`FileReplacer.java`](FileReplacer.java) 是一个通用文本 patch 工具，[`compatible/`](compatible/) 目录下的 YAML 配置文件描述"切换到某个兼容构建（例如 HarmonyOS 2.0 + Gradle 8.0）时需要临时改哪些文件"，配合 `2.0_a2ui_ohos_build.sh` / `2.1.21_publish.sh` / `2.0_ohos_publish.sh` 使用。
 
@@ -66,24 +66,24 @@ bash publish/2.0_ohos_publish.sh a2ui publishAllPublicationsToMavenCentralSnapsh
 | `$1` | `MODULE` | `all` | 模块名；`all` 时发布 `:a2ui`（当前 ohos settings 中唯一需要发布的 A2UI 自家 KMP 模块） |
 | `$2` | `PUBLISH_TASK` | `publishToMavenLocal` | Gradle 发布 task 名；本地用 `publishToMavenLocal`，远端用 `publishAllPublicationsToMavenCentralRepository` 或其 Snapshot 变体 |
 
-脉本会使用 `-c settings.2.0.ohos.gradle.kts` 切换到 HarmonyOS 构建变体，并通过 `KUIKLY_KOTLIN_VERSION=2.0.21-KBA-010` 环境变量驱动 Kotlin toolchain，最终产出带 `-ohos` 后缀的 Maven 坐标（例如 `com.tencent.kuikly:a2ui:1.0.0-2.0.21-ohos`）。
+脉本会使用 `-c settings.2.0.ohos.gradle.kts` 切换到 HarmonyOS 构建变体，并通过 `KUIKLY_KOTLIN_VERSION=2.0.21-KBA-010` 环境变量驱动 Kotlin toolchain，最终产出带 `-ohos` 后缀的 Maven 坐标（例如 `com.tencent.kuikly-a2ui-open:a2ui:1.0.0-2.0.21-ohos`）。
 
 配套的兼容性替换由 `publish/compatible/2.0_ohos.yaml` 定义（Gradle Wrapper 从 7.6.3 切到 8.0），执行前后由脚本自动 `replace` / `restore`。
 
 ## iOS 端发版用法（手工）
 
-本仓库不提供 iOS Pod 发版脚本（与 Kuikly 工程保持一致）。两个 iOS pod（`a2ui`、`OpenA2UIIOSRender`）的发布流程如下：
+本仓库不提供 iOS Pod 发版脚本（与 Kuikly 工程保持一致）。两个 iOS pod（`a2ui`、`OpenKuiklyA2UIIOSRender`）的发布流程如下：
 
-### 1) `OpenA2UIIOSRender`（纯 ObjC/Swift 源码 pod）
+### 1) `OpenKuiklyA2UIIOSRender`（纯 ObjC/Swift 源码 pod）
 
 ```bash
 cd a2ui-render-ios
-pod trunk push OpenA2UIIOSRender.podspec --allow-warnings
+pod trunk push OpenKuiklyA2UIIOSRender.podspec --allow-warnings
 # 或私有 spec repo:
-# pod repo push <repo-alias> OpenA2UIIOSRender.podspec --allow-warnings
+# pod repo push <repo-alias> OpenKuiklyA2UIIOSRender.podspec --allow-warnings
 ```
 
-版本号由 [`OpenA2UIIOSRender.podspec`](../a2ui-render-ios/OpenA2UIIOSRender.podspec) 中的 `spec.version` 决定，默认与 `A2uiVersion.kt` 的 `DEFAULT_A2UI_SEMANTIC` 保持一致。如需临时覆盖，可用 `A2UI_VERSION=x.y.z pod trunk push ...`，但发版主路径仍推荐直接修改 `DEFAULT_A2UI_SEMANTIC` 后同步 podspec 默认值。
+版本号由 [`OpenKuiklyA2UIIOSRender.podspec`](../a2ui-render-ios/OpenKuiklyA2UIIOSRender.podspec) 中的 `spec.version` 决定，默认与 `A2uiVersion.kt` 的 `DEFAULT_A2UI_SEMANTIC` 保持一致。如需临时覆盖，可用 `A2UI_VERSION=x.y.z pod trunk push ...`，但发版主路径仍推荐直接修改 `DEFAULT_A2UI_SEMANTIC` 后同步 podspec 默认值。
 
 ### 2) `a2ui`（KMP 产物 A2UICore.framework）
 

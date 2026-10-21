@@ -18,7 +18,7 @@
  *
  * This is the single source of truth for the version of every artifact
  * shipped by *this* repository (a2ui KMP core, a2ui-render-android,
- * a2ui-render-ohos, OpenA2UIIOSRender pod).
+ * a2ui-render-ohos, OpenKuiklyA2UIIOSRender pod).
  *
  * ─────────────────────────────────────────────────────────────────────────
  *  Two version flavours
@@ -78,7 +78,7 @@
  *   getSemantic(project):
  *     - a2ui/build.2.1.21.gradle.kts       cocoapods { version = ... }
  *     - demo/build.2.1.21.gradle.kts       cocoapods { version = ... }
- *     - a2ui-render-ios/OpenA2UIIOSRender.podspec   (edited by hand when
+ *     - a2ui-render-ios/OpenKuiklyA2UIIOSRender.podspec   (edited by hand when
  *                                                    publishing the iOS pod;
  *                                                    `A2UI_VERSION` env is
  *                                                    also honoured at parse
