@@ -23,9 +23,6 @@ import com.tencent.kuikly.core.pager.Pager
 import com.tencent.kuikly.core.utils.toKRRenderCValue
 import com.tencent.kuikly.core.utils.toAny
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.alloc
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.ptr
 
 /**
  * A2UIOhosPager - HarmonyOS-specific A2UI bootstrap Pager.
@@ -221,28 +218,35 @@ open class A2UIOhosPager : Pager() {
                     }
                 }
             }
-            return memScoped {
-                // 与 KSP 生成的 initKuikly 保持一致：直接在 arena 上 alloc + 就地填充，
-                // 避免 cValue<T> 产生的中间 ByteArray；额外 alloc 一个 result slot 承接
-                // 新版 com_tencent_kuikly_CallNative 的出参。
-                val cv0 = alloc<ohos.KRRenderCValue>(); arg0.toKRRenderCValue(this, cv0)
-                val cv1 = alloc<ohos.KRRenderCValue>(); arg1.toKRRenderCValue(this, cv1)
-                val cv2 = alloc<ohos.KRRenderCValue>(); arg2.toKRRenderCValue(this, cv2)
-                val cv3 = alloc<ohos.KRRenderCValue>(); arg3.toKRRenderCValue(this, cv3)
-                val cv4 = alloc<ohos.KRRenderCValue>(); arg4.toKRRenderCValue(this, cv4)
-                val cv5 = alloc<ohos.KRRenderCValue>(); arg5.toKRRenderCValue(this, cv5)
-                val result = alloc<ohos.KRRenderCValue>()
+            // Mirrors the KSP-generated callNative (see kuikly
+            // core-ksp/.../impl/OhOsTargetEntryBuilder.kt). Each argument is
+            // encoded via `toKRRenderCValue()` (returns a KRRenderCValue by
+            // value), handed to the 7-arg `com_tencent_kuikly_CallNative`, and
+            // released in `finally` with `KRJSONRelease` to prevent native
+            // leaks on exception.
+            var cv0 = ohos.KRJSON_INVALID
+            var cv1 = ohos.KRJSON_INVALID
+            var cv2 = ohos.KRJSON_INVALID
+            var cv3 = ohos.KRJSON_INVALID
+            var cv4 = ohos.KRJSON_INVALID
+            var cv5 = ohos.KRJSON_INVALID
+            return try {
+                cv0 = arg0.toKRRenderCValue()
+                cv1 = arg1.toKRRenderCValue()
+                cv2 = arg2.toKRRenderCValue()
+                cv3 = arg3.toKRRenderCValue()
+                cv4 = arg4.toKRRenderCValue()
+                cv5 = arg5.toKRRenderCValue()
                 ohos.com_tencent_kuikly_CallNative(
-                    methodId,
-                    cv0.ptr,
-                    cv1.ptr,
-                    cv2.ptr,
-                    cv3.ptr,
-                    cv4.ptr,
-                    cv5.ptr,
-                    result.ptr
-                )
-                result.toAny()
+                    methodId, cv0, cv1, cv2, cv3, cv4, cv5
+                ).toAny()
+            } finally {
+                ohos.KRJSONRelease(cv0)
+                ohos.KRJSONRelease(cv1)
+                ohos.KRJSONRelease(cv2)
+                ohos.KRJSONRelease(cv3)
+                ohos.KRJSONRelease(cv4)
+                ohos.KRJSONRelease(cv5)
             }
         }
     }
