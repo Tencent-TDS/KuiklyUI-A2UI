@@ -60,7 +60,7 @@ plugins {
 
 group = MavenConfig.GROUP
 // Android/KMP Maven coordinate — includes the Kotlin suffix
-// (`0.9.0-2.1.21-SNAPSHOT`) to match Kuikly Core's convention and to
+// (`1.0.0-2.1.21`) to match Kuikly Core's convention and to
 // keep the two build files (2.1.21 vs 2.0.ohos) from overwriting each
 // other in the local/remote Maven repo.
 version = A2uiVersion.getArtifactVersion(project)
@@ -87,7 +87,7 @@ kotlin {
         summary = "A2UI DSL demo pages (KMP business sample — :path consumption only, not published)"
         homepage = "https://github.com/Tencent-TDS/KuiklyUI-A2UI"
         // Plain SemVer for the pod — CocoaPods rejects the multi-segment
-        // artifact form (`0.9.0-2.1.21-SNAPSHOT`).
+        // artifact form (`1.0.0-2.1.21`).
         version = A2uiVersion.getSemantic(project)
         license = "{ :type => 'KuiklyUI', :file => '../LICENSE' }"
         authors = "Kuikly Team"

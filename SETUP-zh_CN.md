@@ -138,8 +138,8 @@ SemVer 段，有 `-SNAPSHOT` 后缀会被剥去。
 **产物模式下集成方（下游 App）** — 可以通过 CocoaPods trunk 拉已发布版本：
 
 ```ruby
-pod 'a2ui', '~> 0.9.0'
-pod 'OpenA2UIIOSRender', '~> 0.9.0'
+pod 'a2ui', '~> 1.0.0'
+pod 'OpenA2UIIOSRender', '~> 1.0.0'
 # OpenKuiklyIOSRender 通过 OpenA2UIIOSRender 的 spec.dependency 自动引入
 # （版本号已在 OpenA2UIIOSRender.podspec 中锚定为 Kuikly 2.29.2）
 ```
@@ -217,10 +217,10 @@ bash scripts/link-kuikly.sh
 
 | 产物 | 方案 | 示例 | 来源 |
 |---|---|---|---|
-| Maven 上的 Android AAR / KMP klib（`com.tencent.kuikly-open:a2ui`、`a2ui-render-android`） | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `0.9.0-2.1.21-SNAPSHOT`、`0.9.0-2.0.21-ohos-SNAPSHOT` | `A2uiVersion.getArtifactVersion(project)` |
-| iOS pods（`a2ui`、`OpenA2UIIOSRender`） | `${semantic}`（纯 SemVer，CocoaPods 要求） | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic(project)` |
-| HarmonyOS ohpm（`@kuikly-open/a2ui-render`） | `${semantic}`（纯 SemVer，OHPM 要求） | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic(project)` |
-| README / 展示用途 | `${semantic}` | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic()` |
+| Maven 上的 Android AAR / KMP klib（`com.tencent.kuikly-open:a2ui`、`a2ui-render-android`） | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `1.0.0-2.1.21`、`1.0.0-2.0.21-ohos` | `A2uiVersion.getArtifactVersion(project)` |
+| iOS pods（`a2ui`、`OpenA2UIIOSRender`） | `${semantic}`（纯 SemVer，CocoaPods 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| HarmonyOS ohpm（`@kuikly-open/a2ui-render`） | `${semantic}`（纯 SemVer，OHPM 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| README / 展示用途 | `${semantic}` | `1.0.0` | `A2uiVersion.getSemantic()` |
 
 Maven 坐标中的 Kotlin 后缀遵循 Kuikly Core 约定
 （`com.tencent.kuikly-open:core:2.29.2-2.1.21-SNAPSHOT`）—— KMP `.klib`
@@ -248,7 +248,7 @@ Maven 坐标中的 Kotlin 片段始终读取 `Version.getKotlinVersion()`
 其会响应 `KUIKLY_KOTLIN_VERSION`。
 通过 `2.0_a2ui_ohos_build.sh` 触发的 HarmonyOS 构建会自动设置
 `KUIKLY_KOTLIN_VERSION=2.0.21-KBA-010`，从而在最终坐标中生成
-`-ohos` 标记（`0.9.0-2.0.21-ohos-SNAPSHOT`）。
+`-ohos` 标记（`1.0.0-2.0.21-ohos`）。
 
 ### CI 一行命令
 

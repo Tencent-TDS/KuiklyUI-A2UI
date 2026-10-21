@@ -35,7 +35,7 @@
 ```kotlin
 // build.gradle.kts (业务模块)
 // 版本号格式：${kuiklyVersion}-${kotlinVersion}
-val a2uiVersion = "2.0.0-2.1.21-SNAPSHOT"
+val a2uiVersion = "1.0.0-2.1.21"
 
 dependencies {
     // A2UI 核心（KMP）

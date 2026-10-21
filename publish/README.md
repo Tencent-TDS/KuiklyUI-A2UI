@@ -66,7 +66,7 @@ bash publish/2.0_ohos_publish.sh a2ui publishAllPublicationsToMavenCentralSnapsh
 | `$1` | `MODULE` | `all` | 模块名；`all` 时发布 `:a2ui`（当前 ohos settings 中唯一需要发布的 A2UI 自家 KMP 模块） |
 | `$2` | `PUBLISH_TASK` | `publishToMavenLocal` | Gradle 发布 task 名；本地用 `publishToMavenLocal`，远端用 `publishAllPublicationsToMavenCentralRepository` 或其 Snapshot 变体 |
 
-脚本会使用 `-c settings.2.0.ohos.gradle.kts` 切换到 HarmonyOS 构建变体，并通过 `KUIKLY_KOTLIN_VERSION=2.0.21-KBA-010` 环境变量驱动 Kotlin toolchain，最终产出带 `-ohos` 后缀的 Maven 坐标（例如 `com.tencent.kuikly:a2ui:0.9.0-2.0.21-ohos-SNAPSHOT`）。
+脉本会使用 `-c settings.2.0.ohos.gradle.kts` 切换到 HarmonyOS 构建变体，并通过 `KUIKLY_KOTLIN_VERSION=2.0.21-KBA-010` 环境变量驱动 Kotlin toolchain，最终产出带 `-ohos` 后缀的 Maven 坐标（例如 `com.tencent.kuikly:a2ui:1.0.0-2.0.21-ohos`）。
 
 配套的兼容性替换由 `publish/compatible/2.0_ohos.yaml` 定义（Gradle Wrapper 从 7.6.3 切到 8.0），执行前后由脚本自动 `replace` / `restore`。
 
@@ -113,8 +113,8 @@ pod trunk push a2ui.podspec --allow-warnings
 
 版本号由 [`../buildSrc/src/main/java/A2uiVersion.kt`](../buildSrc/src/main/java/A2uiVersion.kt) 统一管理，提供两个 API：
 
-- `A2uiVersion.getSemantic()` — 语义版本，形如 `0.9.0-SNAPSHOT`。用于 iOS pod（CocoaPods 强 SemVer）、HarmonyOS ohpm 包（同上）、README 显示。
-- `A2uiVersion.getArtifactVersion()` — Maven artifact 版本，形如 `0.9.0-2.1.21-SNAPSHOT` / `0.9.0-2.0.21-ohos-SNAPSHOT`。语义版本后拼当前 Kotlin 版本，规则完全对齐 Kuikly Core `getCoreVersion()`，避免不同 Kotlin toolchain 的 KMP 产物在 Maven 上互相覆盖。
+- `A2uiVersion.getSemantic()` — 语义版本，形如 `1.0.0`。用于 iOS pod（CocoaPods 强 SemVer）、HarmonyOS ohpm 包（同上）、README 显示。
+- `A2uiVersion.getArtifactVersion()` — Maven artifact 版本，形如 `1.0.0-2.1.21` / `1.0.0-2.0.21-ohos`。语义版本后拼当前 Kotlin 版本，规则完全对齐 Kuikly Core `getCoreVersion()`，避免不同 Kotlin toolchain 的 KMP 产物在 Maven 上互相覆盖。
 
 版本号由 `buildSrc/A2uiVersion.kt` 内的 `DEFAULT_A2UI_SEMANTIC` 常量决定，发版时请直接修改源码。也支持通过环境变量临时覆盖（优先级高于默认值，对齐 Kuikly `KUIKLY_VERSION` 的用法）：
 
@@ -127,9 +127,9 @@ A2UI_VERSION=1.0.0 bash publish/2.0_ohos_publish.sh
 
 当前默认：
 
-- 语义版本：`0.9.0-SNAPSHOT`（iOS pod / ohpm 包直接使用）
-- Maven artifact（Kotlin 2.1.21 主线，`2.1.21_publish.sh`）：`0.9.0-2.1.21-SNAPSHOT`
-- Maven artifact（HarmonyOS 2.0 兼容构建，Kotlin `2.0.21-KBA-010`，`2.0_ohos_publish.sh`）：`0.9.0-2.0.21-ohos-SNAPSHOT`
+- 语义版本：`1.0.0`（iOS pod / ohpm 包直接使用）
+- Maven artifact（Kotlin 2.1.21 主线，`2.1.21_publish.sh`）：`1.0.0-2.1.21`
+- Maven artifact（HarmonyOS 2.0 兼容构建，Kotlin `2.0.21-KBA-010`，`2.0_ohos_publish.sh`）：`1.0.0-2.0.21-ohos`
 
 ## 上游 Kuikly 产物版本（`kuikly.version`）
 

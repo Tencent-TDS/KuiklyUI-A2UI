@@ -28,10 +28,10 @@
  *   1. Android / KMP Maven artifacts  →  [getArtifactVersion]
  *      Format: `${semantic}-${kotlin}[-<ohosSuffix>][-SNAPSHOT]`
  *      Examples:
- *        - `0.9.0-2.1.21-SNAPSHOT`         (Kotlin 2.1.21, snapshot)
- *        - `0.9.0-2.0.21-SNAPSHOT`         (Kotlin 2.0.21, snapshot)
- *        - `0.9.0-2.0.21-ohos-SNAPSHOT`    (HarmonyOS Kotlin 2.0.21-KBA-010)
- *        - `0.9.0-2.1.21`                  (release)
+ *        - `1.0.0-2.1.21`                  (Kotlin 2.1.21, release)
+ *        - `1.0.0-2.0.21`                  (Kotlin 2.0.21, release)
+ *        - `1.0.0-2.0.21-ohos`             (HarmonyOS Kotlin 2.0.21-KBA-010)
+ *        - `1.0.0-2.1.21-SNAPSHOT`         (snapshot, when semantic ends with -SNAPSHOT)
  *
  *      Why the Kotlin suffix? KMP `.klib` / metadata binaries are NOT
  *      compatible across Kotlin compiler versions, so every supported
@@ -43,7 +43,7 @@
  *      overwrite each other in the local/remote Maven repo.
  *
  *   2. iOS pod / HarmonyOS ohpm / display  →  [getSemantic]
- *      Format: `${semantic}` (e.g. `0.9.0-SNAPSHOT`, `0.9.0`).
+ *      Format: `${semantic}` (e.g. `1.0.0`, `1.0.0-SNAPSHOT`).
  *      CocoaPods and OHPM both enforce strict SemVer, so we deliberately
  *      keep those artifacts on the plain semantic version. Each toolchain
  *      ships a single pod / ohpm package whose contents are built by
@@ -89,7 +89,7 @@
 object A2uiVersion {
 
     /** Semantic version of this repository's user-visible release line. */
-    private const val DEFAULT_A2UI_SEMANTIC = "0.9.0-SNAPSHOT"
+    private const val DEFAULT_A2UI_SEMANTIC = "1.0.0"
 
     private const val SNAPSHOT_SUFFIX = "-SNAPSHOT"
 
@@ -134,12 +134,12 @@ object A2uiVersion {
      * so that upstream and downstream artifact coordinates stay visually
      * aligned:
      *
-     *   - Snapshot semantic (`0.9.0-SNAPSHOT`) → insert `-${kotlin}` **before**
-     *     the `-SNAPSHOT` suffix   →  `0.9.0-2.1.21-SNAPSHOT`
-     *   - Release semantic (`0.9.0`)          → append `-${kotlin}`
-     *                                          →  `0.9.0-2.1.21`
+     *   - Release semantic (`1.0.0`)          → append `-${kotlin}`
+     *                                          →  `1.0.0-2.1.21`
+     *   - Snapshot semantic (`1.0.0-SNAPSHOT`) → insert `-${kotlin}` **before**
+     *     the `-SNAPSHOT` suffix   →  `1.0.0-2.1.21-SNAPSHOT`
      *   - If kotlin version contains `KBA-010`, that marker is replaced
-     *     with `ohos`                          →  `0.9.0-2.0.21-ohos-SNAPSHOT`
+     *     with `ohos`                          →  `1.0.0-2.0.21-ohos`
      */
     fun getArtifactVersion(project: org.gradle.api.Project? = null): String {
         val semantic = getSemantic(project)

@@ -96,7 +96,7 @@ cd iosAppForNativePage && bash setup.sh && open A2UIDemoApp.xcworkspace
 ```kotlin
 // build.gradle.kts (业务模块)
 // 版本号格式：${kuiklyVersion}-${kotlinVersion}
-val a2uiVersion = "2.x.x-2.1.21"
+val a2uiVersion = "1.0.0-2.1.21"
 
 dependencies {
     // A2UI 核心（KMP）

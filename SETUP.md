@@ -152,8 +152,8 @@ keeps only the SemVer segment of `kuikly.version` and strips any
 from the CocoaPods trunk instead:
 
 ```ruby
-pod 'a2ui', '~> 0.9.0'
-pod 'OpenA2UIIOSRender', '~> 0.9.0'
+pod 'a2ui', '~> 1.0.0'
+pod 'OpenA2UIIOSRender', '~> 1.0.0'
 # OpenKuiklyIOSRender is pulled in transitively via
 # OpenA2UIIOSRender's spec.dependency (pinned to Kuikly 2.29.2 in
 # OpenA2UIIOSRender.podspec).
@@ -245,10 +245,10 @@ different** version schemes:
 
 | Artefact | Scheme | Example | Source |
 |---|---|---|---|
-| Android AAR / KMP klib on Maven (`com.tencent.kuikly-open:a2ui`, `a2ui-render-android`) | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `0.9.0-2.1.21-SNAPSHOT`, `0.9.0-2.0.21-ohos-SNAPSHOT` | `A2uiVersion.getArtifactVersion(project)` |
-| iOS pods (`a2ui`, `OpenA2UIIOSRender`) | `${semantic}` (plain SemVer, required by CocoaPods) | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic(project)` |
-| HarmonyOS ohpm (`@kuikly-open/a2ui-render`) | `${semantic}` (plain SemVer, required by OHPM) | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic(project)` |
-| README / display usage | `${semantic}` | `0.9.0-SNAPSHOT` | `A2uiVersion.getSemantic()` |
+| Android AAR / KMP klib on Maven (`com.tencent.kuikly-open:a2ui`, `a2ui-render-android`) | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `1.0.0-2.1.21`, `1.0.0-2.0.21-ohos` | `A2uiVersion.getArtifactVersion(project)` |
+| iOS pods (`a2ui`, `OpenA2UIIOSRender`) | `${semantic}` (plain SemVer, required by CocoaPods) | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| HarmonyOS ohpm (`@kuikly-open/a2ui-render`) | `${semantic}` (plain SemVer, required by OHPM) | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| README / display usage | `${semantic}` | `1.0.0` | `A2uiVersion.getSemantic()` |
 
 The Kotlin suffix in Maven coordinates follows the Kuikly Core convention
 (`com.tencent.kuikly-open:core:2.29.2-2.1.21-SNAPSHOT`) — KMP `.klib` and
@@ -277,7 +277,7 @@ The Kotlin segment in Maven coordinates always reads
 which responds to `KUIKLY_KOTLIN_VERSION`.
 HarmonyOS builds triggered via `2.0_a2ui_ohos_build.sh` automatically set
 `KUIKLY_KOTLIN_VERSION=2.0.21-KBA-010`, which produces the
-`-ohos` marker in the final coordinate (`0.9.0-2.0.21-ohos-SNAPSHOT`).
+`-ohos` marker in the final coordinate (`1.0.0-2.0.21-ohos`).
 
 ### CI one-liners
 

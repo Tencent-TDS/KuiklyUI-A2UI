@@ -3,7 +3,7 @@ Pod::Spec.new do |spec|
   # KuiklyUI-A2UI standalone project — version resolution order
   # (mirrors A2uiVersion.getSemantic() in buildSrc/):
   #   1. env `A2UI_VERSION`
-  #   2. default '0.9.0-SNAPSHOT'
+  #   2. default '1.0.0'
   #
   # CocoaPods enforces strict SemVer, so we deliberately keep the plain
   # semantic form (no Kotlin suffix). The Kotlin toolchain is instead
@@ -15,7 +15,7 @@ Pod::Spec.new do |spec|
   # from this directory (optionally with `A2UI_VERSION=x.y.z` prefixed).
   # The default value above should be kept in sync with
   # `DEFAULT_A2UI_SEMANTIC` in buildSrc/src/main/java/A2uiVersion.kt.
-  spec.version          = ENV['A2UI_VERSION'] || '0.9.0-SNAPSHOT'
+  spec.version          = ENV['A2UI_VERSION'] || '1.0.0'
   spec.summary          = "A2UI iOS Render Module"
   spec.description      = <<-DESC
                         A2UI iOS platform render implementation.

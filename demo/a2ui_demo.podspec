@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'a2ui_demo'
-    spec.version                  = '0.9.0-SNAPSHOT'
+    spec.version                  = '1.0.0'
     spec.homepage                 = 'https://github.com/Tencent-TDS/KuiklyUI-A2UI'
     spec.source                   = { :http=> ''}
     spec.authors                  = 'Kuikly Team'

@@ -6,7 +6,7 @@
   // (no Kotlin suffix). This repo doesn't bundle an ohpm publish script;
   // when publishing, edit this field by hand (and swap the local `file:`
   // dep to a semver), then run `ohpm pack` / `ohpm publish` from this dir.
-  "version": "0.9.0-SNAPSHOT",
+  "version": "1.0.0",
   "description": "A2UI Render Module for HarmonyOS - bridges A2UI protocol to Kuikly native rendering",
   "main": "src/main/ets/Index.ets",
   "author": "Kuikly Team",
