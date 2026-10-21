@@ -103,7 +103,7 @@ pod trunk push a2ui.podspec --allow-warnings
 ## 通用前置
 
 1. **依赖 KuiklyUI**：默认走 **产物模式**（`kuikly.useSource=false`），从 Maven 仓读取 `com.tencent.kuikly-open:core` 等坐标，无需 Kuikly 源码；需要和 Kuikly 一起源码调试时，参见 [`../SETUP-zh_CN.md`](../SETUP-zh_CN.md) 开启源码模式（`kuikly.useSource=true` + `kuikly.projectDir`）。
-2. **JDK 17+**：`java -version` 需 ≥ 17。
+2. **JDK 1.8+**：`java -version` 需 ≥ 1.8。字节码目标与 KuiklyUI Core 对齐，固定为 1.8，本地或 CI runner 使用 JDK 8 / 11 / 17 均可——Gradle 会按 1.8 产出 class 文件（即流水线的 runner JDK 不必升级到 17）。
 3. **Kotlin / AGP 工具链**：由各脚本内 `KUIKLY_AGP_VERSION` / `KUIKLY_KOTLIN_VERSION` 环境变量固定——`2.1.21_publish.sh` 使用 Kotlin 2.1.21，`2.0_ohos_publish.sh` 使用 Kotlin `2.0.21-KBA-010`。AGP 统一为 7.4.2。
 4. **Kuikly 产物版本**：由 `kuikly.version` 决定（默认 `2.29.2`，拼上 Kotlin 后缀形如 `2.29.2-2.1.21`）。可通过 `-Pkuikly.version=` / `KUIKLY_VERSION` env / `local.properties` 覆盖，详见下文。
 

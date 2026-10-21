@@ -476,7 +476,7 @@ Handles A2UI v0.9 + Kuikly `styles`-extended protocol:
 - **HarmonyOS**: API 12 and above (DevEco Studio 4.1+)
 - **Kotlin**: 2.1.21
 - **Gradle**: 7.6.3 (temporarily switched to 8.0 under the HarmonyOS 2.0 compatibility build via `publish/FileReplacer` patches)
-- **JDK**: 17+
+- **JDK**: 1.8+ (bytecode target is pinned at 1.8 to align with KuiklyUI Core; local JDK 11 / 17 is fine — Gradle still emits 1.8 class files)
 
 > Dependency strategy and version-override mechanics are documented in [`SETUP.md`](SETUP.md).
 

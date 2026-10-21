@@ -475,7 +475,7 @@ Kotlin Common 层的统一入口，管理所有 A2UI 实例的生命周期：
 - **HarmonyOS**：API 12 及以上（DevEco Studio 4.1+）
 - **Kotlin 版本**：2.1.21
 - **Gradle 版本**：7.6.3（HarmonyOS 2.0 兼容构建下切至 8.0，由 `publish/FileReplacer` 临时打补丁）
-- **JDK 要求**：17+
+- **JDK 要求**：1.8+（字节码目标与 KuiklyUI Core 对齐，固定为 1.8；本地开发使用 JDK 11 / 17 均可，Gradle 会以 1.8 产出 class 文件）
 
 > 依赖策略与版本覆盖方式详见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
 
