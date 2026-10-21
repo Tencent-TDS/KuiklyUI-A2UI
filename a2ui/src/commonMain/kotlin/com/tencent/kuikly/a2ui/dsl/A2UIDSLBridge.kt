@@ -643,7 +643,7 @@ class A2UIDSLBridge(
     /**
      * Get the A2UIPager instance (for nativeRef → protocol tag lookup).
      */
-    fun getPager(): A2UIPager? = pager
+    internal fun getPager(): A2UIPager? = pager
 
     /**
      * Show a native date/time picker dialog via the native layer.
