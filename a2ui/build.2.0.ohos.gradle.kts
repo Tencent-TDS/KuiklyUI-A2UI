@@ -1,5 +1,7 @@
 plugins {
     kotlin("multiplatform")
+    id("maven-publish")
+    signing
 }
 
 group = MavenConfig.A2UI_GROUP
@@ -8,6 +10,29 @@ group = MavenConfig.A2UI_GROUP
 // export causes `getArtifactVersion` to emit e.g.
 // `1.0.0-2.0.21-ohos`.
 version = A2uiVersion.getArtifactVersion(project)
+
+publishing {
+    repositories {
+        val username = MavenConfig.getUsername(project)
+        val password = MavenConfig.getPassword(project)
+        if (username.isNotEmpty() && password.isNotEmpty()) {
+            maven {
+                credentials {
+                    setUsername(username)
+                    setPassword(password)
+                }
+                url = uri(MavenConfig.getRepoUrl(version as String))
+            }
+        } else {
+            mavenLocal()
+        }
+
+        publications.withType<MavenPublication>().configureEach {
+            pom.configureMavenCentralMetadata()
+            signPublicationIfKeyPresent(project)
+        }
+    }
+}
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
