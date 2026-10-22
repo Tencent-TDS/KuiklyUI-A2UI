@@ -93,6 +93,10 @@ include(":a2ui")
 project(":a2ui").projectDir = file("a2ui")
 project(":a2ui").buildFileName = buildFileName
 
+include(":a2ui-render-android")
+project(":a2ui-render-android").projectDir = file("a2ui-render-android")
+project(":a2ui-render-android").buildFileName = buildFileName
+
 include(":demo")
 project(":demo").projectDir = file("demo")
 project(":demo").buildFileName = buildFileName

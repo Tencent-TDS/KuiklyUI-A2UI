@@ -34,6 +34,7 @@ if [ "$MODULE" = "all" ]; then
   echo "编译所有模块 a2ui"
   echo "发布方式: $PUBLISH_TASK"
   KUIKLY_AGP_VERSION="7.4.2" KUIKLY_KOTLIN_VERSION="2.0.21-KBA-010" ./gradlew -c settings.2.0.ohos.gradle.kts :a2ui:$PUBLISH_TASK --stacktrace
+  KUIKLY_AGP_VERSION="7.4.2" KUIKLY_KOTLIN_VERSION="2.0.21-KBA-010" ./gradlew -c settings.2.0.ohos.gradle.kts :a2ui-render-android:$PUBLISH_TASK --stacktrace
 
 else
   echo "编译模块: $MODULE"
