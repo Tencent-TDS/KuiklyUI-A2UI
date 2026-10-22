@@ -28,7 +28,6 @@ package com.tencent.kuikly.a2ui.bridge
  * - `androidMain`     → `true`  (A2UIBridgeModule registered via A2UIKuiklyBaseViewSupport)
  * - `ohosArm64Main`   → `true`  (A2UIBridgeModule registered via A2UIKuiklyRenderViewSupport)
  * - `iosMain`         → `true`  (A2UIBridgeModule picked up via NSClassFromString, see A2UIKuiklyRenderViewSupport.prepareForKuiklyPageHosting)
- * - `jvmMain`         → `false` (no platform-side A2UI render pod)
  */
 internal expect val isModuleBasedPlatform: Boolean
 

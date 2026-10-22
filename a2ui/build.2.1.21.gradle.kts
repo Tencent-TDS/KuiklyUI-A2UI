@@ -49,14 +49,6 @@ kotlin {
         publishLibraryVariants("release")
     }
 
-    jvm {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "1.8"
-            }
-        }
-    }
-
     iosSimulatorArm64()
     iosX64()
     iosArm64()
@@ -89,7 +81,6 @@ kotlin {
             }
         }
         val androidMain by getting
-        val jvmMain by getting
     }
 
     sourceSets.iosMain {
