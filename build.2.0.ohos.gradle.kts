@@ -8,7 +8,35 @@ plugins {
     id("com.tencent.kuiklybase.knoi.plugin") version("0.0.4") apply false
 }
 
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+        mavenLocal()
+        maven {
+            url = uri("https://mirrors.tencent.com/repository/maven-tencent/")
+        }
+    }
+}
+
 allprojects {
+    // Project-level repositories mirror `build.2.1.21.gradle.kts`. On
+    // some CI runners the `settings.*.gradle.kts` repository list is
+    // transparently rewritten by an injected `init.gradle` to internal
+    // proxies that do NOT cover `com.tencent.kuikly-open:*` (notably the
+    // OHOS variants like `core:2.29.2-2.0.21-ohos`). Declaring the real
+    // Tencent public Maven proxy here guarantees dependency resolution
+    // reaches an upstream that proxies the kuikly-open repository,
+    // regardless of what the CI init script injects at settings level.
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+        maven {
+            url = uri("https://mirrors.tencent.com/repository/maven-tencent/")
+        }
+    }
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
         jvmTargetValidationMode.set(org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode.WARNING)
     }
