@@ -9,7 +9,10 @@
   "version": "1.0.0",
   "description": "A2UI Render Module for HarmonyOS - bridges A2UI protocol to Kuikly native rendering",
   "main": "src/main/ets/Index.ets",
-  "author": "Kuikly Team",
+  "author": {
+    "name": "Kuikly Team",
+    "email": "tdf_framework@tencent.com"
+  },
   "license": "KuiklyUI",
   "repository": "https://github.com/Tencent-TDS/KuiklyUI-A2UI",
   "homepage": "https://framework.tds.qq.com/",
