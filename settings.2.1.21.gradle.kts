@@ -65,6 +65,30 @@ val useKuiklySource: Boolean = run {
 
 println("[A2UI] kuikly.useSource → $useKuiklySource")
 
+// ── Resolve `a2ui.useSource` — DEFAULT TRUE (source mode). A2UI lives
+// in this very repo so the same-repo dev loop is the common case; set to
+// `false` to validate that demos compile against the published
+// `com.tencent.kuikly-a2ui-open:*` artefacts only. ──────────────────────
+val useA2uiSource: Boolean = run {
+    val KEY = "a2ui.useSource"
+    val ENV_KEY = "A2UI_USE_SOURCE"
+    fun readFromProps(file: java.io.File): String? {
+        if (!file.exists()) return null
+        val props = java.util.Properties().apply {
+            java.io.FileInputStream(file).use { load(it) }
+        }
+        return props.getProperty(KEY)?.takeIf { it.isNotBlank() }
+    }
+    val raw: String? =
+        (settings.startParameter.projectProperties[KEY])?.takeIf { it.isNotBlank() }
+            ?: System.getenv(ENV_KEY)?.takeIf { it.isNotBlank() }
+            ?: readFromProps(java.io.File(settings.rootDir, "local.properties"))
+            ?: readFromProps(java.io.File(settings.rootDir, "gradle.properties"))
+    (raw?.trim() ?: "true").equals("true", ignoreCase = true)
+}
+
+println("[A2UI] a2ui.useSource → $useA2uiSource")
+
 if (useKuiklySource) {
     // Resolve external KuiklyUI checkout. Reads `kuikly.projectDir` from
     // -P / env / local.properties / gradle.properties (first non-blank wins).
@@ -95,13 +119,17 @@ if (useKuiklySource) {
 }
 
 // ── A2UI-owned modules (this repo, top-level paths) ──────────────────────
-include(":a2ui")
-project(":a2ui").projectDir = file("a2ui")
-project(":a2ui").buildFileName = buildFileName
+// `:a2ui` + `:a2ui-render-android` are gated by `a2ui.useSource` — see
+// settings.gradle.kts for the full rationale.
+if (useA2uiSource) {
+    include(":a2ui")
+    project(":a2ui").projectDir = file("a2ui")
+    project(":a2ui").buildFileName = buildFileName
 
-include(":a2ui-render-android")
-project(":a2ui-render-android").projectDir = file("a2ui-render-android")
-project(":a2ui-render-android").buildFileName = buildFileName
+    include(":a2ui-render-android")
+    project(":a2ui-render-android").projectDir = file("a2ui-render-android")
+    project(":a2ui-render-android").buildFileName = buildFileName
+}
 
 include(":demo")
 project(":demo").projectDir = file("demo")

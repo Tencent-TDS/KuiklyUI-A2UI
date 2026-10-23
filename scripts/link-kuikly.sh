@@ -59,6 +59,12 @@ source "$SCRIPT_DIR/lib/kuikly-mode.sh"
 
 echo "=== A2UI ↔ KuiklyUI link setup ==="
 
+if a2ui_use_source; then
+    echo "  A2UI mode                     : source   (a2ui.useSource=true)"
+else
+    echo "  A2UI mode                     : artifact (a2ui.useSource=false, version=$(a2ui_version))"
+fi
+
 if kuikly_use_source; then
     echo "  Mode                          : source  (kuikly.useSource=true)"
     # Only in source mode do we need to resolve `kuikly.projectDir` and

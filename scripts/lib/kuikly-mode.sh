@@ -78,3 +78,63 @@ kuikly_version() {
     [ -z "$raw" ] && raw="2.29.2"
     echo "${raw%-SNAPSHOT}"
 }
+
+# ─────────────────────────────────────────────────────────────────────────
+# A2UI side — dual-mode switch for THIS repository's own publications
+# (`:a2ui`, `:a2ui-render-android`, `OpenKuiklyA2UIIOSRender`,
+# `@kuikly-a2ui-open/render`).
+#
+# Mirrors:
+#   - `A2uiDep.useSource` in `buildSrc/src/main/java/A2uiDep.kt`
+#   - `A2UI::A2uiCocoapods.use_source?` in `scripts/lib/a2ui_cocoapods.rb`
+#
+# Default is TRUE (source mode) — opposite of `kuikly.useSource` —
+# because A2UI lives in this very repo so same-repo dev loop is common.
+#
+# Resolution order (first non-blank wins):
+#   1. `A2UI_USE_SOURCE` environment variable
+#   2. `a2ui.useSource` in <A2UI-root>/local.properties
+#   3. `a2ui.useSource` in <A2UI-root>/gradle.properties
+#   4. Default: true (source mode)
+# ─────────────────────────────────────────────────────────────────────────
+a2ui_use_source() {
+    local raw="${A2UI_USE_SOURCE:-}"
+    if [ -z "$raw" ]; then
+        raw="$(_km_read_prop "$A2UI_ROOT/local.properties" a2ui.useSource || true)"
+    fi
+    if [ -z "$raw" ]; then
+        raw="$(_km_read_prop "$A2UI_ROOT/gradle.properties" a2ui.useSource || true)"
+    fi
+    raw="$(echo "$raw" | tr '[:upper:]' '[:lower:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    # Default true: unset / blank → source mode.
+    [ -z "$raw" ] || [ "$raw" = "true" ]
+}
+
+# ─────────────────────────────────────────────────────────────────────────
+# Resolve A2UI's own SemVer (used by the ohpm artefact dependency in
+# `@kuikly-a2ui-open/render`-consumer oh-package.json5 files, and
+# potentially the iOS pod when wired up in future). Default 1.0.0.
+#
+# Mirrors:
+#   - `A2uiVersion.getSemantic` in buildSrc/.../A2uiVersion.kt
+#   - `A2UI::A2uiCocoapods.version` in scripts/lib/a2ui_cocoapods.rb
+#
+# Resolution order (first non-blank wins):
+#   1. A2UI_VERSION env
+#   2. <A2UI-root>/local.properties → a2ui.version
+#   3. <A2UI-root>/gradle.properties → a2ui.version
+#   4. Default: 1.0.0
+# Any `-SNAPSHOT` tail is stripped (ohpm registry carries only released
+# versions).
+# ─────────────────────────────────────────────────────────────────────────
+a2ui_version() {
+    local raw="${A2UI_VERSION:-}"
+    if [ -z "$raw" ]; then
+        raw="$(_km_read_prop "$A2UI_ROOT/local.properties" a2ui.version || true)"
+    fi
+    if [ -z "$raw" ]; then
+        raw="$(_km_read_prop "$A2UI_ROOT/gradle.properties" a2ui.version || true)"
+    fi
+    [ -z "$raw" ] && raw="1.0.0"
+    echo "${raw%-SNAPSHOT}"
+}

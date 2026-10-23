@@ -1,9 +1,15 @@
 require_relative '../scripts/lib/kuikly_cocoapods'
+require_relative '../scripts/lib/a2ui_cocoapods'
 
 # Resolve Kuikly render pod source depending on `kuikly.useSource`.
 # See `scripts/lib/kuikly_cocoapods.rb` for the resolution order.
 kuikly_pod_version = A2UI::KuiklyCocoapods.render_pod_version(__dir__)
 kuikly_pod_options = A2UI::KuiklyCocoapods.render_pod_options(__dir__)
+
+# Resolve A2UI render pod source depending on `a2ui.useSource` (default
+# source — same-repo dev loop).
+a2ui_pod_version = A2UI::A2uiCocoapods.render_pod_version(__dir__)
+a2ui_pod_options = A2UI::A2uiCocoapods.render_pod_options(__dir__)
 
 platform :ios, '15.0'
 
@@ -24,7 +30,11 @@ target 'A2UIDemoApp' do
   else
     pod 'OpenKuiklyIOSRender', **kuikly_pod_options
   end
-  pod 'OpenKuiklyA2UIIOSRender', :path => '../a2ui-render-ios/'
+  if a2ui_pod_version
+    pod 'OpenKuiklyA2UIIOSRender', a2ui_pod_version
+  else
+    pod 'OpenKuiklyA2UIIOSRender', **a2ui_pod_options
+  end
 end
 
 post_install do |installer|

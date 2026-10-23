@@ -33,8 +33,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":a2ui"))
-    implementation(project(":a2ui-render-android"))
+    // A2UI runtime + Android render — dual-mode (`a2ui.useSource`, default
+    // source). See `buildSrc/src/main/java/A2uiDep.kt`.
+    implementation(A2uiDep.a2ui(project))
+    implementation(A2uiDep.a2uiRenderAndroid(project))
     // Kuikly render engine — required for KRImage adapter (Native View path
     // still uses core-render Kuikly adapters for image/audio/video).
     implementation(KuiklyDep.coreRenderAndroid(project))

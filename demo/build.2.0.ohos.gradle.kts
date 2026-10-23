@@ -85,7 +85,12 @@ kotlin {
                 implementation(KuiklyDep.compose(project))
                 // Re-export the A2UI runtime so the resulting libshared.so
                 // contains both the runtime and the demo Pager classes.
-                api(project(":a2ui"))
+                //
+                // Dual-mode via `A2uiDep` (default source). In artifact
+                // mode this resolves to the published OHOS-tagged KMP
+                // Maven coordinate (e.g. `com.tencent.kuikly-a2ui-open:
+                // a2ui:1.0.0-2.0.21-ohos`).
+                api(A2uiDep.a2ui(project))
             }
         }
 

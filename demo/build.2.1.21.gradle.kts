@@ -111,7 +111,12 @@ kotlin {
                 // to `:a2ui`'s commonMain singletons — none of
                 // `:a2ui`'s symbols need to appear on `:demo`'s API
                 // surface for downstream Kotlin consumers.
-                implementation(project(":a2ui"))
+                //
+                // Dual-mode via `A2uiDep` (default source). In artifact
+                // mode this resolves to the published KMP Maven
+                // coordinate (e.g. `com.tencent.kuikly-a2ui-open:a2ui:
+                // 1.0.0-2.1.21`).
+                implementation(A2uiDep.a2ui(project))
                 // For the "Compose Page integration" example page. Consumed
                 // by `:androidAppForKuiklyPage` at runtime; unused apps
                 // let R8 strip the Compose entry classes.

@@ -33,8 +33,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":a2ui"))
-    implementation(project(":a2ui-render-android"))
+    // A2UI runtime + Android render — dual-mode (`a2ui.useSource`, default
+    // source). See `buildSrc/src/main/java/A2uiDep.kt`.
+    implementation(A2uiDep.a2ui(project))
+    implementation(A2uiDep.a2uiRenderAndroid(project))
     // KMP business module holding the @Page-annotated DSL example pages
     // (A2UISurfaceDemoPager for the "card scene", A2UIJsonHostPager for the
     // component / custom-function / custom-component / custom-icon details,

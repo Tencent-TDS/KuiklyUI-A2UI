@@ -33,8 +33,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":a2ui"))
-    implementation(project(":a2ui-render-android"))
+    // A2UI runtime + Android render — dual-mode (`a2ui.useSource`, default
+    // source). See `buildSrc/src/main/java/A2uiDep.kt`.
+    implementation(A2uiDep.a2ui(project))
+    implementation(A2uiDep.a2uiRenderAndroid(project))
     implementation(KuiklyDep.coreRenderAndroid(project))
     implementation("androidx.appcompat:appcompat:1.4.2")
     implementation("androidx.core:core-ktx:1.7.0")
