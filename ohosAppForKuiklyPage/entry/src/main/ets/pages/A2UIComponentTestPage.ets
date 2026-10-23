@@ -18,7 +18,7 @@ import { KRNativeRenderController, KRRecord, Kuikly } from '@kuikly-open/render'
 import {
   A2UIKuiklyRenderViewSupport,
   a2uiNativeManager
-} from '@kuikly-a2ui-open/a2ui-render';
+} from '@kuikly-a2ui-open/render';
 import { A2UIDemoAssetUtil, TestCaseData } from '../a2ui/A2UIDemoAssetUtil';
 
 /**

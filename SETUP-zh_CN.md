@@ -205,7 +205,7 @@ bash scripts/link-kuikly.sh
 > 源码模式下必须以"真实在 workspace 内的目录"方式提供给 hvigor。镜像
 > 已在 `.gitignore` 中过滤。
 
-**ohpm 包 `@kuikly-a2ui-open/a2ui-render` 的发布** — 本仓库当前没有自动发布
+**ohpm 包 `@kuikly-a2ui-open/render` 的发布** — 本仓库当前没有自动发布
 脚本（与 Kuikly 工程保持一致）。发布前请确保仓库处于**产物模式**
 （即 `a2ui-render-ohos/oh-package.json5` 中 `@kuikly-open/render` 是
 `"<kuikly.version>"` 形式，而不是 `"file:../core-render-ohos"`），然后
@@ -219,7 +219,7 @@ bash scripts/link-kuikly.sh
 |---|---|---|---|
 | Maven 上的 Android AAR / KMP klib（`com.tencent.kuikly-open:a2ui`、`a2ui-render-android`） | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `1.0.0-2.1.21`、`1.0.0-2.0.21-ohos` | `A2uiVersion.getArtifactVersion(project)` |
 | iOS pods（`a2ui`、`OpenKuiklyA2UIIOSRender`） | `${semantic}`（纯 SemVer，CocoaPods 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
-| HarmonyOS ohpm（`@kuikly-a2ui-open/a2ui-render`） | `${semantic}`（纯 SemVer，OHPM 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| HarmonyOS ohpm（`@kuikly-a2ui-open/render`） | `${semantic}`（纯 SemVer，OHPM 要求） | `1.0.0` | `A2uiVersion.getSemantic(project)` |
 | README / 展示用途 | `${semantic}` | `1.0.0` | `A2uiVersion.getSemantic()` |
 
 Maven 坐标中的 Kotlin 后缀遵循 Kuikly Core 约定

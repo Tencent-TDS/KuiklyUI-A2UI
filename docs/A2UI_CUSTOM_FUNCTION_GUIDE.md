@@ -579,7 +579,7 @@ class MyViewController: UIViewController {
 #### 注册自定义函数
 
 ```typescript
-import { registerA2UICustomFunction } from '@kuikly-a2ui-open/a2ui-render';
+import { registerA2UICustomFunction } from '@kuikly-a2ui-open/render';
 
 // 注册一个返回 String 的同步函数
 registerA2UICustomFunction(
@@ -597,7 +597,7 @@ registerA2UICustomFunction(
 #### 注销自定义函数
 
 ```typescript
-import { unregisterA2UICustomFunction } from '@kuikly-a2ui-open/a2ui-render';
+import { unregisterA2UICustomFunction } from '@kuikly-a2ui-open/render';
 
 unregisterA2UICustomFunction('getGreeting');
 ```
@@ -628,7 +628,7 @@ const flag = (args['key'] as boolean) ?? false;     // Boolean
 #### 完整示例
 
 ```typescript
-import { registerA2UICustomFunction, unregisterA2UICustomFunction } from '@kuikly-a2ui-open/a2ui-render';
+import { registerA2UICustomFunction, unregisterA2UICustomFunction } from '@kuikly-a2ui-open/render';
 
 @Entry
 @Component

@@ -300,7 +300,7 @@ A2UISurfaceView.registerCustomFunction(
 {
   "dependencies": {
     "@kuikly-open/render": "2.0.0",
-    "@kuikly-a2ui-open/a2ui-render": "file:../../a2ui-render-ohos"
+    "@kuikly-a2ui-open/render": "file:../../a2ui-render-ohos"
   }
 }
 ```
@@ -365,7 +365,7 @@ static napi_value InitKuikly(napi_env env, napi_callback_info info) {
 
 ```typescript
 import { A2UISurfaceView, A2UISurfaceViewController, A2UISurfaceViewListener }
-  from '@kuikly-a2ui-open/a2ui-render';
+  from '@kuikly-a2ui-open/render';
 
 @Entry
 @Component
@@ -419,7 +419,7 @@ A2UISurface({
 import {
   registerA2UICustomRenderView,
   registerA2UICustomFunction
-} from '@kuikly-a2ui-open/a2ui-render';
+} from '@kuikly-a2ui-open/render';
 
 registerA2UICustomRenderView('A2UIWeb', () => new A2UIWebRenderView());
 

@@ -230,7 +230,7 @@ bash scripts/link-kuikly.sh
 > checkout. So in source mode we must present hvigor with a real,
 > in-workspace directory. The mirror is `.gitignore`d.
 
-**Publishing the ohpm package `@kuikly-a2ui-open/a2ui-render`** — this
+**Publishing the ohpm package `@kuikly-a2ui-open/render`** — this
 repository ships no automated publish script (aligned with the upstream
 Kuikly project). Before publishing, make sure the repository is in
 **artifact mode** (i.e. `@kuikly-open/render` in
@@ -247,7 +247,7 @@ different** version schemes:
 |---|---|---|---|
 | Android AAR / KMP klib on Maven (`com.tencent.kuikly-open:a2ui`, `a2ui-render-android`) | `${semantic}-${kotlin}[-ohos][-SNAPSHOT]` | `1.0.0-2.1.21`, `1.0.0-2.0.21-ohos` | `A2uiVersion.getArtifactVersion(project)` |
 | iOS pods (`a2ui`, `OpenKuiklyA2UIIOSRender`) | `${semantic}` (plain SemVer, required by CocoaPods) | `1.0.0` | `A2uiVersion.getSemantic(project)` |
-| HarmonyOS ohpm (`@kuikly-a2ui-open/a2ui-render`) | `${semantic}` (plain SemVer, required by OHPM) | `1.0.0` | `A2uiVersion.getSemantic(project)` |
+| HarmonyOS ohpm (`@kuikly-a2ui-open/render`) | `${semantic}` (plain SemVer, required by OHPM) | `1.0.0` | `A2uiVersion.getSemantic(project)` |
 | README / display usage | `${semantic}` | `1.0.0` | `A2uiVersion.getSemantic()` |
 
 The Kotlin suffix in Maven coordinates follows the Kuikly Core convention

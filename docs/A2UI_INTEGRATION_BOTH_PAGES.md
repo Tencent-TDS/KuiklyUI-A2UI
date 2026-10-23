@@ -28,7 +28,7 @@
 |--------|---------|-----|-----------|
 | A2UI 核心 KMP | 一份 `:a2ui` 依赖 | 一个 K/N framework（`a2ui_demo`） | 一份 `libshared.so` |
 | Kuikly 渲染层 | `core-render-android` | `OpenKuiklyIOSRender` | `@kuikly-open/render` |
-| A2UI 渲染层 | `a2ui-render-android` | `OpenKuiklyA2UIIOSRender` | `@kuikly-a2ui-open/a2ui-render` |
+| A2UI 渲染层 | `a2ui-render-android` | `OpenKuiklyA2UIIOSRender` | `@kuikly-a2ui-open/render` |
 | 业务 KMP 模块 | 必须（用于 Kuikly 页承载） | 必须（用于 Kuikly 页承载） | 必须（用于 Kuikly 页承载） |
 | 全局初始化 | Application 里做 A + K 两侧初始化 | AppDelegate 一次设置 frameworkName | Ability 里做 A + K 两侧初始化 |
 
@@ -175,7 +175,7 @@ override func viewDidLoad() {
 {
   "dependencies": {
     "@kuikly-open/render": "2.0.0",
-    "@kuikly-a2ui-open/a2ui-render": "file:../../a2ui-render-ohos"
+    "@kuikly-a2ui-open/render": "file:../../a2ui-render-ohos"
   }
 }
 ```

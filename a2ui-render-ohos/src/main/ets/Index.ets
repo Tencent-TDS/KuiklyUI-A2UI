@@ -28,7 +28,7 @@
  *
  * Usage:
  * ```ets
- * import { A2UISurfaceView, A2UISurfaceViewController, A2UISurfaceViewListener } from '@kuikly-a2ui-open/a2ui-render';
+ * import { A2UISurfaceView, A2UISurfaceViewController, A2UISurfaceViewListener } from '@kuikly-a2ui-open/render';
  *
  * @Component
  * struct MyPage {

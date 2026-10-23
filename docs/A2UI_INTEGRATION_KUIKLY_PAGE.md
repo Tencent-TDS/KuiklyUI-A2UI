@@ -366,7 +366,7 @@ import { KRNativeRenderController, Kuikly } from '@kuikly-open/render';
 import {
   A2UIKuiklyRenderViewSupport,
   a2uiNativeManager
-} from '@kuikly-a2ui-open/a2ui-render';
+} from '@kuikly-a2ui-open/render';
 
 @Entry
 @Component

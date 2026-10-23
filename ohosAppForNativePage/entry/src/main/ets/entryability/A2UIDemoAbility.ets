@@ -19,7 +19,7 @@ import { window } from '@kit.ArkUI';
 import { KuiklyRenderAdapterManager } from '@kuikly-open/render';
 import { A2UIVideoViewAdapter } from '../a2ui/adapters/A2UIVideoViewAdapter';
 import { A2UIAudioViewAdapter } from '../a2ui/adapters/A2UIAudioViewAdapter';
-import { registerA2UIIcons, A2UI_ICON_FALLBACK_KEY } from '@kuikly-a2ui-open/a2ui-render';
+import { registerA2UIIcons, A2UI_ICON_FALLBACK_KEY } from '@kuikly-a2ui-open/render';
 
 const TAG = 'A2UIDemoAbility';
 

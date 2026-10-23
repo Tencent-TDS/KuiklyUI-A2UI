@@ -1,5 +1,5 @@
 {
-  "name": "@kuikly-a2ui-open/a2ui-render",
+  "name": "@kuikly-a2ui-open/render",
   // Version is kept in sync with the single source of truth
   // `buildSrc/src/main/java/A2uiVersion.kt` (`DEFAULT_A2UI_SEMANTIC`).
   // OHPM enforces strict SemVer, so we use the plain semantic form here

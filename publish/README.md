@@ -8,7 +8,7 @@
 | **HarmonyOS KMP klib**（`com.tencent.kuikly-a2ui-open:a2ui`，Kotlin `2.0.21-KBA-010` / `-ohos` 坐标） | 本地 `~/.m2` / Sonatype Maven Central | [`2.0_ohos_publish.sh`](2.0_ohos_publish.sh) |
 | **iOS Pod**（`a2ui` / `OpenKuiklyA2UIIOSRender`；`a2ui_demo` 属业务示例代码不发布） | pod trunk / 私有 spec repo | 无脚本，手工发布（见下文） |
 
-> HarmonyOS ohpm 包（`@kuikly-a2ui-open/a2ui-render`）与 iOS Pod 当前都不在本仓库脚本范围内发布，与 Kuikly 工程保持一致。iOS Pod 请在对应目录手工执行 `pod trunk push`，ohpm 包请在 `a2ui-render-ohos/` 目录下手工执行 `ohpm pack` / `ohpm publish`。
+> HarmonyOS ohpm 包（`@kuikly-a2ui-open/render`）与 iOS Pod 当前都不在本仓库脚本范围内发布，与 Kuikly 工程保持一致。iOS Pod 请在对应目录手工执行 `pod trunk push`，ohpm 包请在 `a2ui-render-ohos/` 目录下手工执行 `ohpm pack` / `ohpm publish`。
 
 其中 [`FileReplacer.java`](FileReplacer.java) 是一个通用文本 patch 工具，[`compatible/`](compatible/) 目录下的 YAML 配置文件描述"切换到某个兼容构建（例如 HarmonyOS 2.0 + Gradle 8.0）时需要临时改哪些文件"，配合 `2.0_a2ui_ohos_build.sh` / `2.1.21_publish.sh` / `2.0_ohos_publish.sh` 使用。
 

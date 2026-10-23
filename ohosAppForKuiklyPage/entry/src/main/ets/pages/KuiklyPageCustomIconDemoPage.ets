@@ -21,7 +21,7 @@ import {
   registerA2UIIcons,
   unregisterA2UIIcon,
   A2UI_ICON_FALLBACK_KEY
-} from '@kuikly-a2ui-open/a2ui-render';
+} from '@kuikly-a2ui-open/render';
 
 /**
  * KuiklyPageCustomIconDemoPage — icon-registry demo, KuiklyPage app.

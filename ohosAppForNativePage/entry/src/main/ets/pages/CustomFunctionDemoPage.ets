@@ -14,7 +14,7 @@
  */
 
 import { router } from '@kit.ArkUI';
-import { registerA2UICustomFunction, unregisterA2UICustomFunction } from '@kuikly-a2ui-open/a2ui-render';
+import { registerA2UICustomFunction, unregisterA2UICustomFunction } from '@kuikly-a2ui-open/render';
 
 /**
  * Custom function entry data.
