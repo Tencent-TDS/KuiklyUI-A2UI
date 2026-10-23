@@ -23,15 +23,15 @@ Kuikly A2UI 核心 SDK 内部直接对接 Kuikly DSL 组件树，将服务端下
 - [DevEco Studio 5.1.0 or newer](https://developer.huawei.com/consumer/cn/download/deveco-studio)
 - Device or Emulator with HarmonyOS Next 5.0.0(12) or newer
 
-### 集成Kuikly
+### 集成 Kuikly A2UI
 
-1. 你可以通过 ohpm 将 kuikly a2ui 添加到你的项目中：
+1. 你可以通过 ohpm 将 Kuikly A2UI 添加到你的项目中：
 
   `ohpm install @kuikly-a2ui-open/render`
 
 2. 或者你可以手动添加到你的项目中：
 
-在应用程序模块的 `oh-package.json5` 中添加 kuikly a2ui 依赖
+在应用程序模块的 `oh-package.json5` 中添加 Kuikly A2UI 依赖
 
 ```json5
   "dependencies": {
