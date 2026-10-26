@@ -313,6 +313,8 @@ iOS / HarmonyOS 的 API 语义与 Android **完全一致**（`initSurface` / `wr
 
 ## 接入文档
 
+> **依赖写法约定**：下方三份接入指南中的依赖代码块默认按**产物版本（已发布坐标）模式**书写——这是下游业务从 Maven / CocoaPods trunk / ohpm registry 消费 A2UI 的推荐路径。每个依赖小节会额外并列一个**源码 / `:path` 模式**的代码块，那是**仅本仓库内示例工程使用**的写法（由 `a2ui.useSource` / `kuikly.useSource` 开关切换），下游业务请忽略。开关详见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
+
 ### 接入指南
 
 | 文档 | 说明 |

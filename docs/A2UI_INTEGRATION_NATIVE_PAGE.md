@@ -28,23 +28,51 @@
 
 ---
 
+## 版本号速查（产物模式）
+
+下面所有示例里出现的 `${a2uiVersion}` / `${kuiklyVersion}` 占位符，按平台替换为下表的值即可直接复制使用（当前默认版本）：
+
+| 变量 | Android / KMP Maven 坐标 | iOS CocoaPods / OHOS ohpm | 说明 |
+|------|--------------------------|---------------------------|------|
+| `${a2uiVersion}` | `1.0.0-2.1.21` | `1.0.0` | 本仓库发布的 A2UI 产物版本。Android 走 `${semantic}-${kotlinVersion}`；iOS/OHOS 走纯 SemVer |
+| `${kuiklyVersion}` | `2.30.0-2.1.21` | `2.30.0` | 底层 Kuikly 产物版本。规则同上 |
+| HarmonyOS 的 Android/KMP Maven 坐标 | `1.0.0-2.0.21-ohos` / `2.30.0-2.0.21-ohos` | 同上 | 仅走 HarmonyOS 2.0 兼容构建时才需要（Kotlin `2.0.21-KBA-010`）|
+
+> **源码模式**：如果你是**在本仓库内调试**（即用 `./gradlew :androidAppForNativePage:installDebug` 跑本仓示例工程），下方 Android 代码块里的坐标写法只是展示——仓库示例实际使用的是 `project(":a2ui")` 风格的工程依赖，由 `A2uiDep` / `KuiklyDep` 两个 helper 根据 `a2ui.useSource` / `kuikly.useSource` 两个开关自动切换；本仓默认 `a2ui.useSource=true`、`kuikly.useSource=false`。详见 [`SETUP-zh_CN.md`](../SETUP-zh_CN.md)。
+
+---
+
 ## Android 接入
 
 ### 1. 添加依赖
 
+**产物模式（下游业务接入推荐）**：
+
 ```kotlin
-// build.gradle.kts (业务模块)
-// 版本号格式：${kuiklyVersion}-${kotlinVersion}
-val a2uiVersion = "1.0.0-2.1.21"
+// build.gradle.kts（业务模块）
+val a2uiVersion   = "1.0.0-2.1.21"    // A2UI 产物版本（本仓发布）
+val kuiklyVersion = "2.30.0-2.1.21"   // Kuikly 底层产物版本
 
 dependencies {
     // A2UI 核心（KMP）
     implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
     // A2UI Android 渲染层（提供 A2UISurfaceView）
     implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
-    // Kuikly 渲染层
-    implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
+    // Kuikly 原生渲染层
+    implementation("com.tencent.kuikly-open:core-render-android:${kuiklyVersion}")
     // 图片加载（推荐 Glide）
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+}
+```
+
+**源码模式（仅本仓内示例工程使用，下游业务请忽略）**：
+
+```kotlin
+// androidAppForNativePage/build.gradle.kts（本仓示例）
+dependencies {
+    implementation(A2uiDep.a2ui(project))                 // project(":a2ui")
+    implementation(A2uiDep.a2uiRenderAndroid(project))    // project(":a2ui-render-android")
+    implementation(KuiklyDep.coreRenderAndroid(project))  // 根据开关自动切 Maven / project
     implementation("com.github.bumptech.glide:glide:4.16.0")
 }
 ```
@@ -162,7 +190,21 @@ A2UISurfaceView.registerCustomFunction(
 
 ## iOS 接入
 
-### 1. Podfile
+### 1. 关于 iOS 产物依赖的重要说明
+
+iOS 侧的三类 pod **消费姿势不同**，下游接入 A2UI 时必须注意：
+
+| Pod | 内容 | 是否发布到 CocoaPods Trunk | 下游怎么用 |
+|-----|------|---------------------------|-----------|
+| `OpenKuiklyIOSRender` | Kuikly 原生渲染层（ObjC/C++） | ✅ 已发布 | 直接 `pod 'OpenKuiklyIOSRender', '${kuiklyVersion}'` |
+| `OpenKuiklyA2UIIOSRender` | A2UI 原生渲染层（ObjC/C++，依赖 Kuikly） | ✅ 已发布 | 直接 `pod 'OpenKuiklyA2UIIOSRender', '${a2uiVersion}'` |
+| `a2ui` / `a2ui_demo` | A2UI 核心 **Kotlin/Native framework** | ❌ 不发布到 Trunk | **下游不能用 pod 方式拉取**——这是 Kotlin cocoapods 插件在仓库内生成的本地 podspec，构建期间需要跑 `./gradlew :a2ui:syncFramework`，只能本仓内 `:path =>` 使用 |
+
+**下游业务拿到 A2UI Kotlin framework 的正确姿势**：业务侧自建一个 **KMP 业务模块**，在该模块的 `commonMainImplementation` 里以 **Maven 坐标**依赖 A2UI 核心（`com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}`），然后用业务自己的 KMP cocoapods 配置把生成的 K/N framework 以 pod 形式嵌到 App。Native 页宿主通常**可以不用业务自建 KMP 模块**——如果你**没有任何 Kuikly DSL `@Page` 页面要承载**，`pod 'OpenKuiklyA2UIIOSRender'` + `pod 'OpenKuiklyIOSRender'` 两个产物 pod 就够了（KMP 核心代码由渲染 pod 内部静态链接）。一旦涉及 Kuikly DSL 页面，就必须自建业务 KMP 模块，详见 [A2UI_INTEGRATION_KUIKLY_PAGE.md](A2UI_INTEGRATION_KUIKLY_PAGE.md)。
+
+### 2. Podfile
+
+**产物模式（下游业务接入推荐）**：
 
 ```ruby
 platform :ios, '15.0'
@@ -170,19 +212,36 @@ platform :ios, '15.0'
 target 'MyApp' do
   use_modular_headers!
 
-  # Kuikly iOS 原生渲染层（已发布到 CocoaPods Trunk，正式接入时可去 :path）
+  # Kuikly 原生渲染层（CocoaPods Trunk 产物）
+  pod 'OpenKuiklyIOSRender', '2.30.0'
+
+  # A2UI 原生渲染层（CocoaPods Trunk 产物）
+  # 其 podspec 已 `spec.dependency 'OpenKuiklyIOSRender', '2.30.0'`，
+  # 因此 Kuikly 版本会自动带出，无须额外指定
+  pod 'OpenKuiklyA2UIIOSRender', '1.0.0'
+end
+```
+
+**源码/`:path` 模式（仅本仓内示例工程使用，下游业务请忽略）**：
+
+```ruby
+platform :ios, '15.0'
+
+target 'MyApp' do
+  use_modular_headers!
+
   pod 'OpenKuiklyIOSRender', :path => '<path-to-repo-root>'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-repo-root>'
 
-  # A2UI iOS 渲染层（尚未发布到 Trunk，暂时本地路径）
-  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
-
-  # A2UI 核心（KMP）——由 Kotlin cocoapods 插件自动生成 podspec，
+  # A2UI 核心（KMP）——由 Kotlin cocoapods 插件生成的本地 podspec，
   # 每次 Xcode Build 会触发 Gradle 编译 A2UICore.framework
   pod 'a2ui', :path => '<path-to-a2ui-module>'
 end
 ```
 
-首次 `pod install` 前需要生成 dummy framework：
+仓库示例工程通过 `iosAppFor*/setup.sh` + `scripts/lib/kuikly_cocoapods.rb` / `scripts/lib/a2ui_cocoapods.rb` 由开关自动切换两种模式，详见 [`SETUP-zh_CN.md`](../SETUP-zh_CN.md)。
+
+首次 `pod install` 前需要生成 dummy framework（**仅源码模式**）：
 
 ```bash
 ./gradlew :a2ui:generateDummyFramework
@@ -296,14 +355,29 @@ A2UISurfaceView.registerCustomFunction(
 
 在 `entry/oh-package.json5` 中：
 
+**产物模式（下游业务接入推荐）**：
+
 ```json5
 {
   "dependencies": {
-    "@kuikly-open/render": "2.0.0",
+    "@kuikly-open/render": "2.30.0",         // Kuikly 原生渲染层（ohpm 产物）
+    "@kuikly-a2ui-open/render": "1.0.0"      // A2UI 原生渲染层（ohpm 产物）
+  }
+}
+```
+
+**源码/`file:` 模式（仅本仓内示例工程使用，下游业务请忽略）**：
+
+```json5
+{
+  "dependencies": {
+    "@kuikly-open/render": "file:../../core-render-ohos",
     "@kuikly-a2ui-open/render": "file:../../a2ui-render-ohos"
   }
 }
 ```
+
+> 仓库 5 个 `ohosAppFor*/entry/oh-package.json5` 由 `scripts/apply-ohos-mode.sh` 自动在两种模式间切换（受 `kuikly.useSource` / `a2ui.useSource` 控制），详见 [`SETUP-zh_CN.md`](../SETUP-zh_CN.md)。
 
 ### 2. 构建并放置 KMP 产物
 

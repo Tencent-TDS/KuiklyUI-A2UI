@@ -94,17 +94,17 @@ cd iosAppForNativePage && bash setup.sh && open A2UIDemoApp.xcworkspace
 1 添加依赖：
 
 ```kotlin
-// build.gradle.kts (业务模块)
-// 版本号格式：${kuiklyVersion}-${kotlinVersion}
-val a2uiVersion = "1.0.0-2.1.21"
+// build.gradle.kts（业务模块）
+val a2uiVersion   = "1.0.0-2.1.21"    // A2UI 产物版本（本仓发布）
+val kuiklyVersion = "2.30.0-2.1.21"   // Kuikly 底层产物版本
 
 dependencies {
     // A2UI 核心（KMP）
     implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
     // A2UI Android 渲染层（提供 A2UISurfaceView）
     implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
-    // Kuikly 渲染层
-    implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
+    // Kuikly 原生渲染层
+    implementation("com.tencent.kuikly-open:core-render-android:${kuiklyVersion}")
     // 图片加载
     implementation("com.github.bumptech.glide:glide:4.16.0")
 }

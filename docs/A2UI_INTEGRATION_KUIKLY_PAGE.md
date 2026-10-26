@@ -38,6 +38,20 @@
 
 ---
 
+## 版本号速查（产物模式）
+
+下文所有示例里出现的 `${a2uiVersion}` / `${kuiklyVersion}` 占位符，按平台替换为下表的值（当前默认版本）：
+
+| 变量 | Android / KMP Maven 坐标 | iOS CocoaPods / OHOS ohpm | 说明 |
+|------|--------------------------|---------------------------|------|
+| `${a2uiVersion}` | `1.0.0-2.1.21` | `1.0.0` | 本仓库发布的 A2UI 产物版本 |
+| `${kuiklyVersion}` | `2.30.0-2.1.21` | `2.30.0` | 底层 Kuikly 产物版本 |
+| HarmonyOS 的 Android/KMP Maven 坐标 | `1.0.0-2.0.21-ohos` / `2.30.0-2.0.21-ohos` | 同上 | 仅 HarmonyOS 2.0 兼容构建时需要 |
+
+> **源码模式**：本仓例工程使用 `project(":a2ui")` 风格的工程依赖，由 `A2uiDep` / `KuiklyDep` 根据 `a2ui.useSource` / `kuikly.useSource` 开关自动切换，详见 [`SETUP-zh_CN.md`](../SETUP-zh_CN.md)。
+
+---
+
 ## 业务集成模式
 
 DSL 接入的业务代码 = **Kuikly DSL Kotlin 页面**，因此业务方需要**维护一个自己的 KMP 模块**（就像本仓库的 `:demo`），把带 `@Page` 注解的 Pager 类编进该模块，宿主 App 再依赖它。仓库模块结构参考如下：
@@ -58,23 +72,38 @@ DSL 接入的业务代码 = **Kuikly DSL Kotlin 页面**，因此业务方需要
 
 ### 1. 依赖
 
+**产物模式（下游业务接入推荐）**：
+
 ```kotlin
-// 业务 KMP 模块（:mybiz）依赖 A2UI 核心 + Kuikly DSL 相关：
+// 业务 KMP 模块（`:mybiz`）——承载 @Page Pager
 dependencies {
-    commonMainImplementation("com.tencent.kuikly:core:${kuiklyVersion}")
-    commonMainImplementation("com.tencent.kuikly:core-annotations:${kuiklyVersion}")
+    commonMainImplementation("com.tencent.kuikly-open:core:${kuiklyVersion}")
+    commonMainImplementation("com.tencent.kuikly-open:core-annotations:${kuiklyVersion}")
     commonMainImplementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
-    add("kspCommonMainMetadata", "com.tencent.kuikly:core-ksp:${kuiklyVersion}")
+    add("kspCommonMainMetadata", "com.tencent.kuikly-open:core-ksp:${kuiklyVersion}")
     // 如需 Compose DSL：
-    commonMainImplementation("com.tencent.kuikly:compose:${kuiklyVersion}")
+    commonMainImplementation("com.tencent.kuikly-open:compose:${kuiklyVersion}")
 }
 
-// 宿主 App 模块（:myapp）：
+// 宿主 App 模块（`:myapp`）
 dependencies {
-    implementation(project(":mybiz"))                                      // 业务 KMP 页面
+    implementation(project(":mybiz"))                                                 // 业务 KMP 页面
     implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")
     implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
-    implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
+    implementation("com.tencent.kuikly-open:core-render-android:${kuiklyVersion}")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+}
+```
+
+**源码模式（仅本仓内示例工程使用，下游业务请忽略）**：
+
+```kotlin
+// androidAppForKuiklyPage/build.gradle.kts（本仓示例）
+dependencies {
+    implementation(project(":demo"))                       // 本仓业务 KMP 示例模块
+    implementation(A2uiDep.a2ui(project))                  // project(":a2ui")
+    implementation(A2uiDep.a2uiRenderAndroid(project))     // project(":a2ui-render-android")
+    implementation(KuiklyDep.coreRenderAndroid(project))
     implementation("com.github.bumptech.glide:glide:4.16.0")
 }
 ```
@@ -205,9 +234,18 @@ class MyBizPage : Pager() {
 
 ## iOS 接入
 
-### 1. Podfile
+### 1. 关于 iOS 产物依赖的重要说明
+
+详见 [A2UI_INTEGRATION_NATIVE_PAGE.md#iOS-接入](A2UI_INTEGRATION_NATIVE_PAGE.md#ios-接入)。核心要点回顾：
+
+- `OpenKuiklyIOSRender` / `OpenKuiklyA2UIIOSRender` 是**产物 pod**，已发 CocoaPods trunk。
+- `a2ui` / `a2ui_demo` 是**Kotlin cocoapods 插件生成的本地 podspec**，**不上 trunk**。下游业务必须自建 KMP 模块（就像本仓的 `:demo`），通过 Kotlin cocoapods 插件生成自己的 K/N framework。Kuikly 页接入场景里 **必须**自建，因为 @Page 页面代码必须被打包到业务 framework 里。
+
+### 2. Podfile
 
 Kuikly 页宿主推荐使用 `pod 'a2ui_demo'`——它把 A2UI KMP 逻辑和业务 KMP 逻辑一并编入同一个 K/N framework（默认名 `A2UIDemo`），运行时只有一个 KMP framework，无 duplicate-symbol 风险。
+
+**产物模式（下游业务接入推荐）**：
 
 ```ruby
 platform :ios, '15.0'
@@ -215,17 +253,30 @@ platform :ios, '15.0'
 target 'MyApp' do
   use_modular_headers!
 
-  # 承载业务 KMP Pager 的 framework（demo/ 目录的示例）
+  # 承载业务 KMP Pager 的 framework（本地 Kotlin cocoapods 插件生成，
+  # 注意：这是业务自己 KMP 模块的 podspec，始终 :path）
   pod 'a2ui_demo', :path => '<path-to-biz-kmp-module>'
 
-  # Kuikly 原生渲染层
-  pod 'OpenKuiklyIOSRender', :path => '<path-to-repo-root>'
-
-  # A2UI 原生渲染层
-  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
+  # Kuikly / A2UI 原生渲染层（CocoaPods Trunk 产物）
+  pod 'OpenKuiklyIOSRender', '2.30.0'
+  pod 'OpenKuiklyA2UIIOSRender', '1.0.0'
 
   # ⚠️ 不要再单独引 `pod 'a2ui'`——K/N 静态 framework 会产生
   #    duplicate stdlib-cache symbols
+end
+```
+
+**源码模式（仅本仓内示例工程使用，下游业务请忽略）**：
+
+```ruby
+platform :ios, '15.0'
+
+target 'MyApp' do
+  use_modular_headers!
+
+  pod 'a2ui_demo',               :path => '<path-to-biz-kmp-module>'
+  pod 'OpenKuiklyIOSRender',     :path => '<path-to-repo-root>'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-repo-root>'
 end
 ```
 

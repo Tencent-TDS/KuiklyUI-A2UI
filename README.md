@@ -313,6 +313,8 @@ iOS / HarmonyOS APIs are **semantically identical** to Android (`initSurface` / 
 
 ## Integration Documentation
 
+> **Dependency style convention**: all integration guides below write their **dependency snippets in artifact (published-coordinate) mode** by default — this is the recommended path for downstream apps consuming A2UI from Maven / CocoaPods trunk / ohpm registry. Each dependency section additionally shows a parallel **source / `:path` mode** snippet that is **only** meant for the sample apps inside *this* repository (toggled by `a2ui.useSource` / `kuikly.useSource`); downstream apps should ignore it. See [`SETUP.md`](SETUP.md) for the toggle details.
+
 ### Integration Guides
 
 | Doc | Description |

@@ -36,22 +36,51 @@
 
 ---
 
+## 版本号速查（产物模式）
+
+下文所有示例里出现的 `${a2uiVersion}` / `${kuiklyVersion}` 占位符，按平台替换为下表的值（当前默认版本）：
+
+| 变量 | Android / KMP Maven 坐标 | iOS CocoaPods / OHOS ohpm | 说明 |
+|------|--------------------------|---------------------------|------|
+| `${a2uiVersion}` | `1.0.0-2.1.21` | `1.0.0` | 本仓库发布的 A2UI 产物版本 |
+| `${kuiklyVersion}` | `2.30.0-2.1.21` | `2.30.0` | 底层 Kuikly 产物版本 |
+| HarmonyOS 的 Android/KMP Maven 坐标 | `1.0.0-2.0.21-ohos` / `2.30.0-2.0.21-ohos` | 同上 | 仅 HarmonyOS 2.0 兼容构建时需要 |
+
+> **源码模式**：本仓示例工程 `*AppForBothPages` 使用 `project(":a2ui")` 风格的工程依赖，由 `A2uiDep` / `KuiklyDep` 根据 `a2ui.useSource` / `kuikly.useSource` 开关自动切换，详见 [`SETUP-zh_CN.md`](../SETUP-zh_CN.md)。
+
+---
+
 ## Android 平台
 
 ### 依赖合并
 
 Kuikly 页宿主要求业务 KMP 模块（用于承载 `@Page` Pager）：
 
+**产物模式（下游业务接入推荐）**：
+
 ```kotlin
-// 业务 KMP 模块（承载 @Page 页面），与 Kuikly 页宿主模式相同
-// —— 详见 A2UI_INTEGRATION_KUIKLY_PAGE.md
+// 业务 KMP 模块（承载 @Page 页面）——配置同 Kuikly 页宿主模式
+//   详见 A2UI_INTEGRATION_KUIKLY_PAGE.md
 
 // 宿主 App 模块：
 dependencies {
-    implementation(project(":mybiz"))                                     // 业务 KMP
-    implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")              // A2UI 核心
+    implementation(project(":mybiz"))                                                 // 业务 KMP
+    implementation("com.tencent.kuikly-a2ui-open:a2ui:${a2uiVersion}")                 // A2UI 核心
     implementation("com.tencent.kuikly-a2ui-open:a2ui-render-android:${a2uiVersion}")
-    implementation("com.tencent.kuikly:core-render-android:${a2uiVersion}")
+    implementation("com.tencent.kuikly-open:core-render-android:${kuiklyVersion}")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+}
+```
+
+**源码模式（仅本仓内示例工程使用）**：
+
+```kotlin
+// androidAppForBothPages/build.gradle.kts（本仓示例）
+dependencies {
+    implementation(project(":demo"))
+    implementation(A2uiDep.a2ui(project))
+    implementation(A2uiDep.a2uiRenderAndroid(project))
+    implementation(KuiklyDep.coreRenderAndroid(project))
     implementation("com.github.bumptech.glide:glide:4.16.0")
 }
 ```
@@ -94,6 +123,8 @@ class MyApplication : Application() {
 
 ### Podfile 合并（**最重要**）
 
+**产物模式（下游业务接入推荐）**：
+
 ```ruby
 platform :ios, '15.0'
 
@@ -103,12 +134,25 @@ target 'MyApp' do
   # ⚠️ 关键：Both 模式只能引 `pod 'a2ui_demo'`。
   # A2UIDemo.framework 已经把 :a2ui 的所有 Kotlin 符号打进去了
   #（见业务 KMP 模块的 build.gradle.kts），一个 K/N framework 就够两类
-  # 页面共用了。同时链 `pod 'a2ui'` 会产生 duplicate stdlib-cache 符号，
-  # 编译或运行阶段报错。
+  # 页面共用了。同时链 `pod 'a2ui'` 会产生 duplicate stdlib-cache 符号。
   pod 'a2ui_demo', :path => '<path-to-biz-kmp-module>'
 
-  pod 'OpenKuiklyIOSRender', :path => '<path-to-repo-root>'
-  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-a2ui-render-ios>'
+  pod 'OpenKuiklyIOSRender',     '2.30.0'
+  pod 'OpenKuiklyA2UIIOSRender', '1.0.0'
+end
+```
+
+**源码模式（仅本仓内示例工程使用）**：
+
+```ruby
+platform :ios, '15.0'
+
+target 'MyApp' do
+  use_modular_headers!
+
+  pod 'a2ui_demo',               :path => '<path-to-biz-kmp-module>'
+  pod 'OpenKuiklyIOSRender',     :path => '<path-to-repo-root>'
+  pod 'OpenKuiklyA2UIIOSRender', :path => '<path-to-repo-root>'
 end
 ```
 
@@ -170,11 +214,25 @@ override func viewDidLoad() {
 
 ### 依赖合并
 
+**产物模式（下游业务接入推荐）**：
+
 ```json5
 // entry/oh-package.json5
 {
   "dependencies": {
-    "@kuikly-open/render": "2.0.0",
+    "@kuikly-open/render": "2.30.0",
+    "@kuikly-a2ui-open/render": "1.0.0"
+  }
+}
+```
+
+**源码/`file:` 模式（仅本仓内示例工程使用）**：
+
+```json5
+// entry/oh-package.json5
+{
+  "dependencies": {
+    "@kuikly-open/render": "file:../../core-render-ohos",
     "@kuikly-a2ui-open/render": "file:../../a2ui-render-ohos"
   }
 }
