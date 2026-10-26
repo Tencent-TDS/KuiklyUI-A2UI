@@ -195,7 +195,7 @@ KuiklyUI-A2UI/                             # 工程根目录（本仓库）
 └── 2.0_a2ui_ohos_build{,_release}.sh      # HarmonyOS 构建脚本
 ```
 
-> **依赖模式**：默认走 **Maven / Pod / OHPM 产物依赖**（`kuikly.useSource=false`，Kuikly `2.29.2`），**无需本地 KuiklyUI 源码**；需要和 Kuikly 一起源码联调时再把 `kuikly.useSource` 置为 `true` 并指定 `kuikly.projectDir`。详见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
+> **依赖模式**：默认走 **Maven / Pod / OHPM 产物依赖**（`kuikly.useSource=false`，Kuikly `2.30.0`），**无需本地 KuiklyUI 源码**；需要和 Kuikly 一起源码联调时再把 `kuikly.useSource` 置为 `true` 并指定 `kuikly.projectDir`。详见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
 
 ---
 
@@ -372,7 +372,7 @@ Android / iOS / HarmonyOS 三端 Demo 已内置：
 
 仓库中提供了 3 × 4 = 12 个示例工程，覆盖 3 端（Android / iOS / HarmonyOS）× 4 种（Native 页接入 / Kuikly 页接入 / 两种同时接入 / 协议测试）。
 
-**先决条件**：**无需** clone KuiklyUI 源码。Android / iOS / HarmonyOS 三端默认都从已发布的 **Maven / CocoaPods trunk / ohpm registry** 消费 Kuikly（当前默认 `kuikly.version=2.29.2`），`./gradlew` / `bash setup.sh` / `./2.0_a2ui_ohos_build.sh` 执行时会自动拉取对应产物。只有在想和 KuiklyUI 一起源码联调时才需要 clone KuiklyUI 并在 `local.properties` 中设 `kuikly.useSource=true` + `kuikly.projectDir=…`，具体步骤见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
+**先决条件**：**无需** clone KuiklyUI 源码。Android / iOS / HarmonyOS 三端默认都从已发布的 **Maven / CocoaPods trunk / ohpm registry** 消费 Kuikly（当前默认 `kuikly.version=2.30.0`），`./gradlew` / `bash setup.sh` / `./2.0_a2ui_ohos_build.sh` 执行时会自动拉取对应产物。只有在想和 KuiklyUI 一起源码联调时才需要 clone KuiklyUI 并在 `local.properties` 中设 `kuikly.useSource=true` + `kuikly.projectDir=…`，具体步骤见 [`SETUP-zh_CN.md`](SETUP-zh_CN.md)。
 
 然后按平台运行任意 demo：
 

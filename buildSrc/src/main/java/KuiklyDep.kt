@@ -47,23 +47,23 @@ import java.util.Properties
  *      together)
  *   3. `<root>/local.properties`  → key `kuikly.version`
  *   4. `<root>/gradle.properties` → key `kuikly.version`
- *   5. [DEFAULT_KUIKLY_VERSION] fallback (`2.29.2`)
+ *   5. [DEFAULT_KUIKLY_VERSION] fallback (`2.30.0`)
  *
  * The resolved value is used *verbatim* — the caller must spell out
  * whether a `-SNAPSHOT` tail is wanted. Pick the value that matches the
  * coordinate Kuikly actually published:
  *
- *   - released artifact → `kuikly.version=2.29.2`
- *   - snapshot artifact → `kuikly.version=2.29.2-SNAPSHOT`
+ *   - released artifact → `kuikly.version=2.30.0`
+ *   - snapshot artifact → `kuikly.version=2.30.0-SNAPSHOT`
  *
  * [kuiklyCoordinateVersion] then composes the final Maven coordinate
  * version by inserting the Kotlin toolchain segment *before* any
  * trailing `-SNAPSHOT`, following the exact same convention Kuikly Core
  * publishes with:
  *
- *   `2.29.2`           × Kotlin `2.1.21`         → `2.29.2-2.1.21`
- *   `2.29.2-SNAPSHOT`  × Kotlin `2.1.21`         → `2.29.2-2.1.21-SNAPSHOT`
- *   `2.29.2-SNAPSHOT`  × Kotlin `2.0.21-KBA-010` → `2.29.2-2.0.21-ohos-SNAPSHOT`
+ *   `2.30.0`           × Kotlin `2.1.21`         → `2.30.0-2.1.21`
+ *   `2.30.0-SNAPSHOT`  × Kotlin `2.1.21`         → `2.30.0-2.1.21-SNAPSHOT`
+ *   `2.30.0-SNAPSHOT`  × Kotlin `2.0.21-KBA-010` → `2.30.0-2.0.21-ohos-SNAPSHOT`
  *
  * ─────────────────────────────────────────────────────────────────────────
  *  Why this exists
@@ -81,7 +81,7 @@ object KuiklyDep {
 
     private const val KEY_KUIKLY_VERSION = "kuikly.version"
     private const val ENV_KUIKLY_VERSION = "KUIKLY_VERSION"
-    private const val DEFAULT_KUIKLY_VERSION = "2.29.2"
+    private const val DEFAULT_KUIKLY_VERSION = "2.30.0"
 
     private const val SNAPSHOT_SUFFIX = "-SNAPSHOT"
     private const val OHOS_KOTLIN_MARKER = "KBA-010"

@@ -62,9 +62,9 @@ echo "kuikly.useSource=true" >> local.properties
 发布 core/compose/ksp 时所用的坐标约定一致（见
 [`KuiklyDep.kuiklyCoordinateVersion`](buildSrc/src/main/java/KuiklyDep.kt)）：
 
-- `kuikly.version=2.29.2` × Kotlin `2.1.21` → `2.29.2-2.1.21`
-- `kuikly.version=2.29.2-SNAPSHOT` × Kotlin `2.1.21` → `2.29.2-2.1.21-SNAPSHOT`
-- `kuikly.version=2.29.2-SNAPSHOT` × Kotlin `2.0.21-KBA-010` → `2.29.2-2.0.21-ohos-SNAPSHOT`
+- `kuikly.version=2.30.0` × Kotlin `2.1.21` → `2.30.0-2.1.21`
+- `kuikly.version=2.30.0-SNAPSHOT` × Kotlin `2.1.21` → `2.30.0-2.1.21-SNAPSHOT`
+- `kuikly.version=2.30.0-SNAPSHOT` × Kotlin `2.0.21-KBA-010` → `2.30.0-2.0.21-ohos-SNAPSHOT`
 
 该值**原样使用**——是否带 `-SNAPSHOT` 必须自己写明。解析器只会插入
 Kotlin 工具链段（HarmonyOS 构建时会把 `KBA-010` 后缀替换为 `ohos`）。
@@ -75,7 +75,7 @@ Kotlin 工具链段（HarmonyOS 构建时会把 `KBA-010` 后缀替换为 `ohos`
 2. `KUIKLY_VERSION` 环境变量（和 Kuikly Core 共用同一个 env，联编两个
    仓库时只需这一个环境变量）
 3. `local.properties` → `kuikly.version`
-4. `gradle.properties` → `kuikly.version`（默认 `2.29.2`）
+4. `gradle.properties` → `kuikly.version`（默认 `2.30.0`）
 
 > 要求上游 Kuikly 产物已发布到你的构建可以解析的 Maven 仓。本地未发布
 > 的 Kuikly 联调请改用源码模式（见第 3 节）。
@@ -125,11 +125,11 @@ Podfile、iOS setup 脚本、HarmonyOS DevEco Studio（通过
 
 | 模式 | `iosAppFor*/Podfile` 中 `OpenKuiklyIOSRender` 的声明 |
 |---|---|
-| 产物模式（默认，`kuikly.useSource=false`） | `pod 'OpenKuiklyIOSRender', '2.29.2'`（从 CocoaPods trunk 拉已发布版本） |
+| 产物模式（默认，`kuikly.useSource=false`） | `pod 'OpenKuiklyIOSRender', '2.30.0'`（从 CocoaPods trunk 拉已发布版本） |
 | 源码模式（`kuikly.useSource=true`） | `pod 'OpenKuiklyIOSRender', :path => <kuikly.projectDir>`（本地源码，用于与 Kuikly 一起联调） |
 
 版本号解析顺序与 Gradle 侧 `kuikly.version` 完全一致（env /
-`local.properties` / `gradle.properties` / 默认 `2.29.2`，详见
+`local.properties` / `gradle.properties` / 默认 `2.30.0`，详见
 [`scripts/lib/kuikly_cocoapods.rb`](scripts/lib/kuikly_cocoapods.rb)）。
 `OpenKuiklyIOSRender` 作为纯 ObjC/C++ Pod，trunk 上的 tag 使用纯
 SemVer（无 Kotlin 后缀），所以 Podfile 侧只取 `kuikly.version` 的
@@ -141,7 +141,7 @@ SemVer 段，有 `-SNAPSHOT` 后缀会被剥去。
 pod 'a2ui', '~> 1.0.0'
 pod 'OpenKuiklyA2UIIOSRender', '~> 1.0.0'
 # OpenKuiklyIOSRender 通过 OpenKuiklyA2UIIOSRender 的 spec.dependency 自动引入
-# （版本号已在 OpenKuiklyA2UIIOSRender.podspec 中锚定为 Kuikly 2.29.2）
+# （版本号已在 OpenKuiklyA2UIIOSRender.podspec 中锚定为 Kuikly 2.30.0）
 ```
 
 本仓库没有自动发布 iOS Pod 的脚本（与 Kuikly 工程保持一致），如需
@@ -159,11 +159,11 @@ pod 有意不发布到 trunk。
 
 | 模式 | `a2ui-render-ohos/oh-package.json5` 中 `@kuikly-open/render` 的声明 | `ohosAppFor*/entry/oh-package.json5` 中 `@kuikly-open/render` 的声明 | `ohosAppFor*/build-profile.json5` 的 `modules` 数组 | 本地文件系统 |
 |---|---|---|---|---|
-| 产物模式（默认，`kuikly.useSource=false`） | `"@kuikly-open/render": "2.29.2"`（从 ohpm registry 拉已发布版本） | 同左（版本一致） | 仅 `entry` + `a2ui_render`，无 `render` 模块块 | 无 `.kuikly-external`，无 `core-render-ohos/` |
+| 产物模式（默认，`kuikly.useSource=false`） | `"@kuikly-open/render": "2.30.0"`（从 ohpm registry 拉已发布版本） | 同左（版本一致） | 仅 `entry` + `a2ui_render`，无 `render` 模块块 | 无 `.kuikly-external`，无 `core-render-ohos/` |
 | 源码模式（`kuikly.useSource=true`） | `"@kuikly-open/render": "file:../core-render-ohos"` | `"@kuikly-open/render": "file:../../core-render-ohos"` | 额外包含 `{"name":"render", "srcPath":"../core-render-ohos", …}` 模块块 | `.kuikly-external` 软链指向 `kuikly.projectDir`；`core-render-ohos/` 是 `kuikly.projectDir/core-render-ohos` 的 rsync 本地镜像（git-ignored） |
 
 > 版本号解析顺序与 Gradle / CocoaPods 侧 `kuikly.version` 完全一致
-> （env / `local.properties` / `gradle.properties` / 默认 `2.29.2`，
+> （env / `local.properties` / `gradle.properties` / 默认 `2.30.0`，
 > 任何 `-SNAPSHOT` 后缀会被剥去——ohpm registry 和 CocoaPods trunk 一样
 > 只收录正式发布版）。
 
@@ -223,7 +223,7 @@ bash scripts/link-kuikly.sh
 | README / 展示用途 | `${semantic}` | `1.0.0` | `A2uiVersion.getSemantic()` |
 
 Maven 坐标中的 Kotlin 后缀遵循 Kuikly Core 约定
-（`com.tencent.kuikly-open:core:2.29.2-2.1.21-SNAPSHOT`）—— KMP `.klib`
+（`com.tencent.kuikly-open:core:2.30.0-2.1.21-SNAPSHOT`）—— KMP `.klib`
 与 metadata 二进制在不同 Kotlin 编译器版本间并不兼容，因此每个支持
 的 toolchain 都需要独立坐标发布。
 

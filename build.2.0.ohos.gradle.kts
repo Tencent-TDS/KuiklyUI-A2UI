@@ -25,7 +25,7 @@ allprojects {
     // some CI runners the `settings.*.gradle.kts` repository list is
     // transparently rewritten by an injected `init.gradle` to internal
     // proxies that do NOT cover `com.tencent.kuikly-open:*` (notably the
-    // OHOS variants like `core:2.29.2-2.0.21-ohos`). Declaring the real
+    // OHOS variants like `core:2.30.0-2.0.21-ohos`). Declaring the real
     // Tencent public Maven proxy here guarantees dependency resolution
     // reaches an upstream that proxies the kuikly-open repository,
     // regardless of what the CI init script injects at settings level.

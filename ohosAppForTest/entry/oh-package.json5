@@ -12,6 +12,6 @@
     // `scripts/apply-ohos-mode.sh` (invoked by `scripts/link-kuikly.sh`)
     // rewrites this to `"file:../../core-render-ohos"` so DevEco picks
     // up the local Kuikly checkout mirror.
-    "@kuikly-open/render": "2.29.2"
+    "@kuikly-open/render": "2.30.0"
   }
 }

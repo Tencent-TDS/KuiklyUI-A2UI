@@ -68,9 +68,9 @@ version is composed by combining `kuikly.version` with the current
 Kotlin toolchain, following the convention Kuikly Core publishes with
 (see [`KuiklyDep.kuiklyCoordinateVersion`](buildSrc/src/main/java/KuiklyDep.kt)):
 
-- `kuikly.version=2.29.2` + Kotlin `2.1.21` → `2.29.2-2.1.21`
-- `kuikly.version=2.29.2-SNAPSHOT` + Kotlin `2.1.21` → `2.29.2-2.1.21-SNAPSHOT`
-- `kuikly.version=2.29.2-SNAPSHOT` + Kotlin `2.0.21-KBA-010` → `2.29.2-2.0.21-ohos-SNAPSHOT`
+- `kuikly.version=2.30.0` + Kotlin `2.1.21` → `2.30.0-2.1.21`
+- `kuikly.version=2.30.0-SNAPSHOT` + Kotlin `2.1.21` → `2.30.0-2.1.21-SNAPSHOT`
+- `kuikly.version=2.30.0-SNAPSHOT` + Kotlin `2.0.21-KBA-010` → `2.30.0-2.0.21-ohos-SNAPSHOT`
 
 The value is used **verbatim** — any `-SNAPSHOT` tail must be spelled
 out explicitly. The resolver only inserts the Kotlin toolchain segment
@@ -82,7 +82,7 @@ Resolution order of `kuikly.version`:
 2. `KUIKLY_VERSION` env (shared with Kuikly Core — co-building both
    repos only needs this single env var)
 3. `local.properties` → `kuikly.version`
-4. `gradle.properties` → `kuikly.version` (default: `2.29.2`)
+4. `gradle.properties` → `kuikly.version` (default: `2.30.0`)
 
 > The upstream Kuikly artifact must already be published to a Maven repo
 > that your build can resolve. For local co-development without
@@ -136,12 +136,12 @@ cannot be consumed from trunk.
 
 | Mode | `OpenKuiklyIOSRender` declaration in `iosAppFor*/Podfile` |
 |---|---|
-| Artifact (default, `kuikly.useSource=false`) | `pod 'OpenKuiklyIOSRender', '2.29.2'` (from CocoaPods trunk) |
+| Artifact (default, `kuikly.useSource=false`) | `pod 'OpenKuiklyIOSRender', '2.30.0'` (from CocoaPods trunk) |
 | Source (`kuikly.useSource=true`) | `pod 'OpenKuiklyIOSRender', :path => <kuikly.projectDir>` (local Kuikly checkout, for co-debugging) |
 
 Resolution of the version follows the exact same order as Gradle-side
 `kuikly.version` (env / `local.properties` / `gradle.properties` /
-default `2.29.2`), see
+default `2.30.0`), see
 [`scripts/lib/kuikly_cocoapods.rb`](scripts/lib/kuikly_cocoapods.rb).
 `OpenKuiklyIOSRender` is a pure ObjC/C++ pod and ships to the trunk
 with plain SemVer tags (no Kotlin suffix), so the Podfile-side logic
@@ -155,7 +155,7 @@ from the CocoaPods trunk instead:
 pod 'a2ui', '~> 1.0.0'
 pod 'OpenKuiklyA2UIIOSRender', '~> 1.0.0'
 # OpenKuiklyIOSRender is pulled in transitively via
-# OpenKuiklyA2UIIOSRender's spec.dependency (pinned to Kuikly 2.29.2 in
+# OpenKuiklyA2UIIOSRender's spec.dependency (pinned to Kuikly 2.30.0 in
 # OpenKuiklyA2UIIOSRender.podspec).
 ```
 
@@ -178,12 +178,12 @@ invokes [`scripts/apply-ohos-mode.sh`](scripts/apply-ohos-mode.sh)):
 
 | Mode | `@kuikly-open/render` in `a2ui-render-ohos/oh-package.json5` | `@kuikly-open/render` in `ohosAppFor*/entry/oh-package.json5` | `modules` array in `ohosAppFor*/build-profile.json5` | On-disk layout |
 |---|---|---|---|---|
-| Artifact (default, `kuikly.useSource=false`) | `"@kuikly-open/render": "2.29.2"` (pulled from the ohpm registry) | Same (version matches) | Just `entry` + `a2ui_render`, no `render` block | No `.kuikly-external`, no `core-render-ohos/` |
+| Artifact (default, `kuikly.useSource=false`) | `"@kuikly-open/render": "2.30.0"` (pulled from the ohpm registry) | Same (version matches) | Just `entry` + `a2ui_render`, no `render` block | No `.kuikly-external`, no `core-render-ohos/` |
 | Source (`kuikly.useSource=true`) | `"@kuikly-open/render": "file:../core-render-ohos"` | `"@kuikly-open/render": "file:../../core-render-ohos"` | Adds `{"name":"render", "srcPath":"../core-render-ohos", …}` block | `.kuikly-external` symlinks to `kuikly.projectDir`; `core-render-ohos/` is an rsync mirror of `kuikly.projectDir/core-render-ohos` (git-ignored) |
 
 > The version resolution follows the exact same order as Gradle- /
 > CocoaPods-side `kuikly.version` (env / `local.properties` /
-> `gradle.properties` / default `2.29.2`), and any `-SNAPSHOT` tail is
+> `gradle.properties` / default `2.30.0`), and any `-SNAPSHOT` tail is
 > stripped — the ohpm registry, like the CocoaPods trunk, only hosts
 > released versions.
 
@@ -251,7 +251,7 @@ different** version schemes:
 | README / display usage | `${semantic}` | `1.0.0` | `A2uiVersion.getSemantic()` |
 
 The Kotlin suffix in Maven coordinates follows the Kuikly Core convention
-(`com.tencent.kuikly-open:core:2.29.2-2.1.21-SNAPSHOT`) — KMP `.klib` and
+(`com.tencent.kuikly-open:core:2.30.0-2.1.21-SNAPSHOT`) — KMP `.klib` and
 metadata binaries are not binary-compatible across Kotlin compiler
 versions, so each supported toolchain must publish under its own
 coordinate.

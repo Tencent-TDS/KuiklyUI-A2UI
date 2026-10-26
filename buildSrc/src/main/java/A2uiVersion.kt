@@ -37,7 +37,7 @@
  *      compatible across Kotlin compiler versions, so every supported
  *      Kotlin toolchain must publish its own Maven coordinate — the
  *      exact same convention Kuikly Core uses (see
- *      `KuiklyDep.kuiklyCoordinateVersion`, e.g. `2.29.2-2.1.21-SNAPSHOT`).
+ *      `KuiklyDep.kuiklyCoordinateVersion`, e.g. `2.30.0-2.1.21-SNAPSHOT`).
  *      Without this, the two build files
  *      (`build.2.1.21.gradle.kts` vs `build.2.0.ohos.gradle.kts`) would
  *      overwrite each other in the local/remote Maven repo.

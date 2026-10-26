@@ -51,7 +51,7 @@ Pod::Spec.new do |spec|
   # `OpenKuiklyIOSRender` ships to CocoaPods trunk with plain SemVer tags
   # (no Kotlin suffix — it's a pure ObjC/C++ pod), so we strip any
   # `-SNAPSHOT` tail if the env var carries one.
-  _kuikly_version = (ENV['KUIKLY_VERSION'] || '2.29.2').sub(/-SNAPSHOT\z/, '')
+  _kuikly_version = (ENV['KUIKLY_VERSION'] || '2.30.0').sub(/-SNAPSHOT\z/, '')
   spec.dependency 'OpenKuiklyIOSRender', _kuikly_version
 
   # Keep ObjC-only classes (notably `A2UIBridgeModule`, discovered by

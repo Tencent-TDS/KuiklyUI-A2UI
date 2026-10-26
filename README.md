@@ -195,7 +195,7 @@ KuiklyUI-A2UI/                             # Project root (this repo)
 └── 2.0_a2ui_ohos_build{,_release}.sh      # HarmonyOS build scripts
 ```
 
-> **Dependency mode**: by default the project consumes KuiklyUI Core from **published Maven / Pod / OHPM artefacts** (`kuikly.useSource=false`, Kuikly `2.29.2`) — **no local KuiklyUI source checkout is required**. Switch to source mode (set `kuikly.useSource=true` and point `kuikly.projectDir` at a local checkout) only when you want to co-develop with KuiklyUI itself. See [`SETUP.md`](SETUP.md) for details.
+> **Dependency mode**: by default the project consumes KuiklyUI Core from **published Maven / Pod / OHPM artefacts** (`kuikly.useSource=false`, Kuikly `2.30.0`) — **no local KuiklyUI source checkout is required**. Switch to source mode (set `kuikly.useSource=true` and point `kuikly.projectDir` at a local checkout) only when you want to co-develop with KuiklyUI itself. See [`SETUP.md`](SETUP.md) for details.
 
 ---
 
@@ -372,7 +372,7 @@ Android users can scan and try quickly. For iPhone and HarmonyOS phones, follow 
 
 The repository ships 3 × 4 = 12 sample projects covering 3 platforms (Android / iOS / HarmonyOS) × 4 flavours (native-page integration / Kuikly-page integration / both / protocol test).
 
-**Prerequisite**: **no need** to clone the KuiklyUI source tree. All three platforms (Android / iOS / HarmonyOS) default to consuming Kuikly from the published **Maven / CocoaPods trunk / ohpm registry** (defaulting to `kuikly.version=2.29.2`); `./gradlew` / `bash setup.sh` / `./2.0_a2ui_ohos_build.sh` pull the matching artefacts automatically. Clone KuiklyUI and set `kuikly.useSource=true` + `kuikly.projectDir=…` in `local.properties` only when you want to co-develop against a local KuiklyUI checkout — see [`SETUP.md`](SETUP.md) for the full flow.
+**Prerequisite**: **no need** to clone the KuiklyUI source tree. All three platforms (Android / iOS / HarmonyOS) default to consuming Kuikly from the published **Maven / CocoaPods trunk / ohpm registry** (defaulting to `kuikly.version=2.30.0`); `./gradlew` / `bash setup.sh` / `./2.0_a2ui_ohos_build.sh` pull the matching artefacts automatically. Clone KuiklyUI and set `kuikly.useSource=true` + `kuikly.projectDir=…` in `local.properties` only when you want to co-develop against a local KuiklyUI checkout — see [`SETUP.md`](SETUP.md) for the full flow.
 
 Then run any demo per platform:
 

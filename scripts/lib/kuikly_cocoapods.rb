@@ -14,7 +14,7 @@
 #   1. env var  (`KUIKLY_USE_SOURCE` / `KUIKLY_VERSION`)
 #   2. `<A2UI-root>/local.properties`
 #   3. `<A2UI-root>/gradle.properties`
-#   4. defaults (useSource=false, version=2.29.2)
+#   4. defaults (useSource=false, version=2.30.0)
 #
 # Usage from a Podfile (this file lives at
 # `<A2UI-root>/scripts/lib/kuikly_cocoapods.rb`; each Podfile is at
@@ -27,13 +27,13 @@
 # `render_pod_args` returns a Hash suitable for CocoaPods' `pod` DSL:
 #   - source  mode → `{ :path => '/abs/path/to/KuiklyUI' }`
 #   - artifact mode → `{}` with the version baked into a separate return,
-#                     but we instead return `{ :version => '2.29.2' }`
+#                     but we instead return `{ :version => '2.30.0' }`
 #                     and let the Podfile splat it — see below.
 #
 # Because CocoaPods' `pod` method does NOT accept a `:version` keyword
 # (the version is a positional argument), we expose two helpers:
 #
-#   render_pod_version(podfile_dir)  → nil in source mode, "2.29.2" otherwise
+#   render_pod_version(podfile_dir)  → nil in source mode, "2.30.0" otherwise
 #   render_pod_options(podfile_dir)  → { :path => ... } in source mode, {} otherwise
 #
 # Idiomatic Podfile usage:
@@ -60,7 +60,7 @@ module A2UI
 
     # Keep in sync with `KuiklyDep.DEFAULT_KUIKLY_VERSION` in
     # `buildSrc/src/main/java/KuiklyDep.kt`.
-    DEFAULT_KUIKLY_VERSION = '2.29.2'
+    DEFAULT_KUIKLY_VERSION = '2.30.0'
 
     module_function
 
@@ -79,7 +79,7 @@ module A2UI
     # Kotlin suffix (e.g. `-2.1.21`) is NOT appended, because
     # `OpenKuiklyIOSRender` is a pure ObjC/C++ pod and ships to CocoaPods
     # trunk with plain SemVer tags (see Kuikly's
-    # `OpenKuiklyIOSRender.podspec`: `spec.version = '2.29.2'`).
+    # `OpenKuiklyIOSRender.podspec`: `spec.version = '2.30.0'`).
     def version(podfile_dir)
       a2ui_root = File.expand_path('..', podfile_dir)
       raw = resolve_setting(a2ui_root, VERSION_ENV_KEY, VERSION_PROP_KEY)
