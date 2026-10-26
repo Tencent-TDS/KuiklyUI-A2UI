@@ -19,6 +19,26 @@
 
 set -e
 
+# ─────────────────────────────────────────────────────────────────────
+# Enforce A2UI source mode for this script.
+#
+# Both build steps below invoke `:a2ui:linkShared…` / `:demo:linkShared…`,
+# which require `:a2ui` (and `:a2ui-render-android`) to be included as
+# local projects by `settings.2.0.ohos.gradle.kts`. In artefact mode
+# (`a2ui.useSource=false`) those `include(...)` calls are skipped and
+# Gradle fails with:
+#   "Cannot locate tasks that match ':a2ui:linkShared…' as project 'a2ui'
+#    not found in root project 'KuiklyUI-A2UI'."
+#
+# A Kotlin/Native `.so` is a *link* output owned by the module that
+# declares `binaries.sharedLib(...)` — published `.klib` artefacts
+# cannot stand in for it. So this script is only meaningful in source
+# mode. The env override takes precedence over any `a2ui.useSource`
+# setting in `gradle.properties` / `local.properties`, making the
+# script robust to repos tuned for App-side artefact-mode testing.
+# ─────────────────────────────────────────────────────────────────────
+export A2UI_USE_SOURCE=true
+
 echo "=== A2UI OHOS Build Script (standalone A2UI project) ==="
 
 # Verify we're in the A2UI project root.

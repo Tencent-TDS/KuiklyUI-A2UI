@@ -21,6 +21,22 @@ CONFIG_FILE="publish/compatible/2.1.21.yaml"
 # ─────────────────────────────────────────────────────────────────────
 export KUIKLY_USE_SOURCE=false
 
+# ─────────────────────────────────────────────────────────────────────
+# Enforce A2UI source mode for publishing.
+#
+# This script publishes `:a2ui` and `:a2ui-render-android` themselves,
+# so those modules MUST be included as local projects by
+# `settings.2.1.21.gradle.kts`. In artefact mode (`a2ui.useSource=false`)
+# those `include(...)` calls are skipped and Gradle fails with:
+#   "Cannot locate tasks that match ':a2ui:publishToMavenLocal' as
+#    project 'a2ui' not found in root project 'KuiklyUI-A2UI'."
+#
+# The env override takes precedence over any `a2ui.useSource` setting
+# in `gradle.properties` / `local.properties`, making the script robust
+# to repos tuned for App-side artefact-mode testing.
+# ─────────────────────────────────────────────────────────────────────
+export A2UI_USE_SOURCE=true
+
 # 兼容性替换
 java publish/FileReplacer.java replace "$CONFIG_FILE"
 
