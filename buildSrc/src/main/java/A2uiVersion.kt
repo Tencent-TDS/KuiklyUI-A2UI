@@ -52,13 +52,16 @@
  * ─────────────────────────────────────────────────────────────────────────
  *  Override precedence (both APIs, for the semantic component)
  * ─────────────────────────────────────────────────────────────────────────
- *   1. Environment var   `A2UI_VERSION=<x.y.z>`
- *   2. Default          [DEFAULT_A2UI_SEMANTIC] below.
+ *   1. Gradle property   `-Pa2ui.version=<x.y.z>`
+ *   2. Environment var   `A2UI_VERSION=<x.y.z>`
+ *   3. `<root>/local.properties`   key `a2ui.version`
+ *   4. `<root>/gradle.properties`  key `a2ui.version`
+ *   5. Default           [DEFAULT_A2UI_SEMANTIC] below.
  *
  * This mirrors how `KuiklyDep.kuiklyBaseVersion` resolves the upstream
- * Kuikly coordinate (though that one additionally honours a Gradle
- * property + `local.properties` + `gradle.properties`). A2UI's own
- * semantic version is deliberately kept env-only to match CI expectations.
+ * Kuikly coordinate and matches [A2uiDep.useSource]'s 5-tier resolution,
+ * so IDE sync (which cannot inherit the shell's env vars) and CI (which
+ * typically exports `A2UI_VERSION`) stay in lock-step.
  *
  * The Kotlin component consumed by [getArtifactVersion] is *always* read
  * from [Version.getKotlinVersion] (which honours `KUIKLY_KOTLIN_VERSION`),
@@ -103,6 +106,7 @@ object A2uiVersion {
     private const val OHOS_KOTLIN_MARKER = "KBA-010"
     private const val OHOS_ARTIFACT_SUFFIX = "ohos"
 
+    private const val KEY_A2UI_VERSION_PROP = "a2ui.version"
     private const val KEY_A2UI_VERSION_ENV = "A2UI_VERSION"
 
     /**
@@ -110,18 +114,35 @@ object A2uiVersion {
      * HarmonyOS ohpm packages, and any user-facing display (README,
      * publish logs).
      *
-     * Resolution order (env-only, deliberately simpler than
-     * [KuiklyDep.kuiklyBaseVersion]):
-     *   1. `A2UI_VERSION` environment variable
-     *   2. [DEFAULT_A2UI_SEMANTIC] fallback
+     * Resolution order (mirrors [A2uiDep.useSource] for symmetry):
+     *   1. `-Pa2ui.version=…` Gradle property
+     *   2. `A2UI_VERSION` environment variable
+     *   3. `<root>/local.properties`   key `a2ui.version`
+     *   4. `<root>/gradle.properties`  key `a2ui.version`
+     *   5. [DEFAULT_A2UI_SEMANTIC] fallback
      *
-     * @param project optional Gradle [org.gradle.api.Project] — accepted for
-     *                API symmetry with [getArtifactVersion] but currently
-     *                unused (no Gradle-property override, by design).
+     * @param project optional Gradle [org.gradle.api.Project] — when `null`
+     *                only the env-var and default tiers are consulted
+     *                (used by rare call-sites that lack a Project handle,
+     *                e.g. settings-time code).
      */
-    @Suppress("UNUSED_PARAMETER")
     fun getSemantic(project: org.gradle.api.Project? = null): String {
+        // 1) -Pa2ui.version=…
+        if (project != null) {
+            (project.findProperty(KEY_A2UI_VERSION_PROP) as? String)
+                ?.takeIf { it.isNotBlank() }
+                ?.let { return it }
+        }
+        // 2) A2UI_VERSION env var
         System.getenv(KEY_A2UI_VERSION_ENV)?.takeIf { it.isNotBlank() }?.let { return it }
+        // 3) <root>/local.properties, then 4) <root>/gradle.properties
+        if (project != null) {
+            readFromPropertiesFile(java.io.File(project.rootDir, "local.properties"), KEY_A2UI_VERSION_PROP)
+                ?.let { return it }
+            readFromPropertiesFile(java.io.File(project.rootDir, "gradle.properties"), KEY_A2UI_VERSION_PROP)
+                ?.let { return it }
+        }
+        // 5) fallback
         return DEFAULT_A2UI_SEMANTIC
     }
 
@@ -159,5 +180,23 @@ object A2uiVersion {
         } else {
             artifact
         }
+    }
+
+    // ── Internal: properties-file lookup ────────────────────────────────
+
+    /**
+     * Read [key] from a `.properties` file on disk, returning `null` if the
+     * file does not exist or the key is absent / blank.
+     *
+     * Kept inline (instead of extracted to a shared helper) to avoid a
+     * cross-cutting dependency on any other `buildSrc` util — this file is
+     * loaded very early during Gradle's settings phase.
+     */
+    private fun readFromPropertiesFile(file: java.io.File, key: String): String? {
+        if (!file.exists()) return null
+        val props = java.util.Properties().apply {
+            java.io.FileInputStream(file).use { load(it) }
+        }
+        return props.getProperty(key)?.takeIf { it.isNotBlank() }
     }
 }
