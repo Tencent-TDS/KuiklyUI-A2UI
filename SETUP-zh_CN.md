@@ -80,6 +80,47 @@ Kotlin 工具链段（HarmonyOS 构建时会把 `KBA-010` 后缀替换为 `ohos`
 > 要求上游 Kuikly 产物已发布到你的构建可以解析的 Maven 仓。本地未发布
 > 的 Kuikly 联调请改用源码模式（见第 3 节）。
 
+### 2.1 升级 Kuikly 版本：一次改完清单
+
+`gradle.properties` 中的 `kuikly.version` 是**三端在构建期共享的唯一版本
+真源**：
+
+- Android / KMP（`KuiklyDep.kt`）、iOS CocoaPods
+  （`scripts/lib/kuikly_cocoapods.rb`）、HarmonyOS 构建脚本
+  （`scripts/lib/kuikly-mode.sh`）走的是同一套解析顺序
+  （`-P` → env → `local.properties` → `gradle.properties`），最后都回落
+  到 `gradle.properties`。
+
+但仓库中仍有若干处**写死的字面量版本字符串**，**不会**随 `gradle.properties`
+自动同步，升级 Kuikly 版本时必须手工同步。完整清单：
+
+| # | 文件 | 必/选 | 说明 |
+|---|---|---|---|
+| 1 | [`gradle.properties`](gradle.properties) → `kuikly.version=` | **必** | 三端构建期真正查的那一处。 |
+| 2 | [`a2ui-render-ohos/oh-package.json5`](a2ui-render-ohos/oh-package.json5) → `"@kuikly-open/render": "<ver>"` | **必（产物模式）** | 产物模式稳态下是写死的字面值。`scripts/apply-ohos-mode.sh` 只在**模式切换**那一刻改写，不会在升级版本号时主动同步。 |
+| 3 | [`ohosAppForKuiklyPage/entry/oh-package.json5`](ohosAppForKuiklyPage/entry/oh-package.json5) 同字段 | **必（产物模式）** | 同上。 |
+| 4 | [`ohosAppForNativePage/entry/oh-package.json5`](ohosAppForNativePage/entry/oh-package.json5) 同字段 | **必（产物模式）** | 同上。 |
+| 5 | [`ohosAppForBothPages/entry/oh-package.json5`](ohosAppForBothPages/entry/oh-package.json5) 同字段 | **必（产物模式）** | 同上。 |
+| 6 | [`ohosAppForTest/entry/oh-package.json5`](ohosAppForTest/entry/oh-package.json5) 同字段 | **必（产物模式）** | 同上。 |
+| 7 | [`OpenKuiklyA2UIIOSRender.podspec`](OpenKuiklyA2UIIOSRender.podspec) → `_kuikly_version` fallback（`'<ver>'`） | **发布 pod 前必改** | 它决定下游从 CocoaPods trunk `pod install` 本 pod 时，`spec.dependency 'OpenKuiklyIOSRender', <ver>` 传递依赖带出的 Kuikly 版本。 |
+| 8 | [`buildSrc/src/main/java/KuiklyDep.kt`](buildSrc/src/main/java/KuiklyDep.kt) → `DEFAULT_KUIKLY_VERSION` | 可选 | 代码侧最终兜底；仅当 `gradle.properties` 完全没有 `kuikly.version` 键时才会命中。 |
+| 9 | [`scripts/lib/kuikly-mode.sh`](scripts/lib/kuikly-mode.sh) → `raw="<ver>"` fallback | 可选 | Shell 侧最终兜底，语义同 #8。 |
+| 10 | [`scripts/lib/kuikly_cocoapods.rb`](scripts/lib/kuikly_cocoapods.rb) → `DEFAULT_KUIKLY_VERSION` | 可选 | iOS Podfile Ruby 侧最终兜底，语义同 #8。 |
+| 11 | `README.md` / `README-zh_CN.md` / `SETUP.md` / `SETUP-zh_CN.md` / `INTRODUCING_A2UI.md` / `publish/README.md` 中的版本号示例 | 可选 | 仅示例文本，不影响构建。 |
+
+> **OHOS 坑点**：#2–#6 是最隐蔽的——产物模式稳态下这 5 份
+> `oh-package.json5` 中已经写死 `"@kuikly-open/render": "<旧版本>"`，构建
+> 期**没有任何**版本解析器会去回写它。如果只改了 `gradle.properties`
+> 而漏改这 5 处，Android/KMP 与 iOS 会消费新版本，而 HarmonyOS 仍然
+> 悄悄停留在旧版本。最便宜的交叉验证：升级后执行
+> `grep -rn 'kuikly-open/render' .`。
+>
+> 如果你不想手工改，可以这样绕开：在 `local.properties` 中保持
+> `kuikly.useSource=false`，先切到源码模式跑一次
+> `bash scripts/link-kuikly.sh`，再切回产物模式跑一次——第二次回切时
+> 脚本会按当前 `kuikly.version` 重新回灌这 5 份 `oh-package.json5`。
+> 对于纯版本升级来说这个办法略重，手工改通常更快。
+
 ## 3. 源码模式下配置 KuiklyUI 本地仓路径
 
 仅当 `kuikly.useSource=true` 时需要。将 `kuikly.projectDir` 设置为你

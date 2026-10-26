@@ -88,6 +88,51 @@ Resolution order of `kuikly.version`:
 > that your build can resolve. For local co-development without
 > publishing, use source mode (section 3) instead.
 
+### 2.1 Upgrade Kuikly version — one-shot checklist
+
+`kuikly.version` in `gradle.properties` is the **single source of truth
+shared across all three platforms** at build time:
+
+- Android / KMP (`KuiklyDep.kt`), iOS CocoaPods
+  (`scripts/lib/kuikly_cocoapods.rb`), and HarmonyOS build scripts
+  (`scripts/lib/kuikly-mode.sh`) all follow the same resolution order
+  (`-P` → env → `local.properties` → `gradle.properties`) and fall back
+  to `gradle.properties` as the final step.
+
+However, a few places hold **frozen literal version strings** that are
+not auto-synced from `gradle.properties` and must be edited by hand when
+rolling the Kuikly dependency forward. The following checklist covers
+everything:
+
+| # | File | Required? | Why |
+|---|---|---|---|
+| 1 | [`gradle.properties`](gradle.properties) → `kuikly.version=` | **Required** | The real source consulted by all three platforms at build time. |
+| 2 | [`a2ui-render-ohos/oh-package.json5`](a2ui-render-ohos/oh-package.json5) → `"@kuikly-open/render": "<ver>"` | **Required (artifact mode)** | Written literally in artifact-mode steady state. `scripts/apply-ohos-mode.sh` only rewrites it on **mode switch**, not on version bump. |
+| 3 | [`ohosAppForKuiklyPage/entry/oh-package.json5`](ohosAppForKuiklyPage/entry/oh-package.json5) → same field | **Required (artifact mode)** | Same as above. |
+| 4 | [`ohosAppForNativePage/entry/oh-package.json5`](ohosAppForNativePage/entry/oh-package.json5) → same field | **Required (artifact mode)** | Same as above. |
+| 5 | [`ohosAppForBothPages/entry/oh-package.json5`](ohosAppForBothPages/entry/oh-package.json5) → same field | **Required (artifact mode)** | Same as above. |
+| 6 | [`ohosAppForTest/entry/oh-package.json5`](ohosAppForTest/entry/oh-package.json5) → same field | **Required (artifact mode)** | Same as above. |
+| 7 | [`OpenKuiklyA2UIIOSRender.podspec`](OpenKuiklyA2UIIOSRender.podspec) → `_kuikly_version` fallback (`'<ver>'`) | **Required before `pod trunk push`** | Anchors the `spec.dependency 'OpenKuiklyIOSRender', <ver>` carried by this pod when downstreams `pod install` it from CocoaPods trunk. |
+| 8 | [`buildSrc/src/main/java/KuiklyDep.kt`](buildSrc/src/main/java/KuiklyDep.kt) → `DEFAULT_KUIKLY_VERSION` | Optional | Code-side final fallback; only hit when `gradle.properties` has no `kuikly.version` key. |
+| 9 | [`scripts/lib/kuikly-mode.sh`](scripts/lib/kuikly-mode.sh) → `raw="<ver>"` fallback | Optional | Shell-side final fallback; same semantics as #8. |
+| 10 | [`scripts/lib/kuikly_cocoapods.rb`](scripts/lib/kuikly_cocoapods.rb) → `DEFAULT_KUIKLY_VERSION` | Optional | Ruby-side final fallback for iOS Podfile; same semantics as #8. |
+| 11 | `README.md` / `README-zh_CN.md` / `SETUP.md` / `SETUP-zh_CN.md` / `INTRODUCING_A2UI.md` / `publish/README.md` version snippets | Optional | Prose/examples only — does not affect the build. |
+
+> **OHOS gotcha**: #2–#6 are the subtlest trap — in artifact-mode steady
+> state the five `oh-package.json5` files already contain a hard-coded
+> `"@kuikly-open/render": "<old-version>"` and are **not** touched by
+> any build-time version resolver. If you bump `gradle.properties` and
+> forget them, Android/KMP and iOS will pick up the new version while
+> HarmonyOS silently stays on the old one. The cheapest cross-check is
+> `grep -rn 'kuikly-open/render' .` after the bump.
+>
+> A quick workaround if you prefer not to hand-edit: with
+> `kuikly.useSource=false` in `local.properties`, run
+> `bash scripts/link-kuikly.sh` once in source mode and once back in
+> artifact mode — the second run rewrites the five `oh-package.json5`
+> files from the current `kuikly.version`. This is overkill for a plain
+> version bump; hand-editing is usually simpler.
+
 ## 3. Configure the Kuikly checkout path — source mode
 
 Only required when `kuikly.useSource=true`. Set `kuikly.projectDir` to
