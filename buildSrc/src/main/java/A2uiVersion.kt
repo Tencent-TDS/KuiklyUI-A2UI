@@ -81,7 +81,7 @@
  *   getSemantic(project):
  *     - a2ui/build.2.1.21.gradle.kts       cocoapods { version = ... }
  *     - demo/build.2.1.21.gradle.kts       cocoapods { version = ... }
- *     - a2ui-render-ios/OpenKuiklyA2UIIOSRender.podspec   (edited by hand when
+ *     - OpenKuiklyA2UIIOSRender.podspec              (edited by hand when
  *                                                    publishing the iOS pod;
  *                                                    `A2UI_VERSION` env is
  *                                                    also honoured at parse

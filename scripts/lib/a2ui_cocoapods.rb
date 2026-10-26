@@ -7,8 +7,9 @@
 # and artifact modes.
 #
 # Mirrors `buildSrc/src/main/java/A2uiDep.kt` on the Gradle side:
-#   - `a2ui.useSource=true`  → `:path => '../a2ui-render-ios'` (local
-#                              podspec in this very repo)
+#   - `a2ui.useSource=true`  → `:path => '../'` (local podspec at the
+#                              root of this very repo —
+#                              `OpenKuiklyA2UIIOSRender.podspec`)
 #   - `a2ui.useSource=false` → `'<a2ui.version>'` (artefact from
 #                              CocoaPods trunk)
 #
@@ -53,7 +54,7 @@ module A2UI
 
     # Keep in sync with `A2uiVersion.DEFAULT_A2UI_SEMANTIC` in
     # `buildSrc/src/main/java/A2uiVersion.kt` and with the fallback in
-    # `a2ui-render-ios/OpenKuiklyA2UIIOSRender.podspec`.
+    # `OpenKuiklyA2UIIOSRender.podspec` at the repository root.
     DEFAULT_A2UI_VERSION = '1.0.0'
 
     module_function
@@ -100,15 +101,17 @@ module A2UI
 
     # Returns the options Hash to splat into `pod
     # 'OpenKuiklyA2UIIOSRender', **<here>` in source mode
-    # (`{ :path => '../a2ui-render-ios' }`), or `{}` in artifact mode.
+    # (`{ :path => '../' }`), or `{}` in artifact mode.
     #
     # The `:path` is deliberately returned as a RELATIVE string (as
     # written in the Podfile), because `OpenKuiklyA2UIIOSRender` lives in
     # THIS repository and CocoaPods resolves `:path` relative to the
-    # Podfile directory. No KuiklyPath resolution needed.
+    # Podfile directory. The podspec lives at the repo root (aligned
+    # with `OpenKuiklyIOSRender.podspec` in the upstream Kuikly repo),
+    # so `../` from an `iosAppFor*/Podfile` points right at it.
     def render_pod_options(podfile_dir)
       return {} unless use_source?(podfile_dir)
-      { :path => '../a2ui-render-ios/' }
+      { :path => '../' }
     end
 
     # ── Internal: unified env + local/gradle.properties lookup ───────

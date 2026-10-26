@@ -12,7 +12,7 @@ Pod::Spec.new do |spec|
   # NOTE: this repository does not ship an automated iOS pod publish
   # script (aligned with the upstream Kuikly project). To publish, run
   # `pod trunk push OpenKuiklyA2UIIOSRender.podspec --allow-warnings` manually
-  # from this directory (optionally with `A2UI_VERSION=x.y.z` prefixed).
+  # from the repository root (optionally with `A2UI_VERSION=x.y.z` prefixed).
   # The default value above should be kept in sync with
   # `DEFAULT_A2UI_SEMANTIC` in buildSrc/src/main/java/A2uiVersion.kt.
   spec.version          = ENV['A2UI_VERSION'] || '1.0.0'
@@ -23,17 +23,23 @@ Pod::Spec.new do |spec|
                         using KuiklyRenderLayerHandler with proper threading model.
                         DESC
   spec.homepage         = "https://github.com/Tencent-TDS/KuiklyUI-A2UI"
-  # `:file => "../LICENSE"` resolves to the standalone project's root LICENSE
-  # (KuiklyUI license text) since this podspec lives under `a2ui-render-ios/`.
-  spec.license          = { :type => "KuiklyUI", :file => "../LICENSE" }
+  # This podspec lives at the repository root (aligned with
+  # `OpenKuiklyIOSRender.podspec` in the upstream Kuikly repo), so
+  # `:file => "LICENSE"` resolves to the sibling LICENSE file.
+  spec.license          = { :type => "KuiklyUI", :file => "LICENSE" }
   spec.author           = "Kuikly Team"
   spec.ios.deployment_target = '15.0'
   spec.source           = { :git => "https://github.com/Tencent-TDS/KuiklyUI-A2UI.git", :tag => "#{spec.version}" }
   spec.user_target_xcconfig = { 'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES' }
   spec.requires_arc     = true
 
-  spec.source_files     = 'Sources/**/*.{h,m,mm,swift}'
-  spec.public_header_files = 'Sources/**/*.h'
+  # Source paths are resolved RELATIVE TO THE PODSPEC FILE, which is at
+  # the repository root. The actual Objective-C/Swift sources live in
+  # the `a2ui-render-ios/Sources/` subdirectory, hence the prefix.
+  # (This mirrors `OpenKuiklyIOSRender.podspec` in the upstream Kuikly
+  # repo, which uses `core-render-ios/**/*.{...}` with the same scheme.)
+  spec.source_files     = 'a2ui-render-ios/Sources/**/*.{h,m,mm,swift}'
+  spec.public_header_files = 'a2ui-render-ios/Sources/**/*.h'
 
   # Pin to the Kuikly Core version this A2UI release was built against.
   # Keep in sync with:

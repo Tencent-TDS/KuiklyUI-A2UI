@@ -77,13 +77,13 @@ bash publish/2.0_ohos_publish.sh a2ui publishAllPublicationsToMavenCentralSnapsh
 ### 1) `OpenKuiklyA2UIIOSRender`（纯 ObjC/Swift 源码 pod）
 
 ```bash
-cd a2ui-render-ios
+# podspec 位于仓库根目录（与 Kuikly 工程的 OpenKuiklyIOSRender.podspec 对齐）
 pod trunk push OpenKuiklyA2UIIOSRender.podspec --allow-warnings
 # 或私有 spec repo:
 # pod repo push <repo-alias> OpenKuiklyA2UIIOSRender.podspec --allow-warnings
 ```
 
-版本号由 [`OpenKuiklyA2UIIOSRender.podspec`](../a2ui-render-ios/OpenKuiklyA2UIIOSRender.podspec) 中的 `spec.version` 决定，默认与 `A2uiVersion.kt` 的 `DEFAULT_A2UI_SEMANTIC` 保持一致。如需临时覆盖，可用 `A2UI_VERSION=x.y.z pod trunk push ...`，但发版主路径仍推荐直接修改 `DEFAULT_A2UI_SEMANTIC` 后同步 podspec 默认值。
+版本号由 [`OpenKuiklyA2UIIOSRender.podspec`](../OpenKuiklyA2UIIOSRender.podspec) 中的 `spec.version` 决定，默认与 `A2uiVersion.kt` 的 `DEFAULT_A2UI_SEMANTIC` 保持一致。如需临时覆盖，可用 `A2UI_VERSION=x.y.z pod trunk push ...`，但发版主路径仍推荐直接修改 `DEFAULT_A2UI_SEMANTIC` 后同步 podspec 默认值。
 
 ### 2) `a2ui`（KMP 产物 A2UICore.framework）
 
