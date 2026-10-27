@@ -54,7 +54,7 @@ public final class A2UIBridgeModuleHelper: NSObject {
     /// on the Kuikly Context Queue (hopped via `A2UIRenderHelper.perform(onContextQueue:)`).
     @objc public static func showPickerWithConfigJson(_ configJson: String) {
         guard let data = configJson.data(using: .utf8),
-              let config = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+              let config = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         else { return }
 
         let tag = (config["tag"] as? NSNumber)?.intValue ?? -1
@@ -130,7 +130,7 @@ public final class A2UIBridgeModuleHelper: NSObject {
     /// instead.
     @objc public static func executeFunctionCallWithName(_ functionName: String, argsJson: String) {
         guard let data = argsJson.data(using: .utf8),
-              let args = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+              let args = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
             NSLog("[A2UIBridgeModuleHelper] executeFunctionCall: bad args JSON")
             return
         }

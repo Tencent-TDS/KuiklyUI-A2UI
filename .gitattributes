@@ -1,0 +1,56 @@
+# Normalize text file line endings to LF on checkout & commit; keep binaries intact.
+# Keeps parity across macOS / Linux / Windows dev machines for the shell scripts,
+# Gradle DSL, and HarmonyOS TS/ETS sources that all live in this repo.
+
+* text=auto eol=lf
+
+# Explicit text formats — keep LF regardless of core.autocrlf on Windows.
+*.sh              text eol=lf
+*.bat             text eol=crlf
+gradlew           text eol=lf
+gradlew.bat       text eol=crlf
+*.kt              text eol=lf
+*.kts             text eol=lf
+*.java            text eol=lf
+*.swift           text eol=lf
+*.m               text eol=lf
+*.mm              text eol=lf
+*.h               text eol=lf
+*.hpp             text eol=lf
+*.cpp             text eol=lf
+*.ets             text eol=lf
+*.ts              text eol=lf
+*.js              text eol=lf
+*.json            text eol=lf
+*.json5           text eol=lf
+*.yml             text eol=lf
+*.yaml            text eol=lf
+*.md              text eol=lf
+*.gradle          text eol=lf
+*.properties      text eol=lf
+*.podspec         text eol=lf
+*.podspec.json    text eol=lf
+Podfile           text eol=lf
+Podfile.lock      text eol=lf
+LICENSE           text eol=lf
+THIRD_PARTY_LICENSES text eol=lf
+
+# Explicit binary formats — never diff, never touch line endings.
+*.png             binary
+*.jpg             binary
+*.jpeg            binary
+*.gif             binary
+*.webp            binary
+*.ico             binary
+*.icns            binary
+*.pdf             binary
+*.jar             binary
+*.aar             binary
+*.zip             binary
+*.tar             binary
+*.gz              binary
+*.so              binary
+*.dylib           binary
+*.a               binary
+*.framework       binary
+*.xcassets        binary

@@ -611,7 +611,7 @@ public class A2UISurfaceView: UIView {
         guard let handler = lookupHandler(name: name) else { return nil }
         let args: [String: Any]
         if let data = argsJson.data(using: .utf8),
-           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+           let parsed = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
             args = parsed
         } else {
             args = [:]
@@ -1263,7 +1263,7 @@ public class A2UISurfaceView: UIView {
         var obj: [String: Any] = [:]
         if let configJson = configJson,
            let data = configJson.data(using: .utf8),
-           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+           let parsed = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
             obj = parsed
         }
         obj["deviceWidth"] = Double(screen.width)
@@ -1979,7 +1979,7 @@ extension A2UISurfaceView {
     ///   - argsJson: JSON string of function arguments
     private func executeFunctionCall(_ functionName: String, argsJson: String) {
         guard let data = argsJson.data(using: .utf8),
-              let args = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+              let args = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
             print("[A2UI] Failed to parse functionCall args: \(argsJson)")
             return
         }
@@ -2061,7 +2061,7 @@ extension A2UISurfaceView {
         guard let handler = A2UISurfaceView.lookupHandler(name: name) else { return nil }
         let args: [String: Any]
         if let data = argsJson.data(using: .utf8),
-           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+           let parsed = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
             args = parsed
         } else {
             args = [:]
@@ -2113,7 +2113,7 @@ extension A2UISurfaceView {
     ///   - configJson: JSON config: {"tag":N,"enableDate":bool,"enableTime":bool,"value":"ISO8601","label":"..."}
     func showDateTimePickerSheet(tag: Int, configJson: String) {
         guard let data = configJson.data(using: .utf8),
-              let config = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              let config = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return }
 
         let enableDate = config["enableDate"] as? Bool ?? true
         let enableTime = config["enableTime"] as? Bool ?? false

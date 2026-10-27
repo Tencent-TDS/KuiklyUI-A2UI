@@ -88,4 +88,5 @@ Pod::Spec.new do |spec|
     'CoreGraphics',
     'Foundation'
   ]
+  spec.swift_versions = ['5.0']
 end
