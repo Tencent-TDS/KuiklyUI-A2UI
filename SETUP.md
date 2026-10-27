@@ -13,6 +13,13 @@ modes** against KuiklyUI; the active mode is chosen by a single switch
   `core-render-ios`, `OpenKuiklyIOSRender`. Useful when you need to
   co-debug A2UI with KuiklyUI changes.
 
+> In addition to `kuikly.useSource` (which governs the upstream Kuikly
+> dependency), this repository has a **separate switch `a2ui.useSource`**
+> that controls whether A2UI's **own modules** (`:a2ui` /
+> `:a2ui-render-android`) are consumed from source or from published
+> artefacts on the iOS / HarmonyOS side. The two switches are
+> independent, and the per-platform constraints differ — see §2.
+
 > Scope: the `kuikly.useSource` switch drives Kuikly consumption on all
 > three platforms:
 >
@@ -60,7 +67,78 @@ Resolution order (first non-blank wins):
 echo "kuikly.useSource=true" >> local.properties
 ```
 
-## 2. Configure the upstream Kuikly version — artifact mode
+## 2. Choose A2UI's own dependency mode: `a2ui.useSource`
+
+**Default `true` (source mode).** This switch is fully independent of
+`kuikly.useSource` and only governs whether A2UI's own modules
+(`:a2ui` / `:a2ui-render-android`) are `include(...)`-ed in
+`settings.*.gradle.kts`. That in turn decides whether the iOS pod
+`pod 'a2ui'` can be resolved and whether the Gradle task
+`:a2ui:linkShared…` exists on the HarmonyOS side.
+
+Resolution order (fully symmetric with `kuikly.useSource`):
+
+1. `-Pa2ui.useSource=true|false` on the Gradle command line
+2. `A2UI_USE_SOURCE=true|false` environment variable
+3. `<project-root>/local.properties` → key `a2ui.useSource`
+4. `<project-root>/gradle.properties` → key `a2ui.useSource`
+
+### 2.1 Per-platform constraints
+
+A2UI's Native entry classes must be baked into the Kotlin/Native link
+output (iOS's `A2UICore.framework`, OHOS's `libshared.so`). These
+`.framework` / `.so` outputs are **link products**, not downloadable
+artefacts on Maven / CocoaPods / ohpm, so some scenarios **require**
+`a2ui.useSource=true`. Full breakdown:
+
+| Scenario | How A2UI is consumed | `a2ui.useSource=false` (artifact mode) supported? |
+|---|---|---|
+| **Android / KMP**: all `androidAppFor*` | Maven coordinates `com.tencent.kuikly-a2ui-open:a2ui:<ver>` / `a2ui-render-android:<ver>` | ✅ Yes — Android side is 100% Maven-artifact driven |
+| **iOS**: `iosAppForKuiklyPage` / `iosAppForBothPages` | `pod 'a2ui_demo', :path => '../demo'` → `:demo` consumes A2UI via `api(A2uiDep.a2ui(…))` | ✅ Yes — under artifact mode `:demo` pulls the `a2ui:<ver>` KMP coordinate from Maven |
+| **iOS**: `iosAppForNativePage` / `iosAppForTest` | `pod 'a2ui', :path => '../a2ui'` → directly consumes `:a2ui/iosMain` originals | ❌ **Must be `true`** — the local `a2ui.podspec` requires the `:a2ui:generateDummyFramework` task, which only exists while `:a2ui` is included as a local subproject |
+| **HarmonyOS**: `ohosAppForKuiklyPage` / `ohosAppForBothPages` | `libshared.so` from `:demo:linkSharedDebugSharedOhosArm64` (`:demo` consumes A2UI via `api(A2uiDep.a2ui(…))`) | Technically yes — under artifact mode `:demo` pulls `a2ui:<ver>-<kotlin>-ohos` from Maven. But the unified entrypoint script `2.0_a2ui_ohos_build.sh` **unconditionally `export`s `A2UI_USE_SOURCE=true`** for simplicity — see §2.3 |
+| **HarmonyOS**: `ohosAppForNativePage` / `ohosAppForTest` | `libshared.so` from `:a2ui:linkSharedDebugSharedOhosArm64` | ❌ **Must be `true`** — this Gradle task only exists while `:a2ui` is included as a local subproject; a Kotlin/Native `.so` is a link product and published `.klib`s cannot substitute |
+
+### 2.2 Behaviour of the four iOS `setup.sh` scripts
+
+Each `iosAppFor*/setup.sh` handles `a2ui.useSource=false` differently,
+in line with the per-scenario constraint above:
+
+- `iosAppForKuiklyPage/setup.sh`, `iosAppForBothPages/setup.sh`:
+  under artifact mode, **skip `:a2ui:generateDummyFramework`** (the
+  task does not exist), run only `:demo:generateDummyFramework`, then
+  let `pod install` pull `OpenKuiklyA2UIIOSRender` from the trunk.
+- `iosAppForNativePage/setup.sh`, `iosAppForTest/setup.sh`:
+  under artifact mode, **`exit 1` with a friendly error** instructing
+  the user to flip `a2ui.useSource=true`. The Podfiles here use
+  `pod 'a2ui', :path => '../a2ui'`; without `:a2ui` included the
+  Gradle dummy-framework task is missing and `pod install` would fail
+  later with an obscure error.
+
+### 2.3 Why `2.0_a2ui_ohos_build.sh` unconditionally forces source mode
+
+[`2.0_a2ui_ohos_build.sh`](2.0_a2ui_ohos_build.sh) produces two
+`libshared.so` files in a single run:
+
+| Gradle task | Artefact | Consumer apps |
+|---|---|---|
+| `:a2ui:linkSharedDebugSharedOhosArm64` | A2UI-runtime-only `libshared.so` | `ohosAppForNativePage`, `ohosAppForTest` |
+| `:demo:linkSharedDebugSharedOhosArm64` | A2UI runtime + demo-Pager full `libshared.so` | `ohosAppForKuiklyPage`, `ohosAppForBothPages` |
+
+The first task has a **hard requirement** on source mode (a
+Kotlin/Native `.so` must be linked by the module that declares
+`binaries.sharedLib(...)`; published `.klib`s cannot stand in). So the
+script sets `export A2UI_USE_SOURCE=true` at the top, which takes
+**precedence over** any `gradle.properties` / `local.properties`
+setting — so the script still works even when the repo is tuned for
+App-side artifact-mode testing.
+
+> Strictly speaking, only the NativePage/Test production line requires
+> source mode; the `:demo:linkShared…` line for KuiklyPage/BothPages
+> could run under artifact mode on its own. The script just forces
+> source mode uniformly for simplicity.
+
+## 3. Configure the upstream Kuikly version — artifact mode
 
 Under artifact mode, A2UI resolves Kuikly modules as
 `com.tencent.kuikly-open:<module>:<coord-version>`. The coordinate
@@ -86,9 +164,9 @@ Resolution order of `kuikly.version`:
 
 > The upstream Kuikly artifact must already be published to a Maven repo
 > that your build can resolve. For local co-development without
-> publishing, use source mode (section 3) instead.
+> publishing, use source mode (section 4) instead.
 
-### 2.1 Upgrade Kuikly version — one-shot checklist
+### 3.1 Upgrade Kuikly version — one-shot checklist
 
 `kuikly.version` in `gradle.properties` is the **single source of truth
 shared across all three platforms** at build time:
@@ -133,7 +211,7 @@ everything:
 > files from the current `kuikly.version`. This is overkill for a plain
 > version bump; hand-editing is usually simpler.
 
-## 3. Configure the Kuikly checkout path — source mode
+## 4. Configure the Kuikly checkout path — source mode
 
 Only required when `kuikly.useSource=true`. Set `kuikly.projectDir` to
 your local KuiklyUI repository path. This value is read by **all**
@@ -150,7 +228,7 @@ Resolution order (first hit wins):
 
 Recommended: put an absolute path in `local.properties` (git-ignored).
 
-## 4. Per-platform notes
+## 5. Per-platform notes
 
 **iOS** — this repo ships two kinds of A2UI pods:
 
@@ -283,7 +361,7 @@ Kuikly project). Before publishing, make sure the repository is in
 rather than `"file:../core-render-ohos"`); then run `ohpm pack` /
 `ohpm publish` manually from the `a2ui-render-ohos/` directory.
 
-## 5. A2UI artefact versioning strategy
+## 6. A2UI artefact versioning strategy
 
 This repository includes four types of artefacts and uses **two related but
 different** version schemes:

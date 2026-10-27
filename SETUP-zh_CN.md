@@ -10,6 +10,11 @@
   `:core-ksp`、`core-render-ohos`、`core-render-ios`、
   `OpenKuiklyIOSRender`。用于与 KuiklyUI 一起源码联调。
 
+> 除了对上游 Kuikly 的 `kuikly.useSource` 之外，本仓库还有一个**独立
+> 开关 `a2ui.useSource`** 用来控制 A2UI **自身模块**（`:a2ui` /
+> `:a2ui-render-android`）在 iOS / HarmonyOS 侧是走源码还是产物。两者
+> 互不绑定，各端场景约束不同，详见 §2。
+
 > 作用范围：`kuikly.useSource` 开关同时影响三端的 Kuikly 依赖消费
 > 方式：
 >
@@ -54,7 +59,73 @@
 echo "kuikly.useSource=true" >> local.properties
 ```
 
-## 2. 产物模式下配置上游 Kuikly 版本
+## 2. 选择 A2UI 自身的依赖模式：`a2ui.useSource`
+
+**默认 `true`（源码模式）**。此开关与 `kuikly.useSource` 完全独立，
+只影响 A2UI 自身模块（`:a2ui` / `:a2ui-render-android`）在
+`settings.*.gradle.kts` 中是否被 `include(...)`，进而影响 iOS 侧
+`pod 'a2ui'` 能否被解析、HarmonyOS 侧 `:a2ui:linkShared…` Gradle 任
+务是否存在。
+
+解析优先级（与 `kuikly.useSource` 完全对称）：
+
+1. Gradle 命令行 `-Pa2ui.useSource=true|false`
+2. `A2UI_USE_SOURCE=true|false` 环境变量
+3. `<project-root>/local.properties` → key `a2ui.useSource`
+4. `<project-root>/gradle.properties` → key `a2ui.useSource`
+
+### 2.1 各端场景的约束
+
+A2UI 的 Native 入口类必须打进 Kotlin/Native 链接产物（iOS 的
+`A2UICore.framework`、OHOS 的 `libshared.so`）。这类 `.framework` /
+`.so` 是**链接产物**，不是能从 Maven / CocoaPods / ohpm 直接下发的东
+西，所以某些场景强制要求 `a2ui.useSource=true`。详见下表：
+
+| 场景 | 消费的 A2UI 产物 | 是否支持 `a2ui.useSource=false`（产物模式） |
+|---|---|---|
+| **Android / KMP**：所有 `androidAppFor*` | Maven 坐标 `com.tencent.kuikly-a2ui-open:a2ui:<ver>` / `a2ui-render-android:<ver>` | ✅ 支持 — Android 侧完全走 Maven artifact |
+| **iOS**：`iosAppForKuiklyPage` / `iosAppForBothPages` | `pod 'a2ui_demo', :path => '../demo'` → `:demo` 以 `api(A2uiDep.a2ui(…))` 消费 A2UI | ✅ 支持 — artifact 模式下 `:demo` 从 Maven 拉 `a2ui:<ver>` KMP 坐标 |
+| **iOS**：`iosAppForNativePage` / `iosAppForTest` | `pod 'a2ui', :path => '../a2ui'` → 直接消费 `:a2ui/iosMain` 原件 | ❌ **强制 `true`** — 本地 `a2ui.podspec` 要求 `:a2ui:generateDummyFramework` 任务存在，而该任务只有在 `:a2ui` 作为本地 subproject 被 include 时才存在 |
+| **HarmonyOS**：`ohosAppForKuiklyPage` / `ohosAppForBothPages` | `:demo:linkSharedDebugSharedOhosArm64` 产的 `libshared.so`（`:demo` 以 `api(A2uiDep.a2ui(…))` 消费 A2UI） | 原理上可行 — artifact 模式下 `:demo` 从 Maven 拉 `a2ui:<ver>-<kotlin>-ohos`。但统一入口脚本 `2.0_a2ui_ohos_build.sh` 为简化流程**无条件 `export A2UI_USE_SOURCE=true`**，详见 §2.3 |
+| **HarmonyOS**：`ohosAppForNativePage` / `ohosAppForTest` | `:a2ui:linkSharedDebugSharedOhosArm64` 产的 `libshared.so` | ❌ **强制 `true`** — 该 Gradle 任务只有在 `:a2ui` 作为本地 subproject 被 include 时才存在；Kotlin/Native `.so` 是链接产物，发布的 `.klib` 无法替代 |
+
+### 2.2 iOS `setup.sh` 的行为
+
+四个 `iosAppFor*/setup.sh` 对 `a2ui.useSource=false` 的处理方式按上表
+场景区分：
+
+- `iosAppForKuiklyPage/setup.sh`、`iosAppForBothPages/setup.sh`：
+  在 artifact 模式下**跳过 `:a2ui:generateDummyFramework`**（该任务
+  不存在），仅运行 `:demo:generateDummyFramework`，然后 `pod install`
+  从 trunk 拉 `OpenKuiklyA2UIIOSRender`。
+- `iosAppForNativePage/setup.sh`、`iosAppForTest/setup.sh`：
+  在 artifact 模式下**直接 `exit 1` 并打印友好提示**，要求切回
+  `a2ui.useSource=true`，因为这两个场景的 Podfile 用了
+  `pod 'a2ui', :path => '../a2ui'`，artifact 模式下 `:a2ui` 不被
+  include，Gradle 侧 dummy framework 任务不存在，`pod install` 阶段
+  一定失败且报错晦涩。
+
+### 2.3 HarmonyOS 构建脚本 `2.0_a2ui_ohos_build.sh` 为什么无条件开源码模式
+
+[`2.0_a2ui_ohos_build.sh`](2.0_a2ui_ohos_build.sh) 一次性构建两份
+`libshared.so`：
+
+| Gradle 任务 | 产物 | 消费者 app |
+|---|---|---|
+| `:a2ui:linkSharedDebugSharedOhosArm64` | A2UI 运行时精简版 `libshared.so` | `ohosAppForNativePage`、`ohosAppForTest` |
+| `:demo:linkSharedDebugSharedOhosArm64` | A2UI 运行时 + demo Pager 全量版 `libshared.so` | `ohosAppForKuiklyPage`、`ohosAppForBothPages` |
+
+其中前一个任务对源码模式有**硬性要求**（Kotlin/Native `.so` 必须由
+声明 `binaries.sharedLib(...)` 的本地模块链接产出，`.klib`
+无法替代）。因此脚本在开头 `export A2UI_USE_SOURCE=true`，
+**优先级高于** `gradle.properties` / `local.properties` 的任何设置，
+保证脚本在仓库被调成 App 侧 artifact 测试状态时也能正常跑通。
+
+> 严格地说，只有 NativePage/Test 的那条产线强制源码；
+> KuiklyPage/BothPages 对应的 `:demo:linkShared…` 单独跑在 artifact
+> 模式下也能成立。但脚本图省事统一开了源码模式。
+
+## 3. 产物模式下配置上游 Kuikly 版本
 
 产物模式下，A2UI 把 Kuikly 模块解析成
 `com.tencent.kuikly-open:<module>:<coord-version>`。坐标版本由
@@ -66,21 +137,20 @@ echo "kuikly.useSource=true" >> local.properties
 - `kuikly.version=2.30.0-SNAPSHOT` × Kotlin `2.1.21` → `2.30.0-2.1.21-SNAPSHOT`
 - `kuikly.version=2.30.0-SNAPSHOT` × Kotlin `2.0.21-KBA-010` → `2.30.0-2.0.21-ohos-SNAPSHOT`
 
-该值**原样使用**——是否带 `-SNAPSHOT` 必须自己写明。解析器只会插入
+> 该值**原样使用**——是否带 `-SNAPSHOT` 必须自己写明。解析器只会插入
 Kotlin 工具链段（HarmonyOS 构建时会把 `KBA-010` 后缀替换为 `ohos`）。
 
 `kuikly.version` 解析顺序：
 
 1. `-Pkuikly.version=…`
 2. `KUIKLY_VERSION` 环境变量（和 Kuikly Core 共用同一个 env，联编两个
-   仓库时只需这一个环境变量）
+   仓库时只需要这一个环境变量）
 3. `local.properties` → `kuikly.version`
 4. `gradle.properties` → `kuikly.version`（默认 `2.30.0`）
 
 > 要求上游 Kuikly 产物已发布到你的构建可以解析的 Maven 仓。本地未发布
-> 的 Kuikly 联调请改用源码模式（见第 3 节）。
-
-### 2.1 升级 Kuikly 版本：一次改完清单
+> 的 Kuikly 联调请改用源码模式（见第 4 节）。
+### 3.1 升级 Kuikly 版本：一次改完清单
 
 `gradle.properties` 中的 `kuikly.version` 是**三端在构建期共享的唯一版本
 真源**：
@@ -121,7 +191,7 @@ Kotlin 工具链段（HarmonyOS 构建时会把 `KBA-010` 后缀替换为 `ohos`
 > 脚本会按当前 `kuikly.version` 重新回灌这 5 份 `oh-package.json5`。
 > 对于纯版本升级来说这个办法略重，手工改通常更快。
 
-## 3. 源码模式下配置 KuiklyUI 本地仓路径
+## 4. 源码模式下配置 KuiklyUI 本地仓路径
 
 仅当 `kuikly.useSource=true` 时需要。将 `kuikly.projectDir` 设置为你
 本地 KuiklyUI 仓库路径。该值会被**所有**构建工具读取（Gradle、
@@ -138,7 +208,7 @@ Podfile、iOS setup 脚本、HarmonyOS DevEco Studio（通过
 
 推荐：把绝对路径写在 `local.properties`（该文件已被 git ignore）。
 
-## 4. 各平台说明
+## 5. 各平台说明
 
 **iOS** — 本仓库中 iOS 侧使用两类 A2UI Pod：
 
@@ -252,7 +322,7 @@ bash scripts/link-kuikly.sh
 `"<kuikly.version>"` 形式，而不是 `"file:../core-render-ohos"`），然后
 在 `a2ui-render-ohos/` 目录执行 `ohpm pack` / `ohpm publish`。
 
-## 5. A2UI 产物版本策略
+## 6. A2UI 产物版本策略
 
 本仓库包含四类产物，采用**两套相关但不同**的版本方案：
 
