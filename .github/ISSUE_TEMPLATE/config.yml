@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🤝 社区支持 Support
+    url: https://github.com/Tencent-TDS/KuiklyUI-A2UI/discussions/categories/q-a
+    about: KuiklyUI-A2UI 相关的一般性、咨询类问题请到主 KuiklyUI 仓库 Discussions 参与
+  - name: 🏗️ 生态建设 Ecosystem
+    url: https://github.com/Tencent-TDS/KuiklyUI-A2UI/discussions/categories/%E7%A4%BE%E5%8C%BA%E7%94%9F%E6%80%81
+    about: 组件、配套工具等互助交流、分享

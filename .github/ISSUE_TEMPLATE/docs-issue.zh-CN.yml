@@ -1,0 +1,33 @@
+name: 📚 文档反馈 Docs Issue
+description: 反馈 KuiklyUI-A2UI 工程 README / docs / 接入指南 / 协议 Catalog 中的错误、遗漏或改进建议
+type: Task
+labels: ['s: need triage', 'a2ui', 'docs']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 📚 KuiklyUI-A2UI Docs Issue
+        感谢帮助改善 KuiklyUI-A2UI 工程的文档。请尽量给出具体的文件路径与行号。
+  - type: input
+    id: path
+    attributes:
+      label: 文档路径
+      placeholder: |
+        docs/A2UI_INTEGRATION_KUIKLY_PAGE.md, docs/A2UI_CUSTOM_COMPONENT_GUIDE.md, catalogs/kuikly_a2ui_catalog.json, README.md, SETUP.md 等
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: 问题描述
+      description: 具体错在哪一段？行号 / 章节？或者你希望补充哪些内容？
+      placeholder: 请填写
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 修改建议
+      description: 你建议怎么改？可以给出改后的完整文字或代码块。

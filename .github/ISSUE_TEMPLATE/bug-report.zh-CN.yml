@@ -1,0 +1,84 @@
+name: 🐞 错误报告 Bug Report
+description: 反馈 KuiklyUI-A2UI 工程内新 Bug。一般性、咨询类问题请选择“社区支持”入口进行反馈。
+type: Bug
+labels: ['s: need triage', 'a2ui']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🐞 KuiklyUI-A2UI Bug Report
+        在提交 Issue 前，请确保：
+        - 已阅读工程的 [README](../README.md) 与 [接入指南](../docs)。
+        - 已在 [KuiklyUI-A2UI Issue 列表](https://github.com/Tencent-TDS/KuiklyUI-A2UI/issues?q=is%3Aissue+label%3Aa2ui) 中搜索过你的问题。
+        - 你的问题**是 KuiklyUI-A2UI 工程**（本仓库）内的问题；如果是 KuiklyUI Core 通用问题，请到主仓库反馈。
+
+  - type: textarea
+    id: expect
+    attributes:
+      label: 期望结果
+      placeholder: 请填写
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      placeholder: 请填写
+    validations:
+      required: true
+
+  - type: input
+    id: reproduce
+    attributes:
+      label: 重现链接
+      description: 请提供尽可能精简的复现 Demo GitHub 仓库的链接，比如 Fork 仓库的可复现 Demo 分支。请不要填无关链接，否则你的 Issue 将被关闭。
+      placeholder: https://github.com/<myuser>/<myreproducer>
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduceSteps
+    attributes:
+      label: 重现步骤
+      description: 请清晰的描述重现该 Issue 的步骤。没有清晰重现步骤的 Issue 若 15 天内未提供相关步骤，将被关闭。
+      placeholder: |
+        1. 用 A2UI JSON 消息 '...'
+        2. 在 xxxAppForNativePage/xxxAppForKuiklyPage/xxxAppForBothPages 中打开 '...'
+        3. 观察到 '...' 错误
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduceEnvironment
+    attributes:
+      label: 重现环境
+      description: 请清晰的描述重现该 Issue 的现场环境。
+      placeholder: |
+        - 平台: Android / iOS / HarmonyOS
+        - Device 或模拟器: [e.g. iPhone 15]
+        - OS 版本: [e.g. iOS 17.4]
+        - KuiklyUI-A2UI 工程版本 / commit: [e.g. 1.0.0 / <commit hash>]
+        - KuiklyUI 依赖版本（kuikly.projectDir 或 maven 版本号）: [e.g. 2.1.21 / ../KuiklyUI]
+    validations:
+      required: true
+
+  - type: textarea
+    id: json
+    attributes:
+      label: 触发问题的 A2UI JSON 消息（如涉及）
+      description: 如问题由特定 JSON 消息触发，请贴出**最小可复现**的完整 JSON。请勿贴无关业务字段。
+      render: json
+
+  - type: textarea
+    id: log
+    attributes:
+      label: 相关日志 / 崩溃堆栈
+      description: 如有相关日志，请粘贴到此处。
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 补充信息
+      description: 其他有助于我们定位问题的信息（截图、录屏链接等）。

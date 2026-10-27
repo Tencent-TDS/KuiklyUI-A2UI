@@ -1,0 +1,46 @@
+name: 🚀 特性请求 Feature Request
+description: 提交 KuiklyUI-A2UI 工程的新特性建议或改进方案
+type: Feature
+labels: ['s: need triage', 'a2ui', 'enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🚀 KuiklyUI-A2UI Feature Request
+        感谢参与 KuiklyUI-A2UI 生态建设。在提交前，请先在 [KuiklyUI Discussions](https://github.com/Tencent-TDS/KuiklyUI-A2UI/discussions) 与社区讨论你的想法。
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 使用场景 / 动机
+      description: 请描述你希望解决什么样的业务场景，当前 KuiklyUI-A2UI 的哪些能力不足以支撑。
+      placeholder: 请填写
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 你希望 KuiklyUI-A2UI 提供什么样的 API / 协议扩展 / 组件 / 工具？请尽可能给出**具体**的 JSON 协议片段或 API 签名示例。
+      placeholder: |
+        比如：
+        - 在 KuiklyCommonStyles 中新增 `filter` 字段（对齐 CSS filter），支持模糊/灰度等图像滤镜。
+        - JSON schema 片段：
+          ```json
+          { "filter": { "blur": 8, "grayscale": 0.5 } }
+          ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 备选方案
+      description: 你考虑过哪些其他实现方式？为什么最终选择上面这个提案？
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 补充信息
+      description: 参考资料、竞品实现、协议对齐说明等。
