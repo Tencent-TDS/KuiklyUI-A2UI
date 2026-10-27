@@ -38,8 +38,18 @@ echo "→ Generating dummy A2UICore framework for pod install..."
 # and `:androidAppFor*` projects and the external Kuikly modules. No need
 # to reach into the KuiklyUI checkout.
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-"$REPO_ROOT/gradlew" -p "$REPO_ROOT" :a2ui:generateDummyFramework
-echo "  ✅ Dummy framework generated"
+# In artifact mode (`a2ui.useSource=false`) the Podfile pulls
+# `OpenKuiklyA2UIIOSRender` from CocoaPods trunk and never references the
+# local `a2ui/a2ui.podspec`, so `A2UICore.framework` is simply not needed.
+# `settings.gradle.kts` also skips `include(":a2ui")` in that mode, which
+# would otherwise make `:a2ui:generateDummyFramework` fail with
+# "project 'a2ui' not found".
+if a2ui_use_source; then
+    "$REPO_ROOT/gradlew" -p "$REPO_ROOT" :a2ui:generateDummyFramework
+    echo "  ✅ Dummy framework generated"
+else
+    echo "  → Skipping :a2ui:generateDummyFramework (artifact mode: a2ui.useSource=false)"
+fi
 
 echo "→ Generating dummy A2UIDemo framework for pod install..."
 # The Kuikly-Page & Compose-Page hosting VCs load pages from :demo,

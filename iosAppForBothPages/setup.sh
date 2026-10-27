@@ -21,10 +21,20 @@ else
     echo "→ Skipping link-kuikly.sh (artifact mode: kuikly.useSource=false)"
 fi
 
-echo "→ Generating dummy A2UICore framework for pod install..."
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-"$REPO_ROOT/gradlew" -p "$REPO_ROOT" :a2ui:generateDummyFramework
-echo "  ✅ Dummy framework generated"
+
+# In artifact mode (`a2ui.useSource=false`) the Podfile references
+# `pod 'a2ui_demo', :path => '../demo'` but NOT the local `pod 'a2ui'` —
+# `settings.gradle.kts` also skips `include(":a2ui")` in that mode, so
+# `:a2ui:generateDummyFramework` would fail with "project 'a2ui' not
+# found". The A2UIDemo dummy framework below is still required.
+if a2ui_use_source; then
+    echo "→ Generating dummy A2UICore framework for pod install..."
+    "$REPO_ROOT/gradlew" -p "$REPO_ROOT" :a2ui:generateDummyFramework
+    echo "  ✅ Dummy framework generated"
+else
+    echo "→ Skipping :a2ui:generateDummyFramework (artifact mode: a2ui.useSource=false)"
+fi
 
 echo "→ Generating dummy A2UIDemo framework for pod install..."
 # KuiklyPageCardViewController hosts a Kuikly page from :demo, which

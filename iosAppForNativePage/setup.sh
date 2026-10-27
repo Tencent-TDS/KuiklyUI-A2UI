@@ -29,6 +29,33 @@ else
 fi
 
 # Step 1: Generate dummy framework for CocoaPods (required for pod install)
+# iosAppForNativePage's Podfile uses `pod 'a2ui', :path => '../a2ui'`.
+# That local podspec's `vendored_frameworks = 'build/.../A2UICore.framework'`
+# can only be produced by `:a2ui:generateDummyFramework`, which in turn
+# requires `:a2ui` to be included in `settings.gradle.kts` — and that
+# only happens when `a2ui.useSource=true`. There is no artifact fallback
+# for this app, so bail out early with a clear message rather than
+# letting pod install crash later on the podspec's `raise` branch.
+if ! a2ui_use_source; then
+    cat <<'EOF' >&2
+
+❌ iosAppForNativePage does not support artifact mode (a2ui.useSource=false).
+
+   Its Podfile consumes the local `pod 'a2ui', :path => '../a2ui'`, whose
+   `A2UICore.framework` is produced by `:a2ui:generateDummyFramework`.
+   In artifact mode `:a2ui` is not included as a Gradle subproject, so
+   that task is unavailable.
+
+   Fix: set `a2ui.useSource=true` in gradle.properties (or local.properties)
+   and re-run this script. For an artifact-mode smoke test of the published
+   OpenKuiklyA2UIIOSRender pod, use iosAppForKuiklyPage or iosAppForBothPages
+   instead — their Podfiles depend on `pod 'a2ui_demo'`, which stays local
+   but pulls `:a2ui` via Maven.
+
+EOF
+    exit 1
+fi
+
 echo "→ Generating dummy A2UICore framework for pod install..."
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 "$REPO_ROOT/gradlew" -p "$REPO_ROOT" :a2ui:generateDummyFramework

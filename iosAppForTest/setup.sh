@@ -21,6 +21,31 @@ else
     echo "→ Skipping link-kuikly.sh (artifact mode: kuikly.useSource=false)"
 fi
 
+# iosAppForTest's Podfile consumes the local `pod 'a2ui', :path => '../a2ui'`,
+# whose `A2UICore.framework` is produced by `:a2ui:generateDummyFramework`.
+# That task requires `:a2ui` to be included as a Gradle subproject, which
+# only happens when `a2ui.useSource=true`. Bail out early with a clear
+# message in artifact mode instead of crashing in `pod install` later.
+if ! a2ui_use_source; then
+    cat <<'EOF' >&2
+
+❌ iosAppForTest does not support artifact mode (a2ui.useSource=false).
+
+   Its Podfile consumes the local `pod 'a2ui', :path => '../a2ui'`, whose
+   `A2UICore.framework` is produced by `:a2ui:generateDummyFramework`.
+   In artifact mode `:a2ui` is not included as a Gradle subproject, so
+   that task is unavailable.
+
+   Fix: set `a2ui.useSource=true` in gradle.properties (or local.properties)
+   and re-run this script. For an artifact-mode smoke test of the published
+   OpenKuiklyA2UIIOSRender pod, use iosAppForKuiklyPage or iosAppForBothPages
+   instead — their Podfiles depend on `pod 'a2ui_demo'`, which stays local
+   but pulls `:a2ui` via Maven.
+
+EOF
+    exit 1
+fi
+
 echo "→ Generating dummy A2UICore framework for pod install..."
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 "$REPO_ROOT/gradlew" -p "$REPO_ROOT" :a2ui:generateDummyFramework
