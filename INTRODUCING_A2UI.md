@@ -71,7 +71,7 @@ Android / iOS / HarmonyOS 三端 Demo 已内置：
 
 iPhone 和 HarmonyOS 手机请按如下步骤本地编译 Demo 体验。
 
-**先决条件**：**无需**本地 clone KuiklyUI 源码。Android / iOS / HarmonyOS 三端默认都从已发布的 **Maven / CocoaPods trunk / ohpm registry** 消费 Kuikly（默认 `kuikly.version=2.30.0`）。只有和 KuiklyUI 本地源码联调时才需要开启源码模式，详见 [`SETUP-zh_CN.md`](https://github.com/Tencent-TDS/KuiklyUI-A2UI/SETUP-zh_CN.md)。
+**先决条件**：**无需**本地 clone KuiklyUI 源码。Android / iOS / HarmonyOS 三端默认都从已发布的 **Maven / CocoaPods trunk / ohpm registry** 消费 Kuikly（默认 `kuikly.version=2.30.0`）。只有和 KuiklyUI 本地源码联调时才需要开启源码模式，详见 [`SETUP-zh_CN.md`](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/SETUP-zh_CN.md)。
 
 ```bash
 # iOS
@@ -83,7 +83,7 @@ cd iosAppForNativePage && bash setup.sh && open A2UIDemoApp.xcworkspace
 # ohosAppForNativePage
 ```
 
-更多场景的 Demo，可按项目 [README](https://github.com/Tencent-TDS/KuiklyUI-A2UI/README-zh_CN.md) 文档里步骤本地编译体验。
+更多场景的 Demo，可按项目 [README](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/README-zh_CN.md) 文档里步骤本地编译体验。
 
 ---
 
@@ -178,16 +178,16 @@ class MyActivity : AppCompatActivity() {
 
 [Kuikly A2UI](https://github.com/Tencent-TDS/KuiklyUI-A2UI) 更多使用文档参考：
 
-- **工程目录、架构概述、Demo 构建等参考**：[README.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/README-zh_CN.md)
+- **工程目录、架构概述、Demo 构建等参考**：[README.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/README-zh_CN.md)
 - **接入指南**：
-  - **Native 页面接入指南**：[docs/A2UI_INTEGRATION_NATIVE_PAGE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/docs/A2UI_INTEGRATION_NATIVE_PAGE.md)
-  - **Kuikly 页面接入指南**：[docs/A2UI_INTEGRATION_KUIKLY_PAGE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/docs/A2UI_INTEGRATION_KUIKLY_PAGE.md)
-  - **两种页面同时接入指南**：[docs/A2UI_INTEGRATION_BOTH_PAGES.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/docs/A2UI_INTEGRATION_BOTH_PAGES.md)
-- **架构与实现设计**：[docs/A2UI_KUIKLY_IMPLEMENTATION_DESIGN.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/docs/A2UI_KUIKLY_IMPLEMENTATION_DESIGN.md)
-- **自定义组件指南**：[docs/A2UI_CUSTOM_COMPONENT_GUIDE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/docs/A2UI_CUSTOM_COMPONENT_GUIDE.md)
-- **自定义函数指南**：[docs/A2UI_CUSTOM_FUNCTION_GUIDE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/docs/A2UI_CUSTOM_FUNCTION_GUIDE.md)
-- **自定义 Icon 指南**：[docs/A2UI_CUSTOM_ICON_GUIDE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/docs/A2UI_CUSTOM_ICON_GUIDE.md)
-- **协议 Catalog（Schema）**：[catalogs/kuikly_a2ui_catalog.json](https://github.com/Tencent-TDS/KuiklyUI-A2UI/catalogs/kuikly_a2ui_catalog.json)
+  - **Native 页面接入指南**：[docs/A2UI_INTEGRATION_NATIVE_PAGE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/docs/A2UI_INTEGRATION_NATIVE_PAGE.md)
+  - **Kuikly 页面接入指南**：[docs/A2UI_INTEGRATION_KUIKLY_PAGE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/docs/A2UI_INTEGRATION_KUIKLY_PAGE.md)
+  - **两种页面同时接入指南**：[docs/A2UI_INTEGRATION_BOTH_PAGES.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/docs/A2UI_INTEGRATION_BOTH_PAGES.md)
+- **架构与实现设计**：[docs/A2UI_KUIKLY_IMPLEMENTATION_DESIGN.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/docs/A2UI_KUIKLY_IMPLEMENTATION_DESIGN.md)
+- **自定义组件指南**：[docs/A2UI_CUSTOM_COMPONENT_GUIDE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/docs/A2UI_CUSTOM_COMPONENT_GUIDE.md)
+- **自定义函数指南**：[docs/A2UI_CUSTOM_FUNCTION_GUIDE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/docs/A2UI_CUSTOM_FUNCTION_GUIDE.md)
+- **自定义 Icon 指南**：[docs/A2UI_CUSTOM_ICON_GUIDE.md](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/docs/A2UI_CUSTOM_ICON_GUIDE.md)
+- **协议 Catalog（Schema）**：[catalogs/kuikly_a2ui_catalog.json](https://github.com/Tencent-TDS/KuiklyUI-A2UI/blob/main/catalogs/kuikly_a2ui_catalog.json)
 
 
 ---
