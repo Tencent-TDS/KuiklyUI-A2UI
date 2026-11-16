@@ -21,6 +21,7 @@
         <activity android:name=".FunctionDemoActivity" />
         <activity android:name=".DataBindingDemoActivity" />
         <activity android:name=".ThemeDemoActivity" />
+        <activity android:name=".StreamingRenderDemoActivity" />
     </application>
 
 </manifest>

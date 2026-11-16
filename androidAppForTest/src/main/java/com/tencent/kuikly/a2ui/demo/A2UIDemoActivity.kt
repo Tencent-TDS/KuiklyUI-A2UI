@@ -121,6 +121,15 @@ class A2UIDemoActivity : AppCompatActivity() {
             startActivity(Intent(this, ThemeDemoActivity::class.java))
         })
 
+        contentLayout.addView(createDemoEntry(
+            title = "流式渲染测试",
+            description = "分段推送 A2UI v0.9 envelope（createSurface / updateComponents / updateDataModel），模拟 LLM 边生成边渲染，观察 UI 是否有抖动",
+            iconText = "⚡",
+            color = "#FF6F3C"
+        ) {
+            startActivity(Intent(this, StreamingRenderDemoActivity::class.java))
+        })
+
         // ===== Group 2: A2UI v0.9 协议官方示例 =====
         contentLayout.addView(createSectionHeader("A2UI v0.9 协议官方示例"))
 
