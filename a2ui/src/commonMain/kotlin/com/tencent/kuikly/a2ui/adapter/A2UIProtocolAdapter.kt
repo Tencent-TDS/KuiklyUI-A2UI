@@ -89,6 +89,27 @@ class A2UIProtocolAdapter {
     /** Cache of child-to-parent relationships for the current updateComponents batch */
     private var childToParentCache = mutableMapOf<String, String>()
 
+    /**
+     * Persistent child-to-parent relationships derived from the "children" arrays of
+     * original component definitions across ALL updateComponents batches.
+     *
+     * Why this is needed in addition to childToParentCache:
+     * - childToParentCache is cleared+rebuilt on every updateComponents call and only
+     *   contains relationships for components present in the current batch. When a
+     *   later batch updates just a few components (e.g. appending a child to a Column),
+     *   relationships declared in earlier batches are lost from the cache.
+     * - Template components (e.g. a ChildList item template Row referencing
+     *   "review_author"/"review_body" children) are declared once and then never
+     *   re-sent, so their parent-child links disappear after any subsequent batch.
+     * - When expandChildListBindings later instantiates template children, buildPropsWithScope
+     *   needs to know the template child's parent type (e.g. "Row") to decide branch-specific
+     *   props like the __textInRowPostLayout marker. This lookup must work no matter which
+     *   batch currently sits in childToParentCache.
+     *
+     * This map is append-only and never cleared, keyed by the original component id.
+     */
+    private val originalChildToParent = mutableMapOf<String, String>()
+
     /** Cache of component variant values for the current updateComponents batch */
     private var componentVariantCache = mutableMapOf<String, String>()
 
@@ -889,6 +910,10 @@ class A2UIProtocolAdapter {
                         if (childId is String) {
                             childToParent[childId] = id
                             childOrder[childId] = index
+                            // Also record in the persistent map so template parent
+                            // lookups keep working after later batches clear the
+                            // batch-scoped childToParentCache.
+                            originalChildToParent[childId] = id
                         }
                     }
                 } else if (children is Map<*, *>) {
@@ -2368,8 +2393,26 @@ class A2UIProtocolAdapter {
                         props["borderRadius"] = "20" // Fully rounded
                     }
                     "smallFeature" -> {
-                        props["width"] = 100
-                        props["height"] = 100
+                        if (parentIsRow) {
+                            // In a Row, keep the legacy fixed 100×100 slot: inside a horizontal
+                            // layout cross-axis is height, main-axis is width, so alignSelf=stretch
+                            // can't be used to let the parent dictate the image's width.
+                            props["width"] = 100
+                            props["height"] = 100
+                        } else {
+                            // Spec: "Render as a small rectangle (e.g., 100x100dp)."
+                            // Streaming-friendly placeholder: near-zero footprint until the
+                            // real resolution arrives. We can't use 0×0 because the native
+                            // ImageView skips decoding on empty bounds, so loadResolution
+                            // would never fire and the image would stay invisible. Use a 1dp
+                            // seed to guarantee the decoder runs; the applier then rewrites
+                            // width/height from loadResolution via __featureAutoSizeMax*Dp.
+                            props["width"] = 1
+                            props["height"] = 1
+                            props["resizeMode"] = "cover"
+                            props["__featureAutoSizeMaxWidthDp"] = 100
+                            props["__featureAutoSizeMaxHeightDp"] = 100
+                        }
                     }
                     "mediumFeature" -> {
                         if (parentIsRow) {
@@ -2384,14 +2427,17 @@ class A2UIProtocolAdapter {
                             //   The image is centered horizontally in the parent when the
                             //   parent's content width is greater than the image width.
                             //
-                            // We can't know the intrinsic size at build time, so we set a
-                            // safe pre-load placeholder here (stretch-to-container, 200dp
-                            // tall, cover) and mark the node with __featureAutoSizeMax(Width|Height)Dp
-                            // so A2UIApplier wires up a loadResolution callback that
-                            // rewrites width/height/alignSelf once the real image size
-                            // is known (clamped against these caps, centered on cross axis).
+                            // Streaming-friendly placeholder: height=1dp means the image
+                            // reserves almost NO vertical space until its real resolution
+                            // arrives, avoiding the "big placeholder → smaller real image"
+                            // upward collapse. We MUST keep height > 0 because the native
+                            // ImageView skips image decoding when its bounds have zero
+                            // height, which would prevent loadResolution from ever firing.
+                            // The applier wires a loadResolution callback via the
+                            // __featureAutoSizeMax(Width|Height)Dp markers that rewrites
+                            // width/height/alignSelf once the intrinsic size is known.
                             props["alignSelf"] = "stretch"
-                            props["height"] = 200
+                            props["height"] = 1
                             props["resizeMode"] = "cover"
                             props["__featureAutoSizeMaxWidthDp"] = 300
                             props["__featureAutoSizeMaxHeightDp"] = 200
@@ -2410,22 +2456,37 @@ class A2UIProtocolAdapter {
                             //     own natural width at the leading edge.
                             // We intentionally do NOT emit __featureAutoSizeMaxWidthDp
                             // here; the applier treats its absence as "no width cap +
-                            // no centering". Placeholder height matches the cap so the
-                            // pre-load layout doesn't shift when the real image resolves
-                            // smaller. See A2UIApplier's applyFeatureAutoSize.
+                            // no centering".
+                            // Streaming-friendly placeholder: height=1dp so almost no
+                            // vertical space is reserved before the real resolution lands
+                            // (prevents the "placeholder 400dp → real ~210dp" upward
+                            // collapse). height MUST be > 0 — a 0-height ImageView won't
+                            // decode the image and loadResolution will never fire.
                             props["alignSelf"] = "stretch"
-                            props["height"] = 400
+                            props["height"] = 1
                             props["resizeMode"] = "cover"
                             props["__featureAutoSizeMaxHeightDp"] = 400
                         }
                     }
                     "header" -> {
-                        // Banner style: 100% width (respecting margins), fixed height 200dp, cover.
-                        // alignSelf=stretch lets the image fill parent's available width
-                        // (parent content width minus this image's own margins).
+                        // Banner style (spec): 100% width (respecting margins), max height
+                        // 200dp, cover. alignSelf=stretch lets the image fill parent's
+                        // available width (parent content width minus this image's own
+                        // margins).
+                        //
+                        // Streaming-friendly placeholder: height=1dp (not 0 — see other
+                        // variants for why 0 breaks image decoding), grown by a
+                        // loadResolution callback that keeps alignSelf=stretch (banner
+                        // stays full-width) and sets height = min(availableWidth *
+                        // imgH/imgW, 200dp). The marker __featureAutoSizeHeader=true
+                        // tells the applier to use the header sizing rule
+                        // (stretch-preserving) instead of the default
+                        // mediumFeature/largeFeature rule.
                         props["alignSelf"] = "stretch"
-                        props["height"] = 200
+                        props["height"] = 1
                         props["resizeMode"] = "cover"
+                        props["__featureAutoSizeHeader"] = true
+                        props["__featureAutoSizeMaxHeightDp"] = 200
                     }
                     else -> {
                         if (parentIsRow) {
@@ -2434,7 +2495,7 @@ class A2UIProtocolAdapter {
                         } else {
                             // Same behavior as mediumFeature (the default variant).
                             props["alignSelf"] = "stretch"
-                            props["height"] = 200
+                            props["height"] = 1
                             props["resizeMode"] = "cover"
                             props["__featureAutoSizeMaxWidthDp"] = 300
                             props["__featureAutoSizeMaxHeightDp"] = 200
@@ -2497,7 +2558,19 @@ class A2UIProtocolAdapter {
                             // natural width may exceed the Row's width, causing clipping.
                             // Mark for post-layout correction: set maxWidth = Row's width
                             // so the text wraps within bounds.
+                            //
+                            // Pre-set alignSelf=stretch here so that the applier's post-
+                            // layout callback can flip it STRETCH → AUTO together with the
+                            // maxWidth update. That alignSelf change is the shape-change
+                            // trigger that actually forces the RichTextView to re-measure
+                            // with the new maxWidth — otherwise the Kuikly engine would
+                            // keep the previously measured (over-wide) natural width and
+                            // the text would still clip at the Row's right edge. Row's
+                            // crossAxis is vertical, so alignSelf=stretch on a Text inside
+                            // a Row has no visual side effect (Row height is driven by its
+                            // children, so there is nothing to stretch *to*).
                             props["__textInRowPostLayout"] = "true"
+                            props["alignSelf"] = "stretch"
                         } else if (parentComp == "Column" || parentComp == "Card") {
                             // Inside a vertical container, stretch the text so the Flexbox
                             // engine's Loop A pre-fill provides a width constraint via
@@ -3893,31 +3966,91 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
             }
             val templateComponentType = templateDef["component"] as? String ?: continue
 
-            // Remove previously generated instances for this parent
-            val previousInstances = binding.generatedInstanceIds.toList()
-            for (instanceId in previousInstances) {
-                val instanceTag = idToTag[instanceId] ?: continue
-                messages.add(A2UIMessage(
-                    type = A2UIMessageType.REMOVE_COMPONENT,
-                    surfaceId = surfaceId,
-                    tag = instanceTag,
-                    parentTag = parentTag
-                ))
-                // Also remove children of this instance
-                removeInstanceTree(instanceId, surfaceId, parentTag, messages)
-            }
+            // ------------------------------------------------------------------
+            // Diff-based update (see KDoc on `ChildListBinding.lastItemSnapshots`).
+            //
+            // Before this change, every call to expandChildListBindings for the
+            // same parent REMOVE'd all existing instances and INSTANTIATE'd the
+            // full new array. During streaming updates (e.g. the /reviews array
+            // grows one item at a time) this caused every existing review row
+            // to be destroyed and re-created on every tick, producing a highly
+            // visible flicker where unchanged review bodies toggled between
+            // single-line (just attached, still empty) and wrapped multi-line
+            // (after text props arrive and width is applied) states 5-10 times
+            // over the course of a streaming session.
+            //
+            // The new logic compares each array index with its snapshot from
+            // the previous expansion:
+            //   - equal        : leave the subtree untouched (no REMOVE, no
+            //                    INSTANTIATE, no UPDATE_COMPONENT). This is the
+            //                    fast path and the main source of flicker
+            //                    elimination for append-only streaming.
+            //   - changed      : REMOVE the index's existing subtree, then
+            //                    INSTANTIATE with the new data at the same
+            //                    sibling position.
+            //   - new (i >= oldCount): INSTANTIATE at the next sibling index.
+            //   - removed (i in oldCount until newCount's tail): REMOVE.
+            //
+            // The expanded template may itself contain nested ChildLists,
+            // which are handled recursively by instantiateSubtree; we rely on
+            // `binding.generatedInstanceIds` as the authoritative set of ids
+            // to clean up for a given top-level index (captured via a size
+            // delta when instantiateSubtree is called below).
+            // ------------------------------------------------------------------
+
+            val oldInstancesByIndex = binding.lastInstancesByIndex.toMap()
+            val oldSnapshots = binding.lastItemSnapshots.toMap()
+            val oldCount = oldSnapshots.size
+
+            val newInstancesByIndex = mutableMapOf<Int, MutableList<String>>()
+            val newSnapshots = mutableMapOf<Int, Any?>()
+            // Rebuild `generatedInstanceIds` as we decide index-by-index which
+            // old entries are preserved and which new entries are produced.
             binding.generatedInstanceIds.clear()
 
-            // Generate new instances for each array item
             for ((index, item) in arrayData.withIndex()) {
                 if (item !is Map<*, *>) continue
                 @Suppress("UNCHECKED_CAST")
                 val itemData = item as Map<String, Any?>
-                val scopePath = "/${dataKey}/$index"
+                val oldItem = oldSnapshots[index]
+                val hadOld = oldInstancesByIndex.containsKey(index)
 
-                // Instantiate the outer template subtree; nested inline
-                // ChildLists (relative or absolute) are handled recursively
-                // inside instantiateSubtree so arbitrary nesting depths work.
+                if (hadOld && oldItem == itemData) {
+                    // Unchanged: preserve the entire subtree for this index.
+                    val preservedIds = oldInstancesByIndex[index] ?: mutableListOf()
+                    newInstancesByIndex[index] = preservedIds.toMutableList()
+                    newSnapshots[index] = itemData
+                    binding.generatedInstanceIds.addAll(preservedIds)
+                    continue
+                }
+
+                // Changed or added: if there was an old subtree at this index,
+                // tear it down first to make room for the new one at the same
+                // sibling position.
+                if (hadOld) {
+                    val oldIds = oldInstancesByIndex[index] ?: emptyList()
+                    for (oldInstanceId in oldIds) {
+                        val oldInstanceTag = idToTag[oldInstanceId] ?: continue
+                        // Only REMOVE the top-level template root; nested
+                        // children are torn down via removeInstanceTree so we
+                        // don't double-REMOVE already-detached children.
+                        if (oldInstanceId == "${binding.templateId}__$index") {
+                            messages.add(
+                                A2UIMessage(
+                                    type = A2UIMessageType.REMOVE_COMPONENT,
+                                    surfaceId = surfaceId,
+                                    tag = oldInstanceTag,
+                                    parentTag = parentTag
+                                )
+                            )
+                            removeInstanceTree(oldInstanceId, surfaceId, parentTag, messages)
+                            break
+                        }
+                    }
+                }
+
+                val scopePath = "/${dataKey}/$index"
+                val sizeBefore = binding.generatedInstanceIds.size
                 messages.addAll(
                     instantiateSubtree(
                         originalId = binding.templateId,
@@ -3930,7 +4063,44 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
                         binding = binding
                     )
                 )
+                val produced = binding.generatedInstanceIds.subList(
+                    sizeBefore,
+                    binding.generatedInstanceIds.size
+                ).toMutableList()
+                newInstancesByIndex[index] = produced
+                newSnapshots[index] = itemData
             }
+
+            // Tail removal: indices that existed previously but are not in the
+            // new array (array shrank).
+            val newCount = arrayData.size
+            if (oldCount > newCount) {
+                for (removedIndex in newCount until oldCount) {
+                    val removedIds = oldInstancesByIndex[removedIndex] ?: continue
+                    for (removedInstanceId in removedIds) {
+                        if (removedInstanceId == "${binding.templateId}__$removedIndex") {
+                            val removedTag = idToTag[removedInstanceId] ?: continue
+                            messages.add(
+                                A2UIMessage(
+                                    type = A2UIMessageType.REMOVE_COMPONENT,
+                                    surfaceId = surfaceId,
+                                    tag = removedTag,
+                                    parentTag = parentTag
+                                )
+                            )
+                            removeInstanceTree(removedInstanceId, surfaceId, parentTag, messages)
+                            break
+                        }
+                    }
+                }
+            }
+
+            // Commit the new maps atomically so a subsequent expansion in the
+            // same tick sees a consistent view.
+            binding.lastInstancesByIndex.clear()
+            binding.lastInstancesByIndex.putAll(newInstancesByIndex)
+            binding.lastItemSnapshots.clear()
+            binding.lastItemSnapshots.putAll(newSnapshots)
         }
 
         return messages
@@ -4399,8 +4569,13 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
                     }
                     props["margin"] = 0
                 } else if (parentComp == "Row") {
-                    // Mirror buildProps: Text in Row needs post-layout maxWidth fix
+                    // Mirror buildProps: Text in Row needs post-layout maxWidth fix.
+                    // See adapter line ~2536 for why alignSelf=stretch is pre-set
+                    // alongside __textInRowPostLayout (needed as a shape-change
+                    // trigger so the applier's STRETCH → AUTO flip forces the
+                    // RichTextView to re-measure with the new maxWidth).
                     props["__textInRowPostLayout"] = "true"
+                    props["alignSelf"] = "stretch"
                 } else if (parentComp == "Column" || parentComp == "Card") {
                     // Mirror buildProps: stretch text so the engine's Loop A pre-fill
                     // provides a width constraint via node.getLayoutDimension(crossAxis).
@@ -4429,8 +4604,21 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
                         props["borderRadius"] = "20"
                     }
                     "smallFeature" -> {
-                        props["width"] = 100
-                        props["height"] = 100
+                        if (parentIsRow) {
+                            // In a Row, keep the legacy fixed 100×100 slot.
+                            props["width"] = 100
+                            props["height"] = 100
+                        } else {
+                            // Mirror buildProps("Image", smallFeature, non-Row):
+                            // 1dp seed placeholder (not 0 — 0 bounds suppresses image
+                            // decoding, loadResolution would never fire). Applier grows
+                            // into a 100×100dp box via __featureAutoSizeMax(Width|Height)Dp.
+                            props["width"] = 1
+                            props["height"] = 1
+                            props["resizeMode"] = "cover"
+                            props["__featureAutoSizeMaxWidthDp"] = 100
+                            props["__featureAutoSizeMaxHeightDp"] = 100
+                        }
                     }
                     "mediumFeature" -> {
                         if (parentIsRow) {
@@ -4438,10 +4626,13 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
                             props["height"] = 100
                         } else {
                             // Mirror buildProps("Image", mediumFeature, non-Row):
-                            // safe pre-load placeholder; A2UIApplier will refine
-                            // via loadResolution callback (see __featureAutoSizeMax*Dp).
+                            // 1dp-height placeholder (not 0 — 0 bounds suppresses image
+                            // decoding, loadResolution would never fire); A2UIApplier
+                            // refines via loadResolution (see __featureAutoSizeMax*Dp).
+                            // 1dp avoids the "big placeholder → smaller real image"
+                            // layout collapse.
                             props["alignSelf"] = "stretch"
-                            props["height"] = 200
+                            props["height"] = 1
                             props["resizeMode"] = "cover"
                             props["__featureAutoSizeMaxWidthDp"] = 300
                             props["__featureAutoSizeMaxHeightDp"] = 200
@@ -4454,19 +4645,25 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
                         } else {
                             // Mirror buildProps("Image", largeFeature, non-Row):
                             // no width cap (image renders at intrinsic width, leading-
-                            // aligned), max height 400dp. Placeholder height matches the
-                            // cap so pre-load layout doesn't shift.
+                            // aligned), max height 400dp. 1dp-height placeholder (not 0 —
+                            // 0 bounds suppresses image decoding) avoids the
+                            // "placeholder 400dp → real ~210dp" collapse.
                             props["alignSelf"] = "stretch"
-                            props["height"] = 400
+                            props["height"] = 1
                             props["resizeMode"] = "cover"
                             props["__featureAutoSizeMaxHeightDp"] = 400
                         }
                     }
                     "header" -> {
-                        // Banner style: 100% width (respecting margins), fixed height 200dp, cover.
+                        // Banner style: 100% width (respecting margins), max height 200dp,
+                        // cover. 1dp-height placeholder (not 0 — 0 bounds suppresses
+                        // image decoding); applier grows height via the header-specific
+                        // loadResolution path (keeps alignSelf=stretch).
                         props["alignSelf"] = "stretch"
-                        props["height"] = 200
+                        props["height"] = 1
                         props["resizeMode"] = "cover"
+                        props["__featureAutoSizeHeader"] = true
+                        props["__featureAutoSizeMaxHeightDp"] = 200
                     }
                     else -> {
                         if (parentIsRow) {
@@ -4475,7 +4672,7 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
                         } else {
                             // Same as mediumFeature (default variant).
                             props["alignSelf"] = "stretch"
-                            props["height"] = 200
+                            props["height"] = 1
                             props["resizeMode"] = "cover"
                             props["__featureAutoSizeMaxWidthDp"] = 300
                             props["__featureAutoSizeMaxHeightDp"] = 200
@@ -4548,24 +4745,31 @@ val skipKeys = setOf("id", "component", "children", "child", "accessibility", "a
         val directParent = childToParentCache[instanceId]
         if (directParent != null) return directParent
 
-        // For template instances, look up the original parent relationship
+        // For template instances, look up the original parent relationship.
+        // Fall back to the persistent originalChildToParent map because the batch-
+        // scoped cache only contains relationships for the current updateComponents
+        // batch and may have evicted the template parent link already.
         val originalId = getOriginalComponentId(instanceId)
-        return childToParentCache[originalId]
+        return childToParentCache[originalId] ?: originalChildToParent[originalId]
     }
 
     /**
      * Get the parent component type for an instance (works for both regular and template instances).
      */
     private fun getParentComponentType(instanceId: String): String? {
-        // First try direct lookup
+        // First try direct lookup in the batch-scoped cache (covers live components
+        // present in the latest updateComponents batch).
         val parentId = childToParentCache[instanceId]
         if (parentId != null) {
             return idToTag[parentId]?.let { tagToComponentName[it] }
         }
 
-        // For template instances, look up original parent's component type
+        // For template instances, strip the suffix to find the original id and
+        // look up the original parent. Prefer the batch cache, but fall back to
+        // the persistent originalChildToParent map because template components
+        // are declared once and later batches evict them from the batch cache.
         val originalId = getOriginalComponentId(instanceId)
-        val originalParentId = childToParentCache[originalId]
+        val originalParentId = childToParentCache[originalId] ?: originalChildToParent[originalId]
         if (originalParentId != null) {
             val parentDef = idToOriginalDef[originalParentId]
             return parentDef?.get("component") as? String
@@ -6357,7 +6561,22 @@ data class ChildListBinding(
     /** The component ID of the template to instantiate for each array item */
     val templateId: String,
     /** IDs of currently generated instances (for cleanup on re-expansion) */
-    val generatedInstanceIds: MutableList<String> = mutableListOf()
+    val generatedInstanceIds: MutableList<String> = mutableListOf(),
+    /**
+     * Per-index instance IDs from the last expansion, used by the diff-based
+     * updater to REMOVE only the subtree of indices whose data has actually
+     * changed (or that have been removed), while leaving unchanged indices
+     * fully intact (no REMOVE/INSTANTIATE, no visual flicker). Rebuilt on
+     * every expand call.
+     */
+    val lastInstancesByIndex: MutableMap<Int, MutableList<String>> = mutableMapOf(),
+    /**
+     * Per-index snapshot of the resolved item data from the last expansion.
+     * Compared with the current array to decide whether a given index can
+     * be reused as-is. Primitive maps / lists / scalars are compared with
+     * structural equality.
+     */
+    val lastItemSnapshots: MutableMap<Int, Any?> = mutableMapOf()
 )
 
 /**

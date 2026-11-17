@@ -152,6 +152,23 @@ class A2UIApplier(private val host: A2UIHost) {
      */
     private val imageAutoSizeRegistered = mutableSetOf<Int>()
 
+    /**
+     * Tags of Row-hosted Text views for which `applyRowTextWidth` has already
+     * run successfully at least once (i.e. parent Row had non-zero width and
+     * the width constraint was applied). Used by the first-attach flicker
+     * suppression path in [applyTextProps] / [applyMarkdownText]:
+     *
+     *  - On FIRST applyProps for a given tag, if the Row isn't laid out yet
+     *    (rowMaxW == null), we draw the Text with `opacity = 0f` so the
+     *    "no-width single-line overflow" intermediate frame is invisible.
+     *  - When the one-shot post-layout callback runs, it applies the real
+     *    width AND restores opacity to 1f atomically.
+     *  - After that the tag is added to this set, so subsequent content
+     *    updates (streaming data refresh) never re-hide the Text even if
+     *    some edge case causes rowMaxW to momentarily come back as null.
+     */
+    private val rowTextWidthAppliedTags = mutableSetOf<Int>()
+
     /** Slider binding info: stores the data key and min/max for denormalization */
     private data class SliderBindingInfo(val dataKey: String, val min: Float, val max: Float)
 
@@ -340,6 +357,14 @@ class A2UIApplier(private val host: A2UIHost) {
         textFieldBindingPaths.remove(tag)
         dateTimeBindingPaths.remove(tag)
         dateTimeStaticTags.remove(tag)
+        // When a Row-hosted Text is removed and later re-created at the same
+        // tag (e.g. a ChildList index whose data changed enough to force a
+        // REMOVE + INSTANTIATE), we must clear the "already applied" marker
+        // so the first-attach flicker suppression in applyTextProps /
+        // applyMarkdownText (opacity=0 while parent Row isn't laid out)
+        // re-engages for the fresh instance.
+        rowTextWidthAppliedTags.remove(tag)
+        imageAutoSizeRegistered.remove(tag)
     }
 
     /**
@@ -468,33 +493,31 @@ class A2UIApplier(private val host: A2UIHost) {
         }
 
         // Post-layout width fix for Text inside a Row.
-        // In Kuikly's Flexbox engine, Row children receive parentMaxWidth=undefined,
-        // so Text.measure() has no width constraint and returns single-line width.
-        // When flexWrap=wrap moves the Text to a new line, its natural width may
-        // exceed the Row's width, causing right-side clipping. After layout, we set
-        // maxWidth = Row's content width - Text's margin so the text wraps within bounds.
+        //
+        // Kuikly's Flex engine passes `parentMaxWidth=undefined` from a Row to
+        // its children, so a Row-hosted Text measures at its natural single-
+        // line width and gets clipped at the Row's right edge instead of
+        // wrapping. We work around this by hard-setting the Text's own
+        // `width` to the Row's content width minus the Text's horizontal
+        // margins; this produces an EXACTLY-mode measurement and triggers
+        // real multi-line wrapping.
+        //
+        // The width is normally applied synchronously inside the same
+        // `view.attr { ... }` block that writes the text content (see
+        // [applyTextProps] / [applyMarkdownText]) — that merged path is
+        // flicker-free because the render layer only ever sees the final
+        // state. The one-shot callback registered below is the FIRST-attach
+        // fallback: when a Text is attached during streaming its parent Row
+        // may not yet be laid out, so [computeRowTextMaxWidth] returns null
+        // and [applyRowTextWidth] can't run from the synchronous path. This
+        // callback fires after the first full layout pass and gives
+        // `parentWidth > 0` a chance so the real width (and visibility
+        // restore for the opacity=0 flicker-suppression path) can finally be
+        // applied.
         val textInRowPostLayout = props["__textInRowPostLayout"] as? String
         if (textInRowPostLayout != null && view is RichTextView) {
             host.addTaskWhenLayoutFinish {
-                val parentNode = view.flexNode.parent ?: return@addTaskWhenLayoutFinish
-                val parentWidth = parentNode.layoutFrame.width
-                if (parentWidth > 0f && !parentWidth.isNaN()) {
-                    val padLeft = parentNode.getPadding(StyleSpace.Type.LEFT)
-                    val padRight = parentNode.getPadding(StyleSpace.Type.RIGHT)
-                    val contentWidth = parentWidth - (if (padLeft.isNaN()) 0f else padLeft) - (if (padRight.isNaN()) 0f else padRight)
-                    // Subtract Text's own horizontal margin so it fits within the row
-                    val marginLeft = view.flexNode.getMargin(StyleSpace.Type.LEFT)
-                    val marginRight = view.flexNode.getMargin(StyleSpace.Type.RIGHT)
-                    val textMargin = (if (marginLeft.isNaN()) 0f else marginLeft) + (if (marginRight.isNaN()) 0f else marginRight)
-                    val maxW = (if (contentWidth > 0f) contentWidth else parentWidth) - textMargin
-                    // Only apply maxWidth if the text's current width exceeds the available space
-                    val textWidth = view.flexNode.layoutFrame.width
-                    if (maxW > 0f && textWidth > maxW) {
-                        view.attr {
-                            maxWidth(maxW)
-                        }
-                    }
-                }
+                applyRowTextWidth(view, props)
             }
         }
 
@@ -826,6 +849,13 @@ class A2UIApplier(private val host: A2UIHost) {
 
     /**
      * Apply text-specific properties to a RichTextView.
+     *
+     * For Row-hosted Text (marked with `__textInRowPostLayout`) this function
+     * merges the row-text width constraint into the same `view.attr {}` block
+     * as the text/font/color settings, so the render pipeline never observes
+     * an intermediate "content updated but still at natural single-line width"
+     * state (which would otherwise cause a visible single-line→wrapped flicker
+     * when a newly instantiated review row first receives its body text).
      */
     private fun applyTextProps(view: RichTextView, props: Map<String, Any?>) {
         val rawText = props["text"]?.toString()
@@ -836,6 +866,31 @@ class A2UIApplier(private val host: A2UIHost) {
         if (rawText != null && MarkdownParser.containsMarkdown(rawText)) {
             applyMarkdownText(view, rawText, props)
             return
+        }
+
+        // Compute the row-text width constraint up-front (null when either the
+        // marker is absent or the parent Row hasn't been laid out yet). We
+        // only need to markDirty + relayout when we actually got a width.
+        val rowMaxW = computeRowTextMaxWidth(view, props)
+        val isRowText = props["__textInRowPostLayout"] != null
+        val tag = if (isRowText) host.registry.getTag(view) else null
+        // First-attach flicker suppression: if this is a Row-hosted Text that
+        // has never yet been given a real width (not in `rowTextWidthAppliedTags`),
+        // and the parent Row isn't laid out yet (rowMaxW == null), draw this
+        // frame with opacity=0 so the inevitable "no-width single-line
+        // overflow" intermediate state is never visible. The one-shot
+        // post-layout callback registered by applyProps will later invoke
+        // applyRowTextWidth which both applies the real width AND restores
+        // opacity to 1 atomically, so the user only ever sees the final
+        // wrapped state.
+        val needsFirstAttachHide = isRowText && rowMaxW == null &&
+            tag != null && tag !in rowTextWidthAppliedTags
+        if (rowMaxW != null) {
+            // Invalidate TextShadow's size cache BEFORE the attr block so the
+            // single re-measure triggered by the batched attr-flush uses the
+            // new content + width together (otherwise a cached single-line
+            // result from the previous content would be used).
+            view.shadow?.markDirty()
         }
 
         view.attr {
@@ -887,7 +942,95 @@ class A2UIApplier(private val host: A2UIHost) {
                 }
             }
             props["firstLineHeadIndent"]?.let { firstLineHeadIndent(toFloat(it)) }
+            // Row-text width constraint (merged in the same attr block so the
+            // render never flickers through a "wide single-line" intermediate
+            // state). We use maxWidth (AT-MOST) rather than width (EXACTLY)
+            // so sibling Texts in the same Row can still share the row
+            // horizontally at their natural widths; only overlong text
+            // actually wraps.
+            if (rowMaxW != null) {
+                maxWidth(rowMaxW)
+                alignSelf(FlexAlign.AUTO)
+                opacity(1f)
+            } else if (needsFirstAttachHide) {
+                opacity(0f)
+            }
         }
+        if (rowMaxW != null) {
+            host.performLayoutAndReportHeight()
+            view.setFrameToRenderView(view.flexNode.layoutFrame)
+            view.updateShadow()
+            if (tag != null) rowTextWidthAppliedTags.add(tag)
+        }
+    }
+
+    /**
+     * Compute the horizontal width budget that a Row-hosted Text should use
+     * when wrapping, or null when the computation isn't yet possible (marker
+     * missing, parent not laid out, zero/negative budget after margins).
+     *
+     * Kuikly's Flex engine passes parentMaxWidth=undefined from a Row to its
+     * children, so Text.measure() returns the single-line natural width and
+     * the Row then clips the Text at its right edge. We work around this by
+     * setting the Text's own `maxWidth` to the Row's content width, giving
+     * long text an AT-MOST bound that triggers multi-line wrapping while
+     * short sibling Texts are unaffected and can still share the row
+     * horizontally at their natural widths.
+     */
+    private fun computeRowTextMaxWidth(view: RichTextView, props: Map<String, Any?>): Float? {
+        if (props["__textInRowPostLayout"] == null) return null
+        val parentNode = view.flexNode.parent ?: return null
+        val parentWidth = parentNode.layoutFrame.width
+        if (parentWidth <= 0f || parentWidth.isNaN()) return null
+        val padLeft = parentNode.getPadding(StyleSpace.Type.LEFT)
+        val padRight = parentNode.getPadding(StyleSpace.Type.RIGHT)
+        val contentWidth = parentWidth -
+            (if (padLeft.isNaN()) 0f else padLeft) -
+            (if (padRight.isNaN()) 0f else padRight)
+        val marginLeft = view.flexNode.getMargin(StyleSpace.Type.LEFT)
+        val marginRight = view.flexNode.getMargin(StyleSpace.Type.RIGHT)
+        val textMargin = (if (marginLeft.isNaN()) 0f else marginLeft) +
+            (if (marginRight.isNaN()) 0f else marginRight)
+        val maxW = (if (contentWidth > 0f) contentWidth else parentWidth) - textMargin
+        return if (maxW > 0f) maxW else null
+    }
+
+    /**
+     * Apply the hard width constraint to a Row-hosted Text so wrapping works,
+     * invoked ONLY from the one-shot post-layout callback registered in
+     * [applyProps]. The synchronous path inside [applyTextProps] /
+     * [applyMarkdownText] already merges the width into the same `view.attr`
+     * block that writes the content — this standalone call exists solely to
+     * cover the first-attach case where the parent Row hadn't been laid out
+     * yet and [computeRowTextMaxWidth] returned null.
+     *
+     * In addition to the width + shape-change (alignSelf STRETCH→AUTO) that
+     * forces a real re-measure, this also restores `opacity` to 1 so any
+     * first-attach flicker suppression (opacity=0 set by the synchronous
+     * path when rowMaxW was unknown) is lifted atomically with the final
+     * wrapped layout — the user never sees the single-line intermediate
+     * state.
+     */
+    private fun applyRowTextWidth(view: RichTextView, props: Map<String, Any?>) {
+        val maxW = computeRowTextMaxWidth(view, props) ?: return
+        // Invalidate TextShadow's size cache so the next calculateRenderViewSize
+        // performs a real native multi-line layout instead of returning the
+        // cached single-line result.
+        view.shadow?.markDirty()
+        view.attr {
+            maxWidth(maxW)
+            alignSelf(FlexAlign.AUTO)
+            // Restore visibility in case applyTextProps / applyMarkdownText set
+            // opacity=0 for this first attach frame while waiting for the Row
+            // to be laid out. Setting opacity=1 unconditionally here is safe
+            // because any explicit opacity from protocol props is applied
+            // elsewhere (applyCommonProps) and this call wins by order.
+            opacity(1f)
+        }
+        host.performLayoutAndReportHeight()
+        view.setFrameToRenderView(view.flexNode.layoutFrame)
+        view.updateShadow()
+        host.registry.getTag(view)?.let { rowTextWidthAppliedTags.add(it) }
     }
 
     /** Color used for rendered Markdown links. */
@@ -950,6 +1093,28 @@ class A2UIApplier(private val host: A2UIHost) {
             }
         }
 
+        // Compute the row-text width constraint up-front so we can merge it
+        // into the single trailing `view.attr {}` block below. This avoids a
+        // visible flicker where the Markdown spans appear at their natural
+        // single-line width, get clipped by the Row, and then relayout to
+        // the wrapped width only on a subsequent flush.
+        val rowMaxW = computeRowTextMaxWidth(view, props)
+        val isRowText = props["__textInRowPostLayout"] != null
+        val tag = if (isRowText) host.registry.getTag(view) else null
+        // Same first-attach flicker suppression as applyTextProps: when a
+        // Row-hosted markdown Text is first attached and the parent Row isn't
+        // laid out yet, draw it invisible for this frame; the post-layout
+        // callback (via applyRowTextWidth) will restore opacity atomically
+        // when it applies the real width.
+        val needsFirstAttachHide = isRowText && rowMaxW == null &&
+            tag != null && tag !in rowTextWidthAppliedTags
+        if (rowMaxW != null) {
+            // Invalidate TextShadow's size cache so the single re-measure
+            // triggered by the batched attr-flush uses the new spans + width
+            // together.
+            view.shadow?.markDirty()
+        }
+
         // Paragraph-level attributes still apply to the whole block.
         view.attr {
             props["textAlign"]?.let {
@@ -963,6 +1128,19 @@ class A2UIApplier(private val host: A2UIHost) {
             props["lineHeight"]?.let { lineHeight(toFloat(it)) }
             props["lineSpacing"]?.let { lineSpacing(toFloat(it)) }
             props["letterSpacing"]?.let { letterSpacing(toFloat(it)) }
+            if (rowMaxW != null) {
+                maxWidth(rowMaxW)
+                alignSelf(FlexAlign.AUTO)
+                opacity(1f)
+            } else if (needsFirstAttachHide) {
+                opacity(0f)
+            }
+        }
+        if (rowMaxW != null) {
+            host.performLayoutAndReportHeight()
+            view.setFrameToRenderView(view.flexNode.layoutFrame)
+            view.updateShadow()
+            if (tag != null) rowTextWidthAppliedTags.add(tag)
         }
     }
 
@@ -1418,9 +1596,20 @@ class A2UIApplier(private val host: A2UIHost) {
         //   `__featureAutoSizeMaxHeightDp=<height cap in dp>` (200 mediumFeature / 400 largeFeature)
         //   `__featureAutoSizeMaxWidthDp=<width cap in dp>`  (optional; 300 for mediumFeature)
         // We wire loadResolution once and rewrite the geometry when the real size is known.
+        //
+        // Three sizing modes share this marker set:
+        //   - header (__featureAutoSizeHeader=true): keep alignSelf=stretch, set
+        //     height = min(availableWidth * imgH/imgW, maxHeightDp). Full-width banner.
+        //   - mediumFeature (__featureAutoSizeMaxWidthDp set, no header flag):
+        //     clamp width to min(imgW, cap, availW), center on cross axis (alignSelf=CENTER).
+        //   - largeFeature (no width cap, no header flag):
+        //     width = min(imgW, availW), leading-aligned (alignSelf=AUTO).
+        //
+        // smallFeature reuses the mediumFeature path with cap=100×100.
         val autoSizeMaxHeight = (props["__featureAutoSizeMaxHeightDp"] as? Number)?.toFloat()
         if (autoSizeMaxHeight != null && autoSizeMaxHeight > 0f) {
-            // Width cap is optional. Present  -> clamp + center (mediumFeature).
+            val isHeader = props["__featureAutoSizeHeader"] == true
+            // Width cap is optional. Present  -> clamp + center (mediumFeature/smallFeature).
             //                       Absent   -> no width cap, no centering (largeFeature).
             val autoSizeMaxWidth =
                 (props["__featureAutoSizeMaxWidthDp"] as? Number)?.toFloat()
@@ -1429,17 +1618,86 @@ class A2UIApplier(private val host: A2UIHost) {
                 imageAutoSizeRegistered.add(tag)
                 view.event {
                     loadResolution { params ->
-                        applyFeatureAutoSize(
-                            view,
-                            params.width,
-                            params.height,
-                            autoSizeMaxWidth,
-                            autoSizeMaxHeight
-                        )
+                        if (isHeader) {
+                            applyHeaderAutoSize(
+                                view,
+                                params.width,
+                                params.height,
+                                autoSizeMaxHeight
+                            )
+                        } else {
+                            applyFeatureAutoSize(
+                                view,
+                                params.width,
+                                params.height,
+                                autoSizeMaxWidth,
+                                autoSizeMaxHeight
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Grow a `variant=header` Image's height from its natural resolution once loaded,
+     * while keeping `alignSelf=stretch` so the banner always fills the parent's
+     * cross-axis width (minus the image's own horizontal margin).
+     *
+     * Rules (in dp):
+     *   - width: unchanged (alignSelf=stretch still fills the parent's available width)
+     *   - height = availableWidth * (imgH / imgW), clamped to [maxHeightDp]
+     *     (the spec recommends 200dp for `header`). If the parent's available width
+     *     can't be resolved (parent not yet laid out), fall back to the max height
+     *     so the banner still becomes visible instead of staying at 0dp.
+     *   - alignSelf stays `stretch` (banner style). We do NOT switch to AUTO/CENTER
+     *     here, that's the mediumFeature/largeFeature behavior.
+     *
+     * This path exists so that the adapter can emit a `height=0` placeholder for
+     * `variant=header` (streaming-friendly: no vertical real estate reserved before
+     * the image resolves) without the layout "jumping" when the image lands \u2014 instead
+     * of using a fixed 200dp placeholder which would reserve space and then look fine,
+     * `height=0` makes the banner invisible until it has real content, and this method
+     * is what grows it to the correct height in a single layout pass.
+     *
+     * @param imageWidth  natural image width  from loadResolution callback (treated as dp)
+     * @param imageHeight natural image height from loadResolution callback (treated as dp)
+     * @param maxHeightDp height cap in dp (typically 200 for `header`)
+     */
+    private fun applyHeaderAutoSize(
+        view: ImageView,
+        imageWidth: Int,
+        imageHeight: Int,
+        maxHeightDp: Float
+    ) {
+        if (imageWidth <= 0 || imageHeight <= 0) return
+
+        val intrinsicWidthDp = imageWidth.toFloat()
+        val intrinsicHeightDp = imageHeight.toFloat()
+        val aspectRatio = intrinsicHeightDp / intrinsicWidthDp
+
+        // Stretch mode: width is dictated by the parent, so compute the natural height
+        // the image would take at the parent's content width. If unknown, fall back to
+        // the cap so the banner still shows up at a sensible size.
+        val availableWidthDp = computeParentAvailableWidthDp(view)
+        val naturalHeightDp = if (availableWidthDp != null && availableWidthDp > 0f) {
+            availableWidthDp * aspectRatio
+        } else {
+            maxHeightDp
+        }
+        val targetHeightDp = kotlin.math.min(naturalHeightDp, maxHeightDp)
+
+        view.attr {
+            alignSelf(FlexAlign.STRETCH)
+            height(targetHeightDp)
+        }
+
+        // Same rationale as applyFeatureAutoSize: without an in-flight animation the
+        // DSL's attr path marks the flex tree dirty but doesn't re-run layout, so the
+        // parent Card keeps its 0-height-derived size. Kick a layout pass so the
+        // banner's new height propagates to the host's reported content height.
+        host.performLayoutAndReportHeight()
     }
 
     /**
