@@ -16,6 +16,7 @@
 package com.tencent.kuikly.a2ui.demo.pages
 
 import com.tencent.kuikly.a2ui.dsl.embed.A2UISurface
+import com.tencent.kuikly.a2ui.protocol.A2UIProtocolVersion
 import com.tencent.kuikly.core.annotations.Page
 import com.tencent.kuikly.core.base.Color
 import com.tencent.kuikly.core.base.ViewBuilder
@@ -144,6 +145,7 @@ class A2UICaseListPager : Pager() {
 
                         A2UISurface {
                             attr {
+                                protocolConfig(A2UIProtocolVersion.V1_0, strict = true)
                                 marginBottom(4f)
                                 backgroundColor(Color.WHITE)
                                 borderRadius(6f)
@@ -202,9 +204,17 @@ class A2UICaseListPager : Pager() {
      */
     private fun extractMessages(caseObj: JSONObject): String {
         val arr = caseObj.optJSONArray("messages")
-        if (arr != null) return arr.toString()
+        if (arr != null) {
+            if (arr.length() == 0 || (0 until arr.length()).any {
+                    arr.optJSONObject(it)?.optString("version") != "1.0"
+                }) {
+                println("[A2UI] case skipped: explicit version 1.0 required on every message")
+                return ""
+            }
+            return arr.toString()
+        }
         val obj = caseObj.optJSONObject("messages")
-        if (obj != null) return obj.toString()
+        if (obj != null && obj.optString("version") == "1.0") return obj.toString()
         return ""
     }
 

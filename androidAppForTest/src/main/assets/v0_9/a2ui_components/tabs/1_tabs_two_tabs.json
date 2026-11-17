@@ -1,0 +1,52 @@
+{
+  "name": "Tabs - two tabs",
+  "description": "Tabs with two simple tabs",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tabs-two",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tabs-two",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "tabs"
+          },
+          {
+            "id": "tabs",
+            "component": "Tabs",
+            "tabs": [
+              {
+                "title": "Overview",
+                "child": "tab1"
+              },
+              {
+                "title": "Details",
+                "child": "tab2"
+              }
+            ]
+          },
+          {
+            "id": "tab1",
+            "component": "Text",
+            "text": "Tab 1: Overview content. Lorem ipsum...",
+            "variant": "body"
+          },
+          {
+            "id": "tab2",
+            "component": "Text",
+            "text": "Tab 2: Details content. Different from tab 1.",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "CheckBox - value=false",
+  "description": "CheckBox initialized as unchecked",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cb-false",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cb-false",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "cb"
+          },
+          {
+            "id": "cb",
+            "component": "CheckBox",
+            "label": "Subscribe to newsletter",
+            "value": false
+          }
+        ]
+      }
+    }
+  ]
+}

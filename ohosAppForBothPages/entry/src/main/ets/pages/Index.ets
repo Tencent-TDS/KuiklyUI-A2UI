@@ -100,7 +100,7 @@ struct Index {
 
           this.DemoEntry(new DemoEntryParams(
             'Kuikly 页面接入示例',
-            'Kuikly Page（KuiklyRenderView + @Page）承载一张 A2UI v0.9 天气卡片',
+            'Kuikly Page（KuiklyRenderView + @Page）承载一张 A2UI v1.0 天气卡片',
             '🧬',
             '#3F51B5',
             () => { router.pushUrl({ url: 'pages/KuiklyPageCardDemoPage' }); }
@@ -108,7 +108,7 @@ struct Index {
 
           this.DemoEntry(new DemoEntryParams(
             'Native 页面接入示例',
-            'Native ArkUI 页面 + A2UISurfaceView 直接承载一张 A2UI v0.9 天气卡片',
+            'Native ArkUI 页面 + A2UISurfaceView 直接承载一张 A2UI v1.0 天气卡片',
             '🧱',
             '#455A64',
             () => { router.pushUrl({ url: 'pages/NativeCardDemoPage' }); }

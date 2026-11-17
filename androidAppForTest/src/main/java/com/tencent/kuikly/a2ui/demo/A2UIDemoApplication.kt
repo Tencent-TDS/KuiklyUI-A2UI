@@ -32,6 +32,7 @@ class A2UIDemoApplication : Application() {
         // inside a Kuikly page can pop DatePickerDialogs, execute client-side
         // functionCall actions, and resolve user-registered custom functions.
         A2UIAndroidNativeMethodHandler.install(this)
+        A2UIDemoCustomRegistry.install(this)
     }
 
     companion object {

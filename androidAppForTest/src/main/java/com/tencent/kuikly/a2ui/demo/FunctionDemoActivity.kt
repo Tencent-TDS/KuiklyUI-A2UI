@@ -39,7 +39,7 @@ import androidx.appcompat.app.AppCompatActivity
 class FunctionDemoActivity : AppCompatActivity() {
 
     companion object {
-        private const val ROOT_DIR = "a2ui_function_tests"
+        private const val ROOT_DIR = "v0_9/a2ui_function_tests"
         private const val TITLE_SUFFIX = "函数测试"
     }
 

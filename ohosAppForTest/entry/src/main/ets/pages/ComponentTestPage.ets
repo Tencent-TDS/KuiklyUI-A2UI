@@ -44,33 +44,14 @@ struct ComponentTestPage {
   }
 
   private loadTestCases(): void {
-    if (this.componentDir.length === 0) return;
-
+    if (!this.rootDir.startsWith('v0_9/') && !this.rootDir.startsWith('v1_0/')) {
+      this.rootDir = `v0_9/${this.rootDir}`;
+    }
+    const directory = this.componentDir.length > 0 ? `${this.rootDir}/${this.componentDir}` : this.rootDir;
     try {
       const manifestStr = A2UIDemoAssetUtil.readRawFileSync(this.resMgr, 'a2ui_manifest.json');
-
-      // Determine which section of the manifest to use
-      // Use JSON string parsing to avoid variable-indexed property access
-      let fileList: string[] = [];
-      if (this.rootDir === 'a2ui_components') {
-        const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'components');
-        fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, this.componentDir);
-      } else if (this.rootDir === 'a2ui_function_tests') {
-        const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'function_tests');
-        fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, this.componentDir);
-      } else if (this.rootDir === 'a2ui_databinding_tests') {
-        const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'databinding_tests');
-        fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, this.componentDir);
-      } else if (this.rootDir === 'a2ui_theme_tests') {
-        const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'theme_tests');
-        fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, this.componentDir);
-      } else if (this.rootDir === 'a2ui_custom_functions') {
-        const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'custom_functions');
-        fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, this.componentDir);
-      } else if (this.rootDir === 'a2ui_custom_components') {
-        const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'custom_components');
-        fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, this.componentDir);
-      }
+      const filesSection = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'files');
+      const fileList = A2UIDemoAssetUtil.getStringArrayByKey(filesSection, directory);
 
       if (fileList.length === 0) {
         console.warn(`[ComponentTestPage] No files found for ${this.rootDir}/${this.componentDir}`);
@@ -78,12 +59,18 @@ struct ComponentTestPage {
       }
 
       for (const fileName of fileList) {
-        const filePath = `${this.rootDir}/${this.componentDir}/${fileName}`;
+        const filePath = `${directory}/${fileName}`;
         const jsonStr = A2UIDemoAssetUtil.readRawFileSync(this.resMgr, filePath);
         if (jsonStr.length === 0) continue;
 
         const testCase = A2UIDemoAssetUtil.parseTestCase(jsonStr);
         if (testCase) {
+          const envelopes = JSON.parse(testCase.messages) as Record<string, Object>[];
+          const allowedVersions = this.rootDir.startsWith('v1_0/') ? ['1.0', 'v1.0'] : ['v0.9', 'v0.9.1'];
+          if (envelopes.length === 0 || !envelopes.every((message: Record<string, Object>) => allowedVersions.includes(message['version'] as string))) {
+            console.error(`[ComponentTestPage] Version mismatch or missing version: ${filePath}`);
+            continue;
+          }
           if (testCase.name.length === 0) {
             testCase.name = fileName;
           }
@@ -153,7 +140,7 @@ struct ComponentTestPage {
 
               // Card container - transparent wrapper
               A2UISurface({
-                config: '{"debug": true}',
+                config: this.rootDir.startsWith('v1_0/') ? '{"debug":true,"protocolVersion":"1.0","strictV10":true}' : '{"debug":true,"protocolVersion":"0.9","strictV10":false}',
                 messages: item.messages,
                 finished: true
               })

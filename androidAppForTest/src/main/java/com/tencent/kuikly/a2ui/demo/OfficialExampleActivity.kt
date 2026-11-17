@@ -138,7 +138,7 @@ class OfficialExampleActivity : AppCompatActivity() {
         }
 
         // Load and render all 36 examples
-        val exampleFiles = assets.list("a2ui_examples")?.sorted() ?: emptyList()
+        val exampleFiles = assets.list("v0_9/a2ui_examples")?.sorted() ?: emptyList()
         var exampleIndex = 0
         for (fileName in exampleFiles) {
             if (!fileName.endsWith(".json")) continue
@@ -147,7 +147,7 @@ class OfficialExampleActivity : AppCompatActivity() {
             //if (exampleIndex != 37 && exampleIndex != 38) continue // For quick testing, only load the 24th example. Remove this line to load all examples.
 
             try {
-                val jsonStr = assets.open("a2ui_examples/$fileName").bufferedReader().use { it.readText() }
+                val jsonStr = assets.open("v0_9/a2ui_examples/$fileName").bufferedReader().use { it.readText() }
                 val jsonObj = JSONObject(jsonStr)
                 val name = jsonObj.optString("name", fileName)
                 val description = jsonObj.optString("description", "")

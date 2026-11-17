@@ -72,19 +72,14 @@ class CustomComponentDemoViewController: UIViewController, UITableViewDataSource
         title = "自定义组件示例"
         view.backgroundColor = .systemGroupedBackground
 
-        // Register custom components
-        registerCustomComponents()
+        Self.install()
 
         setupTableView()
     }
 
-    deinit {
-        unregisterCustomComponents()
-    }
-
     // MARK: - Custom Component Registration
 
-    private func registerCustomComponents() {
+    static func install() {
         // 1. A2UIWeb: A WKWebView component with "source" property.
         //    Measurer reports intrinsic size: width = parent cross-axis
         //    constraint, height = 240pt.
@@ -108,12 +103,6 @@ class CustomComponentDemoViewController: UIViewController, UITableViewDataSource
         )
 
         print("✅ [CustomComponent] All custom components registered: A2UIWeb, MyA2UIView")
-    }
-
-    private func unregisterCustomComponents() {
-        A2UISurfaceView.unregisterCustomRenderView(viewName: "A2UIWeb")
-        A2UISurfaceView.unregisterCustomRenderView(viewName: "MyA2UIView")
-        print("🗑️ [CustomComponent] All custom components unregistered")
     }
 
     // MARK: - Table View Setup
@@ -237,7 +226,7 @@ class CustomComponentDemoViewController: UIViewController, UITableViewDataSource
 /// This class implements `KuiklyRenderViewExportProtocol` by extending UIView
 /// and embedding a WKWebView inside.
 /// Intrinsic size (240pt height) is reported through the `measurer` registered
-/// alongside this creator in `registerCustomComponents()` above — A2UI now
+/// alongside this creator in `CustomComponentDemoViewController.install()` — A2UI now
 /// relies on the Kuikly Module channel (`A2UIBridgeModule.calculateCustomViewSize`)
 /// instead of the previous `+hrv_createShadow` path, so this class no longer
 /// implements that selector.
@@ -301,7 +290,7 @@ class A2UIWebView: UIView, KuiklyRenderViewExportProtocol {
 /// This class implements `KuiklyRenderViewExportProtocol` by extending UIView
 /// and embedding a UILabel inside.
 /// Intrinsic size (200pt height) is reported through the `measurer` registered
-/// alongside this creator in `registerCustomComponents()` above — A2UI now
+/// alongside this creator in `CustomComponentDemoViewController.install()` — A2UI now
 /// relies on the Kuikly Module channel (`A2UIBridgeModule.calculateCustomViewSize`)
 /// instead of the previous `+hrv_createShadow` path, so this class no longer
 /// implements that selector.
@@ -344,8 +333,8 @@ class MyA2UIView: UIView, KuiklyRenderViewExportProtocol {
         case "text":
             label.text = "\(propValue)"
         case "textColor":
-            if let colorStr = propValue as? String {
-                label.textColor = UIColor.fromHex(colorStr)
+            if let color = UIColor.fromCustomValue(propValue) {
+                label.textColor = color
             }
         default:
             break
@@ -375,17 +364,29 @@ class MyA2UIView: UIView, KuiklyRenderViewExportProtocol {
 // MARK: - UIColor Hex Extension (for MyA2UIView)
 
 private extension UIColor {
-    static func fromHex(_ hex: String) -> UIColor {
-        var hexStr = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if hexStr.hasPrefix("#") { hexStr.removeFirst() }
-        guard hexStr.count == 6, let rgb = UInt64(hexStr, radix: 16) else {
-            return .darkText
+    static func fromCustomValue(_ value: Any) -> UIColor? {
+        let argb: UInt32
+        if let number = value as? NSNumber {
+            argb = UInt32(truncatingIfNeeded: number.int64Value)
+        } else if let string = value as? String {
+            let text = string.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let decimal = Int64(text) {
+                argb = UInt32(truncatingIfNeeded: decimal)
+            } else if text.hasPrefix("#"),
+                      text.count == 7 || text.count == 9,
+                      let hex = UInt32(text.dropFirst(), radix: 16) {
+                argb = text.count == 7 ? hex | 0xFF000000 : hex
+            } else {
+                return nil
+            }
+        } else {
+            return nil
         }
         return UIColor(
-            red: CGFloat((rgb >> 16) & 0xFF) / 255.0,
-            green: CGFloat((rgb >> 8) & 0xFF) / 255.0,
-            blue: CGFloat(rgb & 0xFF) / 255.0,
-            alpha: 1.0
+            red: CGFloat((argb >> 16) & 0xFF) / 255.0,
+            green: CGFloat((argb >> 8) & 0xFF) / 255.0,
+            blue: CGFloat(argb & 0xFF) / 255.0,
+            alpha: CGFloat((argb >> 24) & 0xFF) / 255.0
         )
     }
 }

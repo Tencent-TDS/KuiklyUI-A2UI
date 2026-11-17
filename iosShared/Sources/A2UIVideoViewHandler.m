@@ -36,6 +36,17 @@
 @property (nonatomic, strong) AVPlayerItem *playerItem;
 @property (nonatomic, strong) id timeObserver;
 @property (nonatomic, assign) BOOL firstFrameReported;
+/**
+ * PR-9 (v1.0) `posterUrl` support.
+ *
+ * A2UI v1.0 adds an optional poster image shown before playback begins. The
+ * core Kotlin A2UIApplier forwards the resolved URL as a generic `posterUrl`
+ * prop through `-krv_setPropWithKey:propValue:`. We track the loaded URL to
+ * dedupe redundant updates and keep a transient UIImageView overlay above the
+ * AVPlayerLayer that is removed on first frame (see `p_handleTimeChange:`).
+ */
+@property (nonatomic, strong, nullable) UIImageView *posterOverlay;
+@property (nonatomic, copy, nullable) NSString *posterLoadedUrl;
 
 @end
 
@@ -142,6 +153,11 @@
     }
     if (!_firstFrameReported && currentMs > 0) {
         _firstFrameReported = YES;
+        // Hide the poster overlay (if any) at the first actual video frame.
+        // Mirrors the Android onRenderedFirstFrame path.
+        if (_posterOverlay) {
+            _posterOverlay.hidden = YES;
+        }
         if ([self.krv_delegate respondsToSelector:@selector(videoFirstFrameDidDisplay)]) {
             [self.krv_delegate videoFirstFrameDidDisplay];
         }
@@ -239,7 +255,59 @@
 }
 
 - (void)krv_setPropWithKey:(NSString *)propKey propValue:(id)propValue {
-    // Reserved for business extension; no-op in the demo.
+    // PR-9 (v1.0) `posterUrl`: forwarded by A2UIApplier as a generic prop.
+    // Overlay a UIImageView on top of the AVPlayerLayer-backed view until the
+    // first frame renders. Image data is fetched on a background queue so the
+    // main thread is never blocked; decode failures are tolerated silently
+    // (the overlay just stays blank).
+    if ([propKey isEqualToString:@"posterUrl"]) {
+        NSString *url = [propValue isKindOfClass:[NSString class]] ? (NSString *)propValue : [propValue description];
+        if (url.length == 0 || [url isEqualToString:self.posterLoadedUrl]) {
+            return;
+        }
+        [self p_applyPosterUrl:url];
+        return;
+    }
+    // Reserved for business extension; no-op for unknown keys in the demo.
+}
+
+- (void)p_applyPosterUrl:(NSString *)url {
+    self.posterLoadedUrl = url;
+    if (self.posterOverlay == nil) {
+        UIImageView *iv = [[UIImageView alloc] initWithFrame:self.bounds];
+        iv.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        iv.contentMode = UIViewContentModeScaleAspectFill;
+        iv.clipsToBounds = YES;
+        iv.backgroundColor = [UIColor blackColor];
+        // Insert on top so it visually covers the player layer. The overlay
+        // is removed via `hidden=YES` on the first rendered frame.
+        [self addSubview:iv];
+        self.posterOverlay = iv;
+    }
+    self.posterOverlay.hidden = NO;
+
+    NSURL *imageURL = [NSURL URLWithString:url];
+    if (imageURL == nil) {
+        return;
+    }
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        NSError *error = nil;
+        NSData *data = [NSData dataWithContentsOfURL:imageURL options:0 error:&error];
+        if (data == nil) {
+            // Silent fallback: overlay stays black, video will play as usual.
+            return;
+        }
+        UIImage *image = [UIImage imageWithData:data];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            // Only apply if the URL is still the current one and the first
+            // frame has not yet arrived (else leave the actual video visible).
+            if (strongSelf && [strongSelf.posterLoadedUrl isEqualToString:url] && !strongSelf.firstFrameReported) {
+                strongSelf.posterOverlay.image = image;
+            }
+        });
+    });
 }
 
 - (void)krv_callWithMethod:(NSString *)method params:(NSString *)params {

@@ -14,10 +14,23 @@
  */
 
 import { router, ComponentContent } from '@kit.ArkUI';
-import { registerA2UICustomRenderView, unregisterA2UICustomRenderView, A2UICustomViewSize } from '@kuikly-a2ui-open/render';
+import { registerA2UICustomRenderView, A2UICustomViewSize } from '@kuikly-a2ui-open/render';
 import { KuiklyRenderBaseView, KuiklyRenderCallback, KRValue } from '@kuikly-open/render';
 import { UIContext } from '@ohos.arkui.UIContext';
 import { webview } from '@kit.ArkWeb';
+
+export function installCustomComponentDemo(): void {
+  registerA2UICustomRenderView(
+    'A2UIWeb',
+    (): KuiklyRenderBaseView => new A2UIWebRenderView(),
+    (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 240 })
+  );
+  registerA2UICustomRenderView(
+    'MyA2UIView',
+    (): KuiklyRenderBaseView => new MyA2UIRenderView(),
+    (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 200 })
+  );
+}
 
 /**
  * Custom component entry data.
@@ -84,47 +97,7 @@ struct CustomComponentDemoPage {
   ];
 
   aboutToAppear(): void {
-    this.registerCustomComponents();
-  }
-
-  aboutToDisappear(): void {
-    this.unregisterCustomComponents();
-  }
-
-  /**
-   * Register all demo custom components.
-   * This demonstrates the public API: registerA2UICustomRenderView.
-   *
-   * Each call ships with a `measurer` so the Flex engine learns the
-   * component's intrinsic size on OHOS without needing a hard-coded
-   * `height` in the JSON spec. The same JSON files render identically on
-   * Android / iOS (their native Shadow mechanisms already return the same
-   * numbers from the dedicated Shadow classes).
-   */
-  private registerCustomComponents(): void {
-    // 1. A2UIWeb: A Web component with "source" property.
-    //    Intrinsic size: full parent cross-axis width, fixed 240vp height.
-    registerA2UICustomRenderView(
-      'A2UIWeb',
-      (): KuiklyRenderBaseView => new A2UIWebRenderView(),
-      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 240 })
-    );
-
-    // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties.
-    //    Intrinsic size: full parent cross-axis width, fixed 200vp height.
-    registerA2UICustomRenderView(
-      'MyA2UIView',
-      (): KuiklyRenderBaseView => new MyA2UIRenderView(),
-      (cw, _ch): A2UICustomViewSize => ({ width: cw, height: 200 })
-    );
-
-    console.info('✅ [CustomComponent] All custom components registered: A2UIWeb, MyA2UIView');
-  }
-
-  private unregisterCustomComponents(): void {
-    unregisterA2UICustomRenderView('A2UIWeb');
-    unregisterA2UICustomRenderView('MyA2UIView');
-    console.info('🗑️ [CustomComponent] All custom components unregistered');
+    installCustomComponentDemo();
   }
 
   build() {
@@ -256,7 +229,7 @@ function createMyA2UIView(view: KuiklyRenderBaseView) {
  */
 export class MyA2UIRenderView extends KuiklyRenderBaseView {
   text: string = '';
-  textColor: string = '#333333';
+  textColor: string | number = '#333333';
 
   setProp(propKey: string, propValue: KRValue | KuiklyRenderCallback): boolean {
     switch (propKey) {
@@ -265,7 +238,9 @@ export class MyA2UIRenderView extends KuiklyRenderBaseView {
         this.updateArkUI();
         return true;
       case 'textColor':
-        this.textColor = propValue as string;
+        const value = propValue as string | number;
+        const argb = typeof value === 'number' ? value : Number(value);
+        this.textColor = Number.isFinite(argb) ? argb >>> 0 : value;
         this.updateArkUI();
         return true;
       default:

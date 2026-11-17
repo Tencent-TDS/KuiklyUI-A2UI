@@ -16,7 +16,7 @@
 import UIKit
 
 /// Component Demo View Controller.
-/// Displays a list of A2UI v0.9 protocol standard components (pure native UI, no A2UI rendering).
+/// Displays a list of A2UI v1.0 protocol standard components (pure native UI, no A2UI rendering).
 class ComponentDemoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -74,7 +74,7 @@ class ComponentDemoViewController: UIViewController, UITableViewDataSource, UITa
         // Header
         let headerView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44))
         let headerLabel = UILabel()
-        headerLabel.text = "A2UI v0.9 标准协议支持的 18 个组件"
+        headerLabel.text = "A2UI v1.0 标准协议支持的 18 个组件"
         headerLabel.font = .systemFont(ofSize: 14)
         headerLabel.textColor = .secondaryLabel
         headerLabel.translatesAutoresizingMaskIntoConstraints = false

@@ -20,48 +20,70 @@ import OpenKuiklyA2UIIOSRender
 ///
 /// iOS mirror of `androidAppForBothPages/NativePageCardActivity`. Embeds an
 /// [A2UISurfaceView] directly inside a plain UIKit view tree and pushes one
-/// hand-crafted A2UI v0.9 weather-card payload through
+/// hand-crafted A2UI 1.0 weather-card payload through
 /// `writeStream()` / `finishStream()`. No Kuikly Pager involved.
 class NativePageCardViewController: UIViewController {
 
-    /// Hand-crafted A2UI v0.9 weather-card envelopes. Kept identical (in
+    /// Hand-crafted A2UI 1.0 weather-card envelopes. Kept identical (in
     /// intent) to the weather card used by the KuiklyPage's DSL entry, so
     /// users can eyeball that both integration paths render the same DSL.
     /// Split into two envelopes: createSurface + updateComponents.
     private static let CREATE_SURFACE_JSON = """
     {
-      "version": "v0.9",
-      "createSurface": { "surfaceId": "both-native-weather" }
+      "version": "1.0",
+      "createSurface": {
+        "surfaceId": "both-native-weather",
+        "catalogId": "kuikly_a2ui_catalog_v1_0.json"
+      }
     }
     """
 
     private static let UPDATE_COMPONENTS_JSON = """
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "both-native-weather",
         "components": [
           {
-            "id": "root", "component": "Card", "child": "outer",
+            "id": "root",
+            "component": "Card",
+            "child": "outer",
             "styles": {
               "padding": 10,
               "backgroundLinearGradient": {
                 "direction": "to-bottom",
                 "colorStops": [
-                  { "color": "#3A6DF0", "stop": 0.0 },
-                  { "color": "#5B4BE1", "stop": 0.55 },
-                  { "color": "#7A3FD8", "stop": 1.0 }
+                  {
+                    "color": "#3A6DF0",
+                    "stop": 0.0
+                  },
+                  {
+                    "color": "#5B4BE1",
+                    "stop": 0.55
+                  },
+                  {
+                    "color": "#7A3FD8",
+                    "stop": 1.0
+                  }
                 ]
               }
             }
           },
           {
-            "id": "outer", "component": "Column", "align": "stretch",
-            "children": ["title", "subtitle", "hero", "detail"]
+            "id": "outer",
+            "component": "Column",
+            "align": "stretch",
+            "children": [
+              "title",
+              "subtitle",
+              "hero",
+              "detail"
+            ]
           },
-
           {
-            "id": "title", "component": "Text", "text": "深圳 · 今日天气", "variant": "h3",
+            "id": "title",
+            "component": "Text",
+            "text": "### 深圳 · 今日天气",
             "styles": {
               "color": "#FFFFFF",
               "fontSize": 15,
@@ -74,7 +96,10 @@ class NativePageCardViewController: UIViewController {
             }
           },
           {
-            "id": "subtitle", "component": "Text", "text": "周一 · 9月8日 · 体感 29°", "variant": "caption",
+            "id": "subtitle",
+            "component": "Text",
+            "text": "周一 · 9月8日 · 体感 29°",
+            "variant": "caption",
             "styles": {
               "color": "#FFFFFF",
               "fontSize": 11,
@@ -85,14 +110,21 @@ class NativePageCardViewController: UIViewController {
               "marginTop": 0,
               "marginBottom": 2,
               "textShadow": {
-                "offsetX": 0, "offsetY": 1, "radius": 2, "color": "#40000000"
+                "offsetX": 0,
+                "offsetY": 1,
+                "radius": 2,
+                "color": "#40000000"
               }
             }
           },
-
           {
-            "id": "hero", "component": "Row", "align": "center",
-            "children": ["temp", "cond"],
+            "id": "hero",
+            "component": "Row",
+            "align": "center",
+            "children": [
+              "temp",
+              "cond"
+            ],
             "styles": {
               "marginTop": 0,
               "marginBottom": 4,
@@ -101,7 +133,9 @@ class NativePageCardViewController: UIViewController {
             }
           },
           {
-            "id": "temp", "component": "Text", "text": "27°", "variant": "h1",
+            "id": "temp",
+            "component": "Text",
+            "text": "# 27°",
             "styles": {
               "color": "#FFFFFF",
               "fontSize": 84,
@@ -112,16 +146,28 @@ class NativePageCardViewController: UIViewController {
               "marginBottom": 0,
               "transform": {
                 "scale": 1.02,
-                "translate": [0, -0.02],
-                "anchor": [0, 0.5]
+                "translate": [
+                  0,
+                  -0.02
+                ],
+                "anchor": [
+                  0,
+                  0.5
+                ]
               },
               "textShadow": {
-                "offsetX": 0, "offsetY": 2, "radius": 12, "color": "#66000000"
+                "offsetX": 0,
+                "offsetY": 2,
+                "radius": 12,
+                "color": "#66000000"
               }
             }
           },
           {
-            "id": "cond", "component": "Text", "text": "多云转晴", "variant": "body",
+            "id": "cond",
+            "component": "Text",
+            "text": "多云转晴",
+            "variant": "body",
             "styles": {
               "color": "#FFFFFF",
               "fontSize": 17,
@@ -132,23 +178,34 @@ class NativePageCardViewController: UIViewController {
               "marginTop": 0,
               "marginBottom": 0,
               "textShadow": {
-                "offsetX": 0, "offsetY": 1, "radius": 4, "color": "#4D000000"
+                "offsetX": 0,
+                "offsetY": 1,
+                "radius": 4,
+                "color": "#4D000000"
               }
             }
           },
-
           {
-            "id": "detail", "component": "Row", "justify": "spaceBetween",
-            "children": ["hum", "wind", "aqi"],
+            "id": "detail",
+            "component": "Row",
+            "justify": "spaceBetween",
+            "children": [
+              "hum",
+              "wind",
+              "aqi"
+            ],
             "styles": {
               "marginTop": 4,
               "paddingTop": 0
             }
           },
-
           {
-            "id": "hum", "component": "Row", "align": "center",
-            "children": ["humText"],
+            "id": "hum",
+            "component": "Row",
+            "align": "center",
+            "children": [
+              "humText"
+            ],
             "styles": {
               "backgroundColor": "#22FFFFFF",
               "borderRadius": 8,
@@ -160,12 +217,19 @@ class NativePageCardViewController: UIViewController {
               "marginTop": 0,
               "marginBottom": 8,
               "boxShadow": {
-                "offsetX": 0, "offsetY": 2, "radius": 6, "color": "#33000000", "fill": false
+                "offsetX": 0,
+                "offsetY": 2,
+                "radius": 6,
+                "color": "#33000000",
+                "fill": false
               }
             }
           },
           {
-            "id": "humText", "component": "Text", "text": "湿度 68%", "variant": "caption",
+            "id": "humText",
+            "component": "Text",
+            "text": "湿度 68%",
+            "variant": "caption",
             "styles": {
               "color": "#FFFFFF",
               "fontSize": 12,
@@ -175,10 +239,13 @@ class NativePageCardViewController: UIViewController {
               "marginBottom": 0
             }
           },
-
           {
-            "id": "wind", "component": "Row", "align": "center",
-            "children": ["windText"],
+            "id": "wind",
+            "component": "Row",
+            "align": "center",
+            "children": [
+              "windText"
+            ],
             "styles": {
               "backgroundColor": "#22FFFFFF",
               "borderRadius": 8,
@@ -189,12 +256,19 @@ class NativePageCardViewController: UIViewController {
               "marginTop": 0,
               "marginBottom": 8,
               "boxShadow": {
-                "offsetX": 0, "offsetY": 2, "radius": 6, "color": "#33000000", "fill": false
+                "offsetX": 0,
+                "offsetY": 2,
+                "radius": 6,
+                "color": "#33000000",
+                "fill": false
               }
             }
           },
           {
-            "id": "windText", "component": "Text", "text": "东南风 3 级", "variant": "caption",
+            "id": "windText",
+            "component": "Text",
+            "text": "东南风 3 级",
+            "variant": "caption",
             "styles": {
               "color": "#FFFFFF",
               "fontSize": 12,
@@ -204,10 +278,13 @@ class NativePageCardViewController: UIViewController {
               "marginBottom": 0
             }
           },
-
           {
-            "id": "aqi", "component": "Row", "align": "center",
-            "children": ["aqiText"],
+            "id": "aqi",
+            "component": "Row",
+            "align": "center",
+            "children": [
+              "aqiText"
+            ],
             "styles": {
               "backgroundColor": "#22FFFFFF",
               "borderRadius": 8,
@@ -219,12 +296,19 @@ class NativePageCardViewController: UIViewController {
               "marginTop": 0,
               "marginBottom": 8,
               "boxShadow": {
-                "offsetX": 0, "offsetY": 2, "radius": 6, "color": "#33000000", "fill": false
+                "offsetX": 0,
+                "offsetY": 2,
+                "radius": 6,
+                "color": "#33000000",
+                "fill": false
               }
             }
           },
           {
-            "id": "aqiText", "component": "Text", "text": "空气 良 · 58", "variant": "caption",
+            "id": "aqiText",
+            "component": "Text",
+            "text": "空气 良 · 58",
+            "variant": "caption",
             "styles": {
               "color": "#FFFFFF",
               "fontSize": 12,
@@ -299,9 +383,9 @@ class NativePageCardViewController: UIViewController {
             surface.bottomAnchor.constraint(equalTo: cardWrap.bottomAnchor)
         ])
 
-        surface.initSurface(configJson: "{}")
+        surface.initSurface(configJson: #"{"protocolVersion":"1.0","strictV10":true}"#)
         surface.surfaceListener = self
-        // Feed the two pre-built v0.9 envelopes directly. Each writeStream()
+        // Feed the two pre-built 1.0 envelopes directly. Each writeStream()
         // call must be a single JSON object per the A2UI protocol.
         surface.writeStream(Self.CREATE_SURFACE_JSON)
         surface.writeStream(Self.UPDATE_COMPONENTS_JSON)

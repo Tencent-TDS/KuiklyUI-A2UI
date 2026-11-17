@@ -1,0 +1,67 @@
+{
+  "name": "Text - function formatString",
+  "description": "Text rendered via formatString function with ${path} interpolation",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-format-string",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-format-string",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "main-column"
+          },
+          {
+            "id": "main-column",
+            "component": "Column",
+            "children": ["greeting", "summary"]
+          },
+          {
+            "id": "greeting",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Hello, ${/firstName} ${/lastName}!"
+              },
+              "returnType": "string"
+            },
+            "variant": "h4"
+          },
+          {
+            "id": "summary",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "You have ${/unread} unread messages and ${/notifications} new notifications."
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-text-format-string",
+        "value": {
+          "firstName": "Alex",
+          "lastName": "Chen",
+          "unread": 5,
+          "notifications": 12
+        }
+      }
+    }
+  ]
+}

@@ -48,6 +48,7 @@ export struct A2UISurface {
 
   build() {
     A2UISurfaceView({
+      configJson: this.config,
       listener: this.listener,
       onReady: (ctrl: A2UISurfaceViewController) => {
         this.feedMessages(ctrl);

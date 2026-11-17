@@ -3,48 +3,48 @@
   "description": "Text rendered via formatString function with ${path} interpolation",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-text-format-string",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-text-format-string",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["greeting", "summary"]
+            "children": [
+              "greeting",
+              "summary"
+            ]
           },
           {
             "id": "greeting",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
-                "value": "Hello, ${/firstName} ${/lastName}!"
-              },
-              "returnType": "string"
-            },
-            "variant": "h4"
+                "value": "#### Hello, ${/firstName} ${/lastName}!"
+              }
+            }
           },
           {
             "id": "summary",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "You have ${/unread} unread messages and ${/notifications} new notifications."
-              },
-              "returnType": "string"
+              }
             },
             "variant": "body"
           }
@@ -52,7 +52,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-text-format-string",
         "value": {

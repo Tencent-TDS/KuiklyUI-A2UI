@@ -189,7 +189,7 @@ class CustomIconDemoActivity : AppCompatActivity() {
         description: String,
         iconNames: List<String>
     ): JSONObject {
-        val surfaceId = "icon-case-${name.hashCode()}"
+        val surfaceId = "icon_case_${name.hashCode()}".replace('-', '_')
         val iconChildren = JSONArray()
         val components = JSONArray()
 
@@ -197,20 +197,19 @@ class CustomIconDemoActivity : AppCompatActivity() {
         components.put(JSONObject().apply {
             put("id", "root")
             put("component", "Card")
-            put("children", JSONArray().apply { put("row") })
+            put("child", "row")
         })
         val row = JSONObject().apply {
             put("id", "row")
             put("component", "Row")
             put("children", iconChildren)
-            put("justifyContent", "spaceAround")
-            put("alignItems", "center")
-            put("padding", 16)
+            put("justify", "spaceAround")
+            put("align", "center")
         }
         components.put(row)
 
         for ((index, iconName) in iconNames.withIndex()) {
-            val id = "icon-$index"
+            val id = "icon_$index"
             iconChildren.put(id)
             components.put(JSONObject().apply {
                 put("id", id)
@@ -222,13 +221,14 @@ class CustomIconDemoActivity : AppCompatActivity() {
 
         val messages = JSONArray().apply {
             put(JSONObject().apply {
-                put("version", "v0.9")
+                put("version", "1.0")
                 put("createSurface", JSONObject().apply {
                     put("surfaceId", surfaceId)
+                    put("catalogId", "kuikly_a2ui_catalog_v1_0.json")
                 })
             })
             put(JSONObject().apply {
-                put("version", "v0.9")
+                put("version", "1.0")
                 put("updateComponents", JSONObject().apply {
                     put("surfaceId", surfaceId)
                     put("components", components)

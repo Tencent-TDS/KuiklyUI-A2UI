@@ -63,12 +63,9 @@ COMPONENT_DIRS=(
 ICON_DIRS=(
     "a2ui_icons"
 )
-# Test-app-only asset dirs (databinding / theme / function tests).
 TEST_ONLY_DIRS=(
-    "a2ui_databinding_tests"
-    "a2ui_examples"
-    "a2ui_function_tests"
-    "a2ui_theme_tests"
+    "v0_9"
+    "v1_0"
 )
 
 # ─── Helpers ──────────────────────────────────────────────────────────────
@@ -89,6 +86,16 @@ sync_dirs() {
     done
 }
 
+sync_android() {
+    echo "→ Syncing Android formal assets…"
+    sync_dirs "$SRC_KUIKLYPAGE" "$SCRIPT_DIR/androidAppForNativePage/src/main/assets" "${COMPONENT_DIRS[@]}" "${ICON_DIRS[@]}"
+    for dir in "${COMPONENT_DIRS[@]}"; do
+        if [ -d "$SCRIPT_DIR/androidAppForBothPages/src/main/assets/$dir" ]; then
+            sync_dirs "$SRC_KUIKLYPAGE" "$SCRIPT_DIR/androidAppForBothPages/src/main/assets" "$dir"
+        fi
+    done
+}
+
 # ─── iOS sync ─────────────────────────────────────────────────────────────
 sync_ios() {
     echo "→ Syncing iOS assets…"
@@ -101,9 +108,6 @@ sync_ios() {
     echo "  · iosAppForKuiklyPage/Resources ← androidAppForKuiklyPage/assets"
     sync_dirs "$SRC_KUIKLYPAGE" "$IOS_KUIKLY_DIR" "${COMPONENT_DIRS[@]}" "${ICON_DIRS[@]}"
 
-    # iosAppForTest: the Test-only asset set (databinding / theme / function
-    # tests). No components/custom_* here — A2UIComponentTestViewController
-    # in the Test app uses the test-only dirs.
     echo "  · iosAppForTest/Resources ← androidAppForTest/assets"
     sync_dirs "$SRC_TEST" "$IOS_TEST_DIR" "${TEST_ONLY_DIRS[@]}"
 
@@ -142,13 +146,15 @@ sync_ohos() {
 
 # ─── Entry ────────────────────────────────────────────────────────────────
 TARGET="${1:-all}"
+python3 "$SCRIPT_DIR/scripts/generate_demo_asset_manifest.py"
 
 case "$TARGET" in
+    android) sync_android ;;
     ios)  sync_ios ;;
     ohos) sync_ohos ;;
-    all)  sync_ios; sync_ohos ;;
+    all)  sync_android; sync_ios; sync_ohos ;;
     *)
-        echo "Usage: $0 [ios|ohos|all]"
+        echo "Usage: $0 [android|ios|ohos|all]"
         exit 1
         ;;
 esac

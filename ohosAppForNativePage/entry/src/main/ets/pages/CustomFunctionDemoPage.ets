@@ -14,7 +14,81 @@
  */
 
 import { router } from '@kit.ArkUI';
-import { registerA2UICustomFunction, unregisterA2UICustomFunction } from '@kuikly-a2ui-open/render';
+import { registerA2UICustomFunction, registerA2UICatalogFunction, A2UICustomFunctionHandler } from '@kuikly-a2ui-open/render';
+
+export function installCustomFunctionDemo(): void {
+  registerDemoFunction('getGreeting', 'string', 'sync', (args) => {
+    const name = (args['name'] as string) ?? 'World';
+    return `Hello, ${name}!`;
+  });
+  registerDemoFunction('formatPhone', 'string', 'sync', (args) => {
+    const phone = (args['phone'] as string) ?? '';
+    if (phone.length === 11) {
+      return `${phone.substring(0, 3)}-${phone.substring(3, 7)}-${phone.substring(7)}`;
+    }
+    return phone;
+  });
+  registerDemoFunction('isVip', 'boolean', 'sync', (args) => {
+    const level = (args['level'] as number) ?? 0;
+    return level >= 3;
+  });
+  registerDemoFunction('calculateDiscount', 'number', 'sync', (args) => {
+    const price = (args['price'] as number) ?? 0;
+    const rate = (args['rate'] as number) ?? 1;
+    return Math.round(price * rate * 100) / 100;
+  });
+  registerDemoFunction('logEvent', 'void', 'sync', (args) => {
+    const event = (args['event'] as string) ?? '';
+    const data = (args['data'] as string) ?? '';
+    console.info(`[CustomFunction] logEvent: event=${event}, data=${data}`);
+    return null;
+  });
+  registerDemoFunction('buildSummary', 'string', 'sync', (args) => {
+    const name = (args['name'] as string) ?? 'Unknown';
+    const count = (args['count'] as number) ?? 0;
+    const status = (args['status'] as string) ?? 'unknown';
+    return `项目「${name}」当前状态: ${status}，共 ${count} 个任务`;
+  });
+  registerA2UICatalogFunction(
+    'fetchUser',
+    'custom_functions_catalog_v1_0.json',
+    '{"returnType":"object","invokeMode":"sync","allowedCallers":"agentOnly","args":{"type":"object","properties":{"id":{"type":"number"}},"required":["id"],"additionalProperties":false}}',
+    null
+  );
+}
+
+function registerDemoFunction(name: string, returnType: string, invokeMode: string, handler: A2UICustomFunctionHandler): void {
+  let argsSchema: string;
+  switch (name) {
+    case 'getGreeting':
+      argsSchema = '{"type":"object","properties":{"name":{"type":"string"}},"required":["name"],"additionalProperties":false}';
+      break;
+    case 'formatPhone':
+      argsSchema = '{"type":"object","properties":{"phone":{"type":"string"}},"required":["phone"],"additionalProperties":false}';
+      break;
+    case 'isVip':
+      argsSchema = '{"type":"object","properties":{"level":{"type":"number"}},"required":["level"],"additionalProperties":false}';
+      break;
+    case 'calculateDiscount':
+      argsSchema = '{"type":"object","properties":{"price":{"type":"number"},"rate":{"type":"number"}},"required":["price","rate"],"additionalProperties":false}';
+      break;
+    case 'logEvent':
+      argsSchema = '{"type":"object","properties":{"event":{"type":"string"},"data":{"type":"string"}},"required":["event"],"additionalProperties":false}';
+      break;
+    case 'buildSummary':
+      argsSchema = '{"type":"object","properties":{"name":{"type":"string"},"count":{"type":"number"},"status":{"type":"string"}},"required":["name","count","status"],"additionalProperties":false}';
+      break;
+    default:
+      throw new Error(`Unknown custom demo function: ${name}`);
+  }
+  registerA2UICustomFunction(name, returnType, invokeMode, handler);
+  registerA2UICatalogFunction(
+    name,
+    'custom_functions_catalog_v1_0.json',
+    `{"returnType":"${returnType}","invokeMode":"${invokeMode}","allowedCallers":"rendererOrAgent","requiresUserActivation":false,"args":${argsSchema}}`,
+    handler
+  );
+}
 
 /**
  * Custom function entry data.
@@ -79,7 +153,7 @@ struct CustomFunctionDemoPage {
     {
       title: '返回 Boolean 的自定义函数',
       entries: [
-        { dir: '02_boolean_return', name: 'isVip(level) → Boolean', description: '自定义函数返回布尔值，用于 check 条件控制组件显隐。', color: '#00B894' }
+        { dir: '02_boolean_return', name: 'isVip(level) → Boolean', description: '展示 isVip Boolean 返回值，按钮以官方 numeric ValidationResult 校验 VIP 阈值。', color: '#00B894' }
       ]
     },
     {
@@ -103,73 +177,7 @@ struct CustomFunctionDemoPage {
   ];
 
   aboutToAppear(): void {
-    this.registerCustomFunctions();
-  }
-
-  aboutToDisappear(): void {
-    this.unregisterCustomFunctions();
-  }
-
-  /**
-   * Register all demo custom functions.
-   * This demonstrates the public API: registerA2UICustomFunction.
-   */
-  private registerCustomFunctions(): void {
-    // 1. getGreeting(name) → String
-    registerA2UICustomFunction('getGreeting', 'string', 'sync', (args) => {
-      const name = (args['name'] as string) ?? 'World';
-      return `Hello, ${name}!`;
-    });
-
-    // 2. formatPhone(phone) → String
-    registerA2UICustomFunction('formatPhone', 'string', 'sync', (args) => {
-      const phone = (args['phone'] as string) ?? '';
-      if (phone.length === 11) {
-        return `${phone.substring(0, 3)}-${phone.substring(3, 7)}-${phone.substring(7)}`;
-      }
-      return phone;
-    });
-
-    // 3. isVip(level) → Boolean
-    registerA2UICustomFunction('isVip', 'boolean', 'sync', (args) => {
-      const level = (args['level'] as number) ?? 0;
-      return level >= 3;
-    });
-
-    // 4. calculateDiscount(price, rate) → Number
-    registerA2UICustomFunction('calculateDiscount', 'number', 'sync', (args) => {
-      const price = (args['price'] as number) ?? 0;
-      const rate = (args['rate'] as number) ?? 1;
-      return Math.round(price * rate * 100) / 100;
-    });
-
-    // 5. logEvent(event, data) → Void (sync)
-    registerA2UICustomFunction('logEvent', 'void', 'sync', (args) => {
-      const event = (args['event'] as string) ?? '';
-      const data = (args['data'] as string) ?? '';
-      console.info(`📊 [CustomFunction] logEvent: event=${event}, data=${data}`);
-      return null;
-    });
-
-    // 6. buildSummary(name, count, status) → String
-    registerA2UICustomFunction('buildSummary', 'string', 'sync', (args) => {
-      const name = (args['name'] as string) ?? 'Unknown';
-      const count = (args['count'] as number) ?? 0;
-      const status = (args['status'] as string) ?? 'unknown';
-      return `项目「${name}」当前状态: ${status}，共 ${count} 个任务`;
-    });
-
-    console.info('✅ [CustomFunction] All custom functions registered');
-  }
-
-  private unregisterCustomFunctions(): void {
-    unregisterA2UICustomFunction('getGreeting');
-    unregisterA2UICustomFunction('formatPhone');
-    unregisterA2UICustomFunction('isVip');
-    unregisterA2UICustomFunction('calculateDiscount');
-    unregisterA2UICustomFunction('logEvent');
-    unregisterA2UICustomFunction('buildSummary');
-    console.info('🗑️ [CustomFunction] All custom functions unregistered');
+    installCustomFunctionDemo();
   }
 
   build() {

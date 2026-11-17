@@ -18,6 +18,7 @@
 #   ./2.0_a2ui_ohos_build.sh
 
 set -e
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 
 # ─────────────────────────────────────────────────────────────────────
 # Enforce A2UI source mode for this script.

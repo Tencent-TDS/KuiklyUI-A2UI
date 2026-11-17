@@ -63,7 +63,7 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
             FunctionInfo(
                 dir: "02_boolean_return",
                 name: "isVip(level) → Boolean",
-                description: "自定义函数返回布尔值，用于 check 条件控制组件显隐。验证 evaluateCheckFunction 兜底路径。",
+                description: "展示 isVip Boolean 返回值，按钮以官方 numeric ValidationResult 校验 VIP 阈值。",
                 icon: "✓",
                 color: UIColor(red: 0.0, green: 0.72, blue: 0.58, alpha: 1.0)
             )
@@ -102,21 +102,16 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
         title = "自定义函数示例"
         view.backgroundColor = .systemGroupedBackground
 
-        // Register custom functions
-        registerCustomFunctions()
+        Self.install()
 
         setupTableView()
     }
 
-    deinit {
-        unregisterCustomFunctions()
-    }
-
     // MARK: - Custom Function Registration
 
-    private func registerCustomFunctions() {
+    static func install() {
         // 1. getGreeting(name) → String
-        A2UISurfaceView.registerCustomFunction(
+        registerDemoFunction(
             name: "getGreeting",
             returnType: A2UISurfaceView.returnTypeString,
             invokeMode: A2UISurfaceView.invokeModeSync
@@ -126,7 +121,7 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
         }
 
         // 2. formatPhone(phone) → String
-        A2UISurfaceView.registerCustomFunction(
+        registerDemoFunction(
             name: "formatPhone",
             returnType: A2UISurfaceView.returnTypeString,
             invokeMode: A2UISurfaceView.invokeModeSync
@@ -142,7 +137,7 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
         }
 
         // 3. isVip(level) → Boolean
-        A2UISurfaceView.registerCustomFunction(
+        registerDemoFunction(
             name: "isVip",
             returnType: A2UISurfaceView.returnTypeBoolean,
             invokeMode: A2UISurfaceView.invokeModeSync
@@ -152,7 +147,7 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
         }
 
         // 4. calculateDiscount(price, rate) → Number
-        A2UISurfaceView.registerCustomFunction(
+        registerDemoFunction(
             name: "calculateDiscount",
             returnType: A2UISurfaceView.returnTypeNumber,
             invokeMode: A2UISurfaceView.invokeModeSync
@@ -164,7 +159,7 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
         }
 
         // 5. logEvent(event, data) → Void (sync)
-        A2UISurfaceView.registerCustomFunction(
+        registerDemoFunction(
             name: "logEvent",
             returnType: A2UISurfaceView.returnTypeVoid,
             invokeMode: A2UISurfaceView.invokeModeSync
@@ -176,7 +171,7 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
         }
 
         // 6. buildSummary(name, count, status) → String
-        A2UISurfaceView.registerCustomFunction(
+        registerDemoFunction(
             name: "buildSummary",
             returnType: A2UISurfaceView.returnTypeString,
             invokeMode: A2UISurfaceView.invokeModeSync
@@ -187,17 +182,45 @@ class CustomFunctionDemoViewController: UIViewController, UITableViewDataSource,
             return "项目「\(name)」当前状态: \(status)，共 \(count) 个任务"
         }
 
-        print("✅ [CustomFunction] All custom functions registered")
+        A2UISurfaceView.registerCatalogFunction(
+            name: "fetchUser",
+            catalogId: "custom_functions_catalog_v1_0.json",
+            definitionJson: #"{"returnType":"object","invokeMode":"sync","allowedCallers":"agentOnly","args":{"type":"object","properties":{"id":{"type":"number"}},"required":["id"],"additionalProperties":false}}"#,
+            handler: nil
+        )
+        print("[CustomFunction] All custom functions registered")
     }
 
-    private func unregisterCustomFunctions() {
-        A2UISurfaceView.unregisterCustomFunction(name: "getGreeting")
-        A2UISurfaceView.unregisterCustomFunction(name: "formatPhone")
-        A2UISurfaceView.unregisterCustomFunction(name: "isVip")
-        A2UISurfaceView.unregisterCustomFunction(name: "calculateDiscount")
-        A2UISurfaceView.unregisterCustomFunction(name: "logEvent")
-        A2UISurfaceView.unregisterCustomFunction(name: "buildSummary")
-        print("🗑️ [CustomFunction] All custom functions unregistered")
+    private static func registerDemoFunction(
+        name: String,
+        returnType: String,
+        invokeMode: String,
+        handler: @escaping A2UISurfaceView.Handler
+    ) {
+        let argsSchema: String
+        switch name {
+        case "getGreeting":
+            argsSchema = #"{"type":"object","properties":{"name":{"type":"string"}},"required":["name"],"additionalProperties":false}"#
+        case "formatPhone":
+            argsSchema = #"{"type":"object","properties":{"phone":{"type":"string"}},"required":["phone"],"additionalProperties":false}"#
+        case "isVip":
+            argsSchema = #"{"type":"object","properties":{"level":{"type":"number"}},"required":["level"],"additionalProperties":false}"#
+        case "calculateDiscount":
+            argsSchema = #"{"type":"object","properties":{"price":{"type":"number"},"rate":{"type":"number"}},"required":["price","rate"],"additionalProperties":false}"#
+        case "logEvent":
+            argsSchema = #"{"type":"object","properties":{"event":{"type":"string"},"data":{"type":"string"}},"required":["event"],"additionalProperties":false}"#
+        case "buildSummary":
+            argsSchema = #"{"type":"object","properties":{"name":{"type":"string"},"count":{"type":"number"},"status":{"type":"string"}},"required":["name","count","status"],"additionalProperties":false}"#
+        default:
+            preconditionFailure("Unknown custom demo function: \(name)")
+        }
+        A2UISurfaceView.registerCustomFunction(name: name, returnType: returnType, invokeMode: invokeMode, handler: handler)
+        A2UISurfaceView.registerCatalogFunction(
+            name: name,
+            catalogId: "custom_functions_catalog_v1_0.json",
+            definitionJson: #"{"returnType":"\#(returnType)","invokeMode":"\#(invokeMode)","allowedCallers":"rendererOrAgent","requiresUserActivation":false,"args":\#(argsSchema)}"#,
+            handler: handler
+        )
     }
 
     // MARK: - Table View Setup

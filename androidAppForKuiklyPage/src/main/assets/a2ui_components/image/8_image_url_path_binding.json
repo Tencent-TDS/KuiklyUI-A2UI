@@ -3,15 +3,15 @@
   "description": "Image url/description bound to data model paths",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-image-binding",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-image-binding",
         "components": [
@@ -24,10 +24,10 @@
             "id": "img",
             "component": "Image",
             "url": {
-              "path": "/photoUrl"
+              "@path": "/photoUrl"
             },
             "description": {
-              "path": "/alt"
+              "@path": "/alt"
             },
             "variant": "mediumFeature"
           }
@@ -35,7 +35,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-image-binding",
         "value": {

@@ -133,30 +133,30 @@ struct KuiklyPageCustomIconDemoPage {
     description: string,
     iconNames: string[]
   ): string {
-    const surfaceId: string = `icon-case-${KuiklyPageCustomIconDemoPage.hashCode(name)}`;
+    const surfaceId: string = `icon_case_${KuiklyPageCustomIconDemoPage.hashCode(name)}`.replace(/-/g, '_');
 
     // childrenIds for the Row — quoted JSON strings.
     let childrenIds: string = '';
     for (let i = 0; i < iconNames.length; i++) {
       if (i > 0) childrenIds += ',';
-      childrenIds += `"icon-${i}"`;
+      childrenIds += `"icon_${i}"`;
     }
 
     // components array: root Card → Row → Icons.
     let componentsJson: string =
-      '{"id":"root","component":"Card","children":["row"]},' +
+      '{"id":"root","component":"Card","child":"row"},' +
       `{"id":"row","component":"Row","children":[${childrenIds}],` +
-        '"justifyContent":"spaceAround","alignItems":"center","padding":16}';
+        '"justify":"spaceAround","align":"center"}';
     for (let i = 0; i < iconNames.length; i++) {
       componentsJson +=
-        `,{"id":"icon-${i}","component":"Icon","name":${JSON.stringify(iconNames[i])},"size":48}`;
+        `,{"id":"icon_${i}","component":"Icon","name":${JSON.stringify(iconNames[i])},"size":48}`;
     }
 
     // messages array — `createSurface` + `updateComponents`.
     const messages: string =
       '[' +
-        `{"version":"v0.9","createSurface":{"surfaceId":"${surfaceId}"}},` +
-        `{"version":"v0.9","updateComponents":{"surfaceId":"${surfaceId}",` +
+        `{"version":"1.0","createSurface":{"surfaceId":"${surfaceId}","catalogId":"kuikly_a2ui_catalog_v1_0.json"}},` +
+        `{"version":"1.0","updateComponents":{"surfaceId":"${surfaceId}",` +
           `"components":[${componentsJson}]}}` +
       ']';
 

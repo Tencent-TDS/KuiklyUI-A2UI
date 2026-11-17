@@ -1,0 +1,32 @@
+{
+  "name": "Card - single Text child",
+  "description": "Most basic Card form: one Text inside",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-card-single-text",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-card-single-text",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "t"
+          },
+          {
+            "id": "t",
+            "component": "Text",
+            "text": "Card with a single Text child",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

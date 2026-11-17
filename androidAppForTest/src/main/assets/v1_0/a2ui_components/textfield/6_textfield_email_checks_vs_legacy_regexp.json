@@ -1,0 +1,90 @@
+{
+  "name": "TextField - email and original regex validation via @checks",
+  "description": "A2UI 1.0: both editable values are model-bound; email and the original regex validate via @checks. The unchanged legacy validationRegexp comparison remains in the 0.9 compatibility archive.",
+  "messages": [
+    {
+      "version": "1.0",
+      "createSurface": {
+        "surfaceId": "test-tf-regexp",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "1.0",
+      "updateComponents": {
+        "surfaceId": "test-tf-regexp",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "tf_checks",
+              "tf"
+            ]
+          },
+          {
+            "id": "tf_checks",
+            "component": "TextField",
+            "label": "Email (email via @checks)",
+            "value": {
+              "@path": "/email"
+            },
+            "variant": "shortText",
+            "@checks": [
+              {
+                "condition": {
+                  "@call": "email",
+                  "args": {
+                    "value": {
+                      "@path": "/email"
+                    }
+                  }
+                },
+                "message": "Please enter a valid email address"
+              }
+            ]
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "Email (regex via @checks)",
+            "value": {
+              "@path": "/emailRegexp"
+            },
+            "variant": "shortText",
+            "@checks": [
+              {
+                "condition": {
+                  "@call": "regex",
+                  "args": {
+                    "value": {
+                      "@path": "/emailRegexp"
+                    },
+                    "pattern": "^[^@]+@[^@]+\\.[^@]+$"
+                  }
+                },
+                "message": "Please enter an address matching the original email pattern"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "version": "1.0",
+      "updateDataModel": {
+        "surfaceId": "test-tf-regexp",
+        "value": {
+          "email": "",
+          "emailRegexp": ""
+        }
+      }
+    }
+  ]
+}

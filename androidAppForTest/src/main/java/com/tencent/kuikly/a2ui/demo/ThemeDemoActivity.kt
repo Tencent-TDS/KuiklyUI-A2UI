@@ -50,7 +50,7 @@ import androidx.appcompat.app.AppCompatActivity
 class ThemeDemoActivity : AppCompatActivity() {
 
     companion object {
-        private const val ROOT_DIR = "a2ui_theme_tests"
+        private const val ROOT_DIR = "v0_9/a2ui_theme_tests"
         private const val TITLE_SUFFIX = "主题"
     }
 

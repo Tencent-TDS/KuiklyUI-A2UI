@@ -1,0 +1,49 @@
+{
+  "name": "Text - variant h3 / h4 / h5",
+  "description": "Text component with variant=h3 (28dp), h4 (24dp), h5 (20dp), all bold",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-h345",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-h345",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "main-column"
+          },
+          {
+            "id": "main-column",
+            "component": "Column",
+            "children": ["t-h3", "t-h4", "t-h5"]
+          },
+          {
+            "id": "t-h3",
+            "component": "Text",
+            "text": "Heading 3 (28dp)",
+            "variant": "h3"
+          },
+          {
+            "id": "t-h4",
+            "component": "Text",
+            "text": "Heading 4 (24dp)",
+            "variant": "h4"
+          },
+          {
+            "id": "t-h5",
+            "component": "Text",
+            "text": "Heading 5 (20dp)",
+            "variant": "h5"
+          }
+        ]
+      }
+    }
+  ]
+}

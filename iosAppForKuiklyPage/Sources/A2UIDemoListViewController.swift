@@ -82,7 +82,7 @@ class A2UIDemoListViewController: A2UIDemoBaseListViewController {
             A2UIDemoSection(title: "组件展示", entries: [
                 A2UIDemoEntry(
                     title: "组件展示",
-                    description: "展示 A2UI v0.9 协议语义化组件：Text、Row、Column、Card 等 18 个组件",
+                    description: "展示 A2UI v1.0 协议语义化组件：Text、Row、Column、Card 等 18 个组件",
                     icon: "🔧",
                     color: UIColor(red: 0.95, green: 0.61, blue: 0.07, alpha: 1.0),
                     build: { ComponentDemoViewController() }

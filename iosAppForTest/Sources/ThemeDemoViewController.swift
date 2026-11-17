@@ -22,7 +22,7 @@ import UIKit
 /// `Resources/a2ui_theme_tests/<capabilityDir>/`.
 class ThemeDemoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    private static let rootDir = "a2ui_theme_tests"
+    private static let rootDir = "v0_9/a2ui_theme_tests"
     private static let titleSuffix = "主题"
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)

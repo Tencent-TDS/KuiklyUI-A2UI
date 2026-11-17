@@ -3,40 +3,56 @@
   "description": "自定义函数 getGreeting 返回字符串，绑定到 Text.text。Demo 注册了 getGreeting 函数，接收 name 参数，返回 'Hello, {name}!'。",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "cf-str-1",
-"catalogId": "custom_functions_catalog.json"
+        "catalogId": "custom_functions_catalog_v1_0.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "cf-str-1",
         "components": [
-          { "id": "root", "component": "Card", "child": "col" },
-          { "id": "col", "component": "Column", "children": ["title", "result"] },
-          { "id": "title", "component": "Text", "text": "getGreeting(name) → String", "variant": "caption" },
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "result"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "getGreeting(name) → String",
+            "variant": "caption"
+          },
           {
             "id": "result",
             "component": "Text",
             "text": {
-              "call": "getGreeting",
+              "@call": "formatString",
               "args": {
-                "name": { "path": "/userName" }
-              },
-              "returnType": "string"
-            },
-            "variant": "h3"
+                "value": "### ${getGreeting(name:${/userName})}"
+              }
+            }
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "cf-str-1",
-        "value": { "userName": "Kuikly" }
+        "value": {
+          "userName": "Kuikly"
+        }
       }
     }
   ]

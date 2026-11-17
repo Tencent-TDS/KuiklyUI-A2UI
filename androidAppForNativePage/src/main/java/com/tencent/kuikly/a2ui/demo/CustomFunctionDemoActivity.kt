@@ -49,12 +49,6 @@ import com.tencent.kuikly.a2ui.render.android.A2UISurfaceView
  */
 class CustomFunctionDemoActivity : AppCompatActivity() {
 
-    companion object {
-        private const val TAG = "CustomFunctionDemo"
-        private const val ROOT_DIR = "a2ui_custom_functions"
-        private const val TITLE_SUFFIX = "自定义函数"
-    }
-
     private data class FunctionEntry(
         val dir: String,
         val name: String,
@@ -77,7 +71,7 @@ class CustomFunctionDemoActivity : AppCompatActivity() {
             FunctionEntry(
                 "02_boolean_return",
                 "isVip(level) → Boolean",
-                "自定义函数返回布尔值，用于 check 条件控制组件显隐。验证 evaluateCheckFunction 兜底路径。",
+                "展示 isVip Boolean 返回值，按钮以官方 numeric ValidationResult 校验 VIP 阈值。",
                 "#00B894"
             )
         )),
@@ -110,104 +104,109 @@ class CustomFunctionDemoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ===== Register custom functions globally =====
-        registerCustomFunctions()
+        install(applicationContext)
 
         setContentView(buildLayout())
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // Unregister to keep the demo clean (optional in production)
-        unregisterCustomFunctions()
-    }
+    companion object {
+        private const val TAG = "CustomFunctionDemo"
+        private const val ROOT_DIR = "a2ui_custom_functions"
+        private const val TITLE_SUFFIX = "自定义函数"
 
-    /**
-     * Register all demo custom functions.
-     * This demonstrates the public API: [A2UISurfaceView.registerCustomFunction].
-     */
-    private fun registerCustomFunctions() {
-        // 1. getGreeting(name) → String
-        A2UISurfaceView.registerCustomFunction(
-            name = "getGreeting",
-            returnType = A2UISurfaceView.RETURN_TYPE_STRING,
-            invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
-        ) { args ->
-            val name = args.optString("name", "World")
-            "Hello, $name!"
-        }
-
-        // 2. formatPhone(phone) → String
-        A2UISurfaceView.registerCustomFunction(
-            name = "formatPhone",
-            returnType = A2UISurfaceView.RETURN_TYPE_STRING,
-            invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
-        ) { args ->
-            val phone = args.optString("phone", "")
-            if (phone.length == 11) {
-                "${phone.substring(0, 3)}-${phone.substring(3, 7)}-${phone.substring(7)}"
-            } else {
-                phone
+        fun install(context: android.content.Context) {
+            val applicationContext = context.applicationContext
+            registerDemoFunction(
+                name = "getGreeting",
+                returnType = A2UISurfaceView.RETURN_TYPE_STRING,
+                invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
+            ) { args ->
+                val name = args.optString("name", "World")
+                "Hello, $name!"
             }
+            registerDemoFunction(
+                name = "formatPhone",
+                returnType = A2UISurfaceView.RETURN_TYPE_STRING,
+                invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
+            ) { args ->
+                val phone = args.optString("phone", "")
+                if (phone.length == 11) {
+                    "${phone.substring(0, 3)}-${phone.substring(3, 7)}-${phone.substring(7)}"
+                } else {
+                    phone
+                }
+            }
+            registerDemoFunction(
+                name = "isVip",
+                returnType = A2UISurfaceView.RETURN_TYPE_BOOLEAN,
+                invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
+            ) { args ->
+                val level = args.optInt("level", 0)
+                level >= 3
+            }
+            registerDemoFunction(
+                name = "calculateDiscount",
+                returnType = A2UISurfaceView.RETURN_TYPE_NUMBER,
+                invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
+            ) { args ->
+                val price = args.optDouble("price", 0.0)
+                val rate = args.optDouble("rate", 1.0)
+                Math.round(price * rate * 100) / 100.0
+            }
+            registerDemoFunction(
+                name = "logEvent",
+                returnType = A2UISurfaceView.RETURN_TYPE_VOID,
+                invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
+            ) { args ->
+                val event = args.optString("event", "")
+                val data = args.optString("data", "")
+                Log.i(TAG, "logEvent: event=$event, data=$data")
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "logEvent: $event ($data)", Toast.LENGTH_SHORT).show()
+                }
+                null
+            }
+            registerDemoFunction(
+                name = "buildSummary",
+                returnType = A2UISurfaceView.RETURN_TYPE_STRING,
+                invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
+            ) { args ->
+                val name = args.optString("name", "Unknown")
+                val count = args.optInt("count", 0)
+                val status = args.optString("status", "unknown")
+                "项目「$name」当前状态: $status，共 $count 个任务"
+            }
+            A2UISurfaceView.registerCatalogFunction(
+                name = "fetchUser",
+                catalogId = "custom_functions_catalog_v1_0.json",
+                definitionJson = """{"returnType":"object","invokeMode":"sync","allowedCallers":"agentOnly","args":{"type":"object","properties":{"id":{"type":"number"}},"required":["id"],"additionalProperties":false}}""",
+                handler = null
+            )
+            Log.i(TAG, "All custom functions registered")
         }
 
-        // 3. isVip(level) → Boolean
-        A2UISurfaceView.registerCustomFunction(
-            name = "isVip",
-            returnType = A2UISurfaceView.RETURN_TYPE_BOOLEAN,
-            invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
-        ) { args ->
-            val level = args.optInt("level", 0)
-            level >= 3
+        private fun registerDemoFunction(
+            name: String,
+            returnType: String,
+            invokeMode: String,
+            handler: (org.json.JSONObject) -> Any?
+        ) {
+            val argsSchema = when (name) {
+                "getGreeting" -> """{"type":"object","properties":{"name":{"type":"string"}},"required":["name"],"additionalProperties":false}"""
+                "formatPhone" -> """{"type":"object","properties":{"phone":{"type":"string"}},"required":["phone"],"additionalProperties":false}"""
+                "isVip" -> """{"type":"object","properties":{"level":{"type":"number"}},"required":["level"],"additionalProperties":false}"""
+                "calculateDiscount" -> """{"type":"object","properties":{"price":{"type":"number"},"rate":{"type":"number"}},"required":["price","rate"],"additionalProperties":false}"""
+                "logEvent" -> """{"type":"object","properties":{"event":{"type":"string"},"data":{"type":"string"}},"required":["event"],"additionalProperties":false}"""
+                "buildSummary" -> """{"type":"object","properties":{"name":{"type":"string"},"count":{"type":"number"},"status":{"type":"string"}},"required":["name","count","status"],"additionalProperties":false}"""
+                else -> error("Unknown custom demo function: $name")
+            }
+            A2UISurfaceView.registerCustomFunction(name, returnType, invokeMode) { args -> handler(args) }
+            A2UISurfaceView.registerCatalogFunction(
+                name = name,
+                catalogId = "custom_functions_catalog_v1_0.json",
+                definitionJson = """{"returnType":"$returnType","invokeMode":"$invokeMode","allowedCallers":"rendererOrAgent","requiresUserActivation":false,"args":$argsSchema}"""
+            ) { args -> handler(args) }
         }
-
-        // 4. calculateDiscount(price, rate) → Number
-        A2UISurfaceView.registerCustomFunction(
-            name = "calculateDiscount",
-            returnType = A2UISurfaceView.RETURN_TYPE_NUMBER,
-            invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
-        ) { args ->
-            val price = args.optDouble("price", 0.0)
-            val rate = args.optDouble("rate", 1.0)
-            Math.round(price * rate * 100) / 100.0
-        }
-
-        // 5. logEvent(event, data) → Void (sync)
-        A2UISurfaceView.registerCustomFunction(
-            name = "logEvent",
-            returnType = A2UISurfaceView.RETURN_TYPE_VOID,
-            invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
-        ) { args ->
-            val event = args.optString("event", "")
-            val data = args.optString("data", "")
-            Log.i(TAG, "📊 logEvent: event=$event, data=$data")
-            Toast.makeText(this, "logEvent: $event ($data)", Toast.LENGTH_SHORT).show()
-            null
-        }
-
-        // 6. buildSummary(name, count, status) → String
-        A2UISurfaceView.registerCustomFunction(
-            name = "buildSummary",
-            returnType = A2UISurfaceView.RETURN_TYPE_STRING,
-            invokeMode = A2UISurfaceView.INVOKE_MODE_SYNC
-        ) { args ->
-            val name = args.optString("name", "Unknown")
-            val count = args.optInt("count", 0)
-            val status = args.optString("status", "unknown")
-            "项目「$name」当前状态: $status，共 $count 个任务"
-        }
-
-        Log.i(TAG, "✅ All custom functions registered")
-    }
-
-    private fun unregisterCustomFunctions() {
-        A2UISurfaceView.unregisterCustomFunction("getGreeting")
-        A2UISurfaceView.unregisterCustomFunction("formatPhone")
-        A2UISurfaceView.unregisterCustomFunction("isVip")
-        A2UISurfaceView.unregisterCustomFunction("calculateDiscount")
-        A2UISurfaceView.unregisterCustomFunction("logEvent")
-        A2UISurfaceView.unregisterCustomFunction("buildSummary")
-        Log.i(TAG, "🗑️ All custom functions unregistered")
     }
 
     private fun buildLayout(): View {

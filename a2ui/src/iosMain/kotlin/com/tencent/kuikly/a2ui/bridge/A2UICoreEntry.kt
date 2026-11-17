@@ -408,3 +408,136 @@ class A2UIPickerResultBridge private constructor() {
         val shared: A2UIPickerResultBridge = A2UIPickerResultBridge()
     }
 }
+
+/**
+ * ObjC-facing bridge for the v1.0 bidirectional RPC channel (PR-6b).
+ *
+ * Mirrors the design of [A2UIPickerResultBridge]: a per-process
+ * singleton whose selectors are small, stable, and String/primitive-
+ * only so Swift / ObjC callers can use them without ever constructing
+ * a Kotlin [A2UIRpcRequest] or touching a KMP data class.
+ *
+ * Why not reach into `A2UIBridgeManager` directly from Swift?
+ *   `A2UIBridgeManager` is a Kotlin `object` with multi-arg methods,
+ *   which Kotlin/Native exposes as mangled companion-level ObjC
+ *   selectors (`A2UIBridgeManagerCompanion.setRendererFunctionJsonHandlerInstanceId:handler:`
+ *   etc.). Those are callable but fragile across K/N versions and
+ *   awkward to type out. This bridge pins the exposed ObjC selectors
+ *   to a stable shape and keeps every K/N-generated name internal
+ *   to this module.
+ *
+ * Threading: all methods run synchronously on the calling thread and
+ * forward straight into [A2UIBridgeManager] \u2014 Swift callers are
+ * expected to invoke the register / respond / fail / invoke methods
+ * on the Kuikly Context Queue (via
+ * `A2UIRenderHelper.perform(onContextQueue:)`), matching the policy
+ * used by the picker and custom-function bridges.
+ *
+ * Selectors (must match what Swift's `A2UIBridgeModule` /
+ * `A2UISurfaceView` shadow protocol expects \u2014 K/N appends the first
+ * parameter's name automatically, don't pre-bake it):
+ *
+ *   * `+shared`
+ *   * `-setHandlerInstanceId:handler:`         \u2192 [setHandler]
+ *   * `-removeHandlerInstanceId:`              \u2192 [removeHandler]
+ *   * `-respondInstanceId:surfaceId:requestId:resultJson:`
+ *   * `-failInstanceId:surfaceId:requestId:code:message:detailsJson:`
+ *   * `-invokeInstanceId:surfaceId:name:argsJson:timeoutMs:onComplete:`
+ *     returns the minted requestId (or `nil` when dispatch failed).
+ */
+@OptIn(ExperimentalObjCName::class)
+@ObjCName("A2UIRpcBridge")
+class A2UIRpcBridge private constructor() {
+
+    /**
+     * Install the Swift-side handler for `callRendererFunction` RPCs.
+     *
+     * [handler] receives a JSON string envelope (see
+     * [A2UIBridgeManager.setRendererFunctionJsonHandler] KDoc). The
+     * handler MUST eventually call [respond] or [fail] on this bridge
+     * \u2014 synchronously or asynchronously \u2014 to close the loop.
+     *
+     * Passing the same instanceId twice replaces the previous handler;
+     * use [removeHandler] to unregister explicitly (e.g. on view
+     * tear-down) to avoid retaining Swift closures across stream
+     * lifecycles.
+     */
+    @ObjCName("setHandler")
+    fun setHandler(instanceId: String, handler: (String) -> Unit) {
+        A2UIBridgeManager.setRendererFunctionJsonHandler(instanceId, handler)
+    }
+
+    @ObjCName("removeHandler")
+    fun removeHandler(instanceId: String) {
+        A2UIBridgeManager.setRendererFunctionJsonHandler(instanceId, null)
+    }
+
+    /**
+     * Close an inbound RPC successfully. [resultJson] may be an empty
+     * string when the function has no return value (void).
+     */
+    @ObjCName("respond")
+    fun respond(
+        instanceId: String,
+        surfaceId: String,
+        requestId: String,
+        resultJson: String,
+    ) {
+        A2UIBridgeManager.respondToAgentJson(
+            instanceId = instanceId,
+            surfaceId = surfaceId,
+            requestId = requestId,
+            resultJson = resultJson.takeIf { it.isNotEmpty() },
+        )
+    }
+
+    /** Close an inbound RPC with an error. [detailsJson] is optional. */
+    @ObjCName("fail")
+    fun fail(
+        instanceId: String,
+        surfaceId: String,
+        requestId: String,
+        code: String,
+        message: String,
+        detailsJson: String,
+    ) {
+        A2UIBridgeManager.failAgentRequestJson(
+            instanceId = instanceId,
+            surfaceId = surfaceId,
+            requestId = requestId,
+            code = code,
+            message = message.takeIf { it.isNotEmpty() },
+            detailsJson = detailsJson.takeIf { it.isNotEmpty() },
+        )
+    }
+
+    /**
+     * Fire a renderer-to-agent RPC. Returns the minted requestId (or
+     * `nil` when the instance is unknown). [timeoutMs] values `<= 0`
+     * mean "use the dispatcher default" so ObjC callers that cannot
+     * express a Kotlin `Long?` can still opt in / out cleanly.
+     */
+    @ObjCName("invoke")
+    fun invoke(
+        instanceId: String,
+        surfaceId: String,
+        name: String,
+        argsJson: String,
+        timeoutMs: Long,
+        onComplete: (String) -> Unit,
+    ): String? {
+        return A2UIBridgeManager.invokeAgentFunctionJson(
+            instanceId = instanceId,
+            surfaceId = surfaceId,
+            name = name,
+            argsJson = argsJson.takeIf { it.isNotEmpty() },
+            timeoutMs = timeoutMs.takeIf { it > 0L },
+            onCompleteJson = onComplete,
+        )
+    }
+
+    companion object {
+        @ObjCName("shared")
+        val shared: A2UIRpcBridge = A2UIRpcBridge()
+    }
+}

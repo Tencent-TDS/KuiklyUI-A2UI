@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.tencent.kuikly.a2ui.dsl.embed.A2UISurfaceDSLView
+import com.tencent.kuikly.a2ui.protocol.A2UIProtocolVersion
 import com.tencent.kuikly.compose.ComposeContainer
 import com.tencent.kuikly.compose.extension.MakeKuiklyComposeNode
 import com.tencent.kuikly.compose.foundation.background
@@ -53,7 +54,7 @@ import com.tencent.kuikly.core.annotations.Page
  *
  * Rendering layout:
  *  1. A Compose header (Text) describing the sample.
- *  2. An [A2UISurfaceDSLView] streamed with a hand-crafted A2UI v0.9
+ *  2. An [A2UISurfaceDSLView] streamed with a hand-crafted A2UI 1.0
  *     "weather card" payload. The payload is built inline (no assets
  *     dependency) so this page compiles in isolation.
  *
@@ -95,6 +96,7 @@ class ComposeSampleWithA2UIPager : ComposeContainer() {
                         .fillMaxWidth()
                         .background(Color(0xFFF5F5F5)),
                     viewInit = {
+                        attr { protocolConfig(A2UIProtocolVersion.V1_0, strict = true) }
                         // Feed the weather-card envelopes right after mount.
                         // A2UISurfaceDSLView buffers pre-didInit() writes so
                         // ordering here is safe.
@@ -109,29 +111,29 @@ class ComposeSampleWithA2UIPager : ComposeContainer() {
     }
 
     /**
-     * Hand-crafted A2UI v0.9 "weather card" envelopes.
+     * Hand-crafted A2UI 1.0 "weather card" envelopes.
      *
      * Follows the same shape as the shared demo sample in
      * [A2UISurfaceDemoSample.kt] — see that file's KDoc for the protocol
      * rationale (top-level envelopes; `catalogId` on `createSurface`;
      * `components` array with string-id references; `Card.child` is a *single*
-     * string; `Row/Column` use only `align`/`children`; `variant` values
-     * limited to those defined by the basic catalog).
+     * string; `Row/Column` use `align`/`children`; headings use Markdown,
+     * while `variant` is limited to `body` and `caption`).
      */
     private fun weatherCardEnvelopes(): List<String> {
-        val surfaceId = "compose-weather-surface"
+        val surfaceId = "compose_weather_surface"
         val createSurface = """
             {
-              "version": "v0.9",
+              "version": "1.0",
               "createSurface": {
                 "surfaceId": "$surfaceId",
-                "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+                "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
               }
             }
         """.trimIndent()
         val updateComponents = """
             {
-              "version": "v0.9",
+              "version": "1.0",
               "updateComponents": {
                 "surfaceId": "$surfaceId",
                 "components": [
@@ -142,7 +144,7 @@ class ComposeSampleWithA2UIPager : ComposeContainer() {
                   },
                   {
                     "id": "title", "component": "Text",
-                    "text": "深圳 · 今日天气", "variant": "h4"
+                    "text": "#### 深圳 · 今日天气"
                   },
                   {
                     "id": "hero", "component": "Row",
@@ -150,7 +152,7 @@ class ComposeSampleWithA2UIPager : ComposeContainer() {
                   },
                   {
                     "id": "temp", "component": "Text",
-                    "text": "27°C", "variant": "h4"
+                    "text": "#### 27°C"
                   },
                   {
                     "id": "cond", "component": "Text",

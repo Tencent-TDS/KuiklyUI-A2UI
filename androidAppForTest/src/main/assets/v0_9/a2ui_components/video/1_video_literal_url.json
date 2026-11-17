@@ -1,0 +1,31 @@
+{
+  "name": "Video - literal URL",
+  "description": "Video component with a literal URL (placeholder full-width)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-video-literal",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-video-literal",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "v"
+          },
+          {
+            "id": "v",
+            "component": "Video",
+            "url": "https://www.w3schools.com/html/mov_bbb.mp4"
+          }
+        ]
+      }
+    }
+  ]
+}

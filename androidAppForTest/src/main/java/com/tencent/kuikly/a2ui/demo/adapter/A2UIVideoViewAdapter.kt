@@ -16,7 +16,11 @@
 package com.tencent.kuikly.a2ui.demo.adapter
 
 import android.content.Context
+import android.graphics.Color
 import android.net.Uri
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.ImageView
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
@@ -61,6 +65,24 @@ private class A2UIVideoView(
         .setTrackSelector(DefaultTrackSelector())
         .build()
 
+    /**
+     * PR-9 (v1.0) `posterUrl` support.
+     *
+     * A2UI v1.0 adds an optional poster image shown before playback begins.
+     * The core Kotlin [com.tencent.kuikly.a2ui.dsl.A2UIApplier] forwards the
+     * resolved URL as a generic `posterUrl` prop through
+     * [IKRVideoView.setProp], and we handle it here as a transient overlay
+     * [ImageView] placed on top of the ExoPlayer surface. The overlay is
+     * hidden the moment ExoPlayer renders its first frame (see
+     * [onRenderedFirstFrame]) so playback smoothly replaces the cover image.
+     *
+     * Images are loaded on a background thread to avoid StrictMode / main-thread
+     * network violations; decoding errors are tolerated silently (the overlay
+     * just stays blank, which is still better than a video blank).
+     */
+    private var posterOverlay: ImageView? = null
+    private var posterLoadedUrl: String? = null
+
     init {
         // Per A2UI basic catalog guide: render with user controls + scrubbing enabled.
         useController = true
@@ -101,6 +123,9 @@ private class A2UIVideoView(
             }
 
             override fun onRenderedFirstFrame() {
+                // Hide the poster overlay (if any) when the first video frame
+                // arrives. This is the exact moment the cover should fade out.
+                posterOverlay?.visibility = View.GONE
                 listener.videoFirstFrameDidDisplay()
             }
         })
@@ -145,7 +170,62 @@ private class A2UIVideoView(
     }
 
     override fun setProp(propKey: String, propValue: Any): Boolean {
+        if (propKey == "posterUrl") {
+            val url = propValue.toString()
+            if (url.isEmpty() || url == posterLoadedUrl) return true
+            applyPosterUrl(url)
+            return true
+        }
         return false
+    }
+
+    /**
+     * Lazily create a full-bleed ImageView on top of the ExoPlayer surface
+     * and load the given URL into it. Called from [setProp] when the A2UI
+     * core forwards a v1.0 `posterUrl`.
+     */
+    private fun applyPosterUrl(url: String) {
+        posterLoadedUrl = url
+        val overlay: ImageView = posterOverlay ?: ImageView(context).also { iv ->
+            iv.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            iv.scaleType = ImageView.ScaleType.CENTER_CROP
+            iv.setBackgroundColor(Color.BLACK)
+            // PlayerView extends FrameLayout internally, so we can stack the
+            // overlay directly on top. Insert as the LAST child so it draws
+            // above the SurfaceView; the player's media controller still
+            // intercepts taps because PlayerView dispatches touches via its
+            // own onTouchEvent chain. The overlay is removed-from-view via
+            // visibility=GONE on first rendered frame.
+            addView(iv)
+            posterOverlay = iv
+        }
+        overlay.visibility = View.VISIBLE
+
+        // Load on a background thread so network IO never blocks the UI.
+        // Keep it dependency-free (no Glide/Coil) — this is a demo adapter,
+        // production hosts are expected to swap in their own image pipeline.
+        Thread {
+            runCatching {
+                val connection = java.net.URL(url).openConnection()
+                connection.connectTimeout = 10_000
+                connection.readTimeout = 10_000
+                connection.getInputStream().use { stream ->
+                    val bitmap = android.graphics.BitmapFactory.decodeStream(stream)
+                    post {
+                        // Only apply if the URL is still the current one;
+                        // the user may have triggered another update meanwhile.
+                        if (posterLoadedUrl == url && bitmap != null) {
+                            overlay.setImageBitmap(bitmap)
+                        }
+                    }
+                }
+            }.onFailure {
+                // Silent fallback: overlay stays black, video will play as usual.
+            }
+        }.apply { isDaemon = true }.start()
     }
 
     override fun call(method: String, params: String?) {}

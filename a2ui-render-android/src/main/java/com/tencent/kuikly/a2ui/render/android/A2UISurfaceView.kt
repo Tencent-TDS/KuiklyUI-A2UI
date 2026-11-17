@@ -231,6 +231,14 @@ class A2UISurfaceView @JvmOverloads constructor(
             )
         }
 
+        @JvmStatic
+        @JvmOverloads
+        fun registerCatalogFunction(name: String, catalogId: String, definitionJson: String, handler: Handler? = null) {
+            ensureCustomFunctionListenerInstalled()
+            A2UIAndroidCustomFunctionRegistry.registerCatalog(name, catalogId, definitionJson,
+                handler?.let { callback -> A2UIAndroidCustomFunctionRegistry.Handler { args -> callback.invoke(args) } })
+        }
+
         /**
          * Reverse of [registerCustomFunction]. Safe to call for names that
          * were never registered.
@@ -380,8 +388,32 @@ class A2UISurfaceView @JvmOverloads constructor(
         // endregion
     }
 
-    /** Unique instance ID for this A2UI surface */
-    private val instanceId = "a2ui_${UUID.randomUUID()}"
+    /**
+     * Unique instance ID for this A2UI surface.
+     *
+     * Public so native-page hosts can wire the KMP `A2UIBridgeManager`
+     * RPC v1.0 three-piece set (`setRendererFunctionJsonHandler` /
+     * `respondToAgentJson` / `invokeAgentFunctionJson`) to this specific
+     * surface. The same id is used by the Kotlin core as the key into
+     * `nativeBridgeMap` / `rendererFunctionHandlers`, so passing it back
+     * through the commonMain API closes the loop with no extra routing.
+     */
+    val instanceId: String = "a2ui_${UUID.randomUUID()}"
+
+    /**
+     * Optional outbound sink for serialised A2UI v1.0 RPC envelopes.
+     *
+     * The Kotlin core issues `A2UINativeMethod.SEND_RPC_ENVELOPE`
+     * (methodId = 108) whenever a `callAgentFunction(…)` or an error
+     * response needs to leave the device. Native-page hosts that want
+     * to forward these envelopes onto their agent transport (WebSocket,
+     * SSE, HTTP long-poll …) install a handler here. Called on the
+     * Kuikly Context Thread; keep the work brief or hop off before doing
+     * IO. Safe to leave null — the envelope is simply dropped and the
+     * KMP-side dispatcher timeout machinery eventually fails any
+     * pending onComplete callback with `A2UIRpcError.Codes.TIMEOUT`.
+     */
+    var rpcEnvelopeOutboundHandler: ((envelopeJson: String) -> Unit)? = null
 
     /** A2UI Core Entry - bridge to Kotlin logic */
     private var coreEntry: A2UICoreEntry? = null
@@ -1073,6 +1105,36 @@ class A2UISurfaceView @JvmOverloads constructor(
                     }
                     A2UINativeMethod.DESTROY -> {
                         postToMainThread { handler.onDestroy() }
+                    }
+                    A2UINativeMethod.SEND_RPC_ENVELOPE -> {
+                        // v1.0 outbound RPC envelope. arg1 = instanceId,
+                        // arg2 = complete wire envelope JSON. The envelope
+                        // is already fully formed by the Kotlin core; we
+                        // just hand it to the registered sink. A2UI's
+                        // inbound replies (from the agent) come back
+                        // through the regular `writeStream(…)` API.
+                        val envelopeJson = arg2 as? String ?: return null
+                        val sink = rpcEnvelopeOutboundHandler
+                        if (sink != null) {
+                            try {
+                                sink.invoke(envelopeJson)
+                            } catch (t: Throwable) {
+                                Log.e(
+                                    "A2UISurfaceView",
+                                    "rpcEnvelopeOutboundHandler threw: " +
+                                        "${t.javaClass.simpleName}: ${t.message}",
+                                    t
+                                )
+                            }
+                        } else {
+                            Log.w(
+                                "A2UISurfaceView",
+                                "Dropping outbound RPC envelope for instanceId='" +
+                                    "$instanceId': no rpcEnvelopeOutboundHandler is " +
+                                    "installed. Call setRpcEnvelopeOutboundHandler(…) " +
+                                    "on this A2UISurfaceView to wire the agent transport."
+                            )
+                        }
                     }
                     A2UINativeMethod.FLUSH_UI_TASKS -> {
                         // Before flushing UI tasks, trigger layout recalculation.

@@ -19,7 +19,7 @@ import { router, promptAction } from '@kit.ArkUI';
  * KuiklyPageComponentDemoPage — component-showcase list page.
  *
  * Mirrors [ComponentDemoActivity] on Android: this is a *native ArkUI*
- * list page (no Kuikly hosting) that enumerates the 18 A2UI v0.9
+ * list page (no Kuikly hosting) that enumerates the 18 A2UI v1.0
  * semantic components. Tapping an entry navigates to the shared
  * `A2UIComponentTestPage`, which loads the matching rawfile JSON test
  * cases and renders them via `A2UISurface`.
@@ -97,7 +97,7 @@ struct KuiklyPageComponentDemoPage {
         .width('100%')
         .alignItems(VerticalAlign.Center)
 
-        Text('A2UI v0.9 标准协议支持的 18 个组件')
+        Text('A2UI v1.0 标准协议支持的 18 个组件')
           .fontSize(12)
           .fontColor('#DDDDFF')
           .margin({ top: 4 })

@@ -189,6 +189,12 @@ class A2UIComponentTestActivity : AppCompatActivity() {
                 Log.w(TAG, "$fileName has no 'messages' field, skip")
                 continue
             }
+            if ((0 until messagesArray.length()).any {
+                    messagesArray.optJSONObject(it)?.optString("version") != "1.0"
+                }) {
+                Log.e(TAG, "$fileName requires explicit version 1.0 on every message")
+                continue
+            }
 
             // Title row: index + name + filename badge
             val titleRow = LinearLayout(this).apply {
@@ -230,7 +236,7 @@ class A2UIComponentTestActivity : AppCompatActivity() {
             }
 
             // Card container - transparent layout wrapper, no extra styling
-            // (the inner Card component handles its own styling per v0.9 protocol)
+            // (the inner Card component handles its own styling per v1.0 protocol)
             val cardContainer = FrameLayout(this).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -249,7 +255,7 @@ class A2UIComponentTestActivity : AppCompatActivity() {
             cardContainer.addView(surfaceView)
             container.addView(cardContainer)
 
-            surfaceView.init("{\"debug\": true}")
+            surfaceView.init("{\"debug\":true,\"protocolVersion\":\"1.0\",\"strictV10\":true}")
             surfaceView.setListener(object : A2UISurfaceViewListener {
                 override fun onAction(surfaceId: String, tag: Int, action: String, params: String?) {
                     Log.d(TAG, "[$name] Action: surfaceId=$surfaceId, tag=$tag, action=$action, params=$params")
@@ -264,7 +270,7 @@ class A2UIComponentTestActivity : AppCompatActivity() {
                 }
             })
             // Feed each envelope in the asset's `messages` array one by one.
-            // The array wrapper is a demo convenience — the A2UI v0.9 protocol
+            // The array wrapper is a demo convenience — the A2UI v1.0 protocol
             // itself is a stream of JSON *objects*, not arrays.
             for (i in 0 until messagesArray.length()) {
                 val envelope = messagesArray.optJSONObject(i)

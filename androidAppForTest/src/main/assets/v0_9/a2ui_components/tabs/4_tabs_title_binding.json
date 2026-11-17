@@ -1,0 +1,67 @@
+{
+  "name": "Tabs - title data binding",
+  "description": "Tab titles bound to data model paths",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tabs-binding",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tabs-binding",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "tabs"
+          },
+          {
+            "id": "tabs",
+            "component": "Tabs",
+            "tabs": [
+              {
+                "title": {
+                  "path": "/tab1"
+                },
+                "child": "c1"
+              },
+              {
+                "title": {
+                  "path": "/tab2"
+                },
+                "child": "c2"
+              }
+            ]
+          },
+          {
+            "id": "c1",
+            "component": "Text",
+            "text": "Content for tab 1",
+            "variant": "body"
+          },
+          {
+            "id": "c2",
+            "component": "Text",
+            "text": "Content for tab 2",
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-tabs-binding",
+        "value": {
+          "tab1": "Bound A",
+          "tab2": "Bound B"
+        }
+      }
+    }
+  ]
+}

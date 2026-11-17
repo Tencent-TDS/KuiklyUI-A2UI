@@ -1,0 +1,43 @@
+{
+  "name": "Button - variant=borderless",
+  "description": "Borderless link-style button",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-btn-borderless",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-btn-borderless",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "btn"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "lbl",
+            "action": {
+              "event": {
+                "name": "linkClicked"
+              }
+            },
+            "variant": "borderless"
+          },
+          {
+            "id": "lbl",
+            "component": "Text",
+            "text": "Link Style",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

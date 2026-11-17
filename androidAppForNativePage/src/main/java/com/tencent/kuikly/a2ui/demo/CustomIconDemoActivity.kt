@@ -62,24 +62,62 @@ class CustomIconDemoActivity : AppCompatActivity() {
         // ==== Card A: 5 registered icons — hit KRImageView through REGISTERED_ICONS ====
         private const val REGISTERED_CREATE_SURFACE_JSON = """
             {
-              "version": "v0.9",
-              "createSurface": { "surfaceId": "native-icon-card-registered" }
+              "version": "1.0",
+              "createSurface": {
+                "surfaceId": "native-icon-card-registered",
+                "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
+              }
             }
         """
         private const val REGISTERED_UPDATE_COMPONENTS_JSON = """
             {
-              "version": "v0.9",
+              "version": "1.0",
               "updateComponents": {
                 "surfaceId": "native-icon-card-registered",
                 "components": [
-                  { "id": "root",    "component": "Card", "child": "row" },
-                  { "id": "row",     "component": "Row",  "justify": "spaceAround", "align": "center",
-                    "children": ["icon-0", "icon-1", "icon-2", "icon-3", "icon-4"] },
-                  { "id": "icon-0",  "component": "Icon", "name": "star" },
-                  { "id": "icon-1",  "component": "Icon", "name": "favorite" },
-                  { "id": "icon-2",  "component": "Icon", "name": "home" },
-                  { "id": "icon-3",  "component": "Icon", "name": "settings" },
-                  { "id": "icon-4",  "component": "Icon", "name": "search" }
+                  {
+                    "id": "root",
+                    "component": "Card",
+                    "child": "row"
+                  },
+                  {
+                    "id": "row",
+                    "component": "Row",
+                    "justify": "spaceAround",
+                    "align": "center",
+                    "children": [
+                      "icon_0",
+                      "icon_1",
+                      "icon_2",
+                      "icon_3",
+                      "icon_4"
+                    ]
+                  },
+                  {
+                    "id": "icon_0",
+                    "component": "Icon",
+                    "name": "star"
+                  },
+                  {
+                    "id": "icon_1",
+                    "component": "Icon",
+                    "name": "favorite"
+                  },
+                  {
+                    "id": "icon_2",
+                    "component": "Icon",
+                    "name": "home"
+                  },
+                  {
+                    "id": "icon_3",
+                    "component": "Icon",
+                    "name": "settings"
+                  },
+                  {
+                    "id": "icon_4",
+                    "component": "Icon",
+                    "name": "search"
+                  }
                 ]
               }
             }
@@ -88,22 +126,50 @@ class CustomIconDemoActivity : AppCompatActivity() {
         // ==== Card B: 3 unregistered names — all fall back to _fallback.png ====
         private const val UNREGISTERED_CREATE_SURFACE_JSON = """
             {
-              "version": "v0.9",
-              "createSurface": { "surfaceId": "native-icon-card-unregistered" }
+              "version": "1.0",
+              "createSurface": {
+                "surfaceId": "native-icon-card-unregistered",
+                "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
+              }
             }
         """
         private const val UNREGISTERED_UPDATE_COMPONENTS_JSON = """
             {
-              "version": "v0.9",
+              "version": "1.0",
               "updateComponents": {
                 "surfaceId": "native-icon-card-unregistered",
                 "components": [
-                  { "id": "root",    "component": "Card", "child": "row" },
-                  { "id": "row",     "component": "Row",  "justify": "spaceAround", "align": "center",
-                    "children": ["icon-0", "icon-1", "icon-2"] },
-                  { "id": "icon-0",  "component": "Icon", "name": "camera" },
-                  { "id": "icon-1",  "component": "Icon", "name": "delete" },
-                  { "id": "icon-2",  "component": "Icon", "name": "edit" }
+                  {
+                    "id": "root",
+                    "component": "Card",
+                    "child": "row"
+                  },
+                  {
+                    "id": "row",
+                    "component": "Row",
+                    "justify": "spaceAround",
+                    "align": "center",
+                    "children": [
+                      "icon_0",
+                      "icon_1",
+                      "icon_2"
+                    ]
+                  },
+                  {
+                    "id": "icon_0",
+                    "component": "Icon",
+                    "name": "camera"
+                  },
+                  {
+                    "id": "icon_1",
+                    "component": "Icon",
+                    "name": "delete"
+                  },
+                  {
+                    "id": "icon_2",
+                    "component": "Icon",
+                    "name": "edit"
+                  }
                 ]
               }
             }
@@ -242,7 +308,7 @@ class CustomIconDemoActivity : AppCompatActivity() {
         cardWrap.addView(surface)
         parent.addView(cardWrap)
 
-        surface.init("{}")
+        surface.init("""{"protocolVersion":"1.0","strictV10":true}""")
         surface.setListener(object : A2UISurfaceViewListener {
             override fun onAction(surfaceId: String, tag: Int, action: String, params: String?) {
                 Log.d(TAG, "onAction $title tag=$tag action=$action")

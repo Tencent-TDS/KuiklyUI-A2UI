@@ -87,8 +87,15 @@ export class A2UIDemoAssetUtil {
       const name = (json['name'] as string) || '';
       const description = (json['description'] as string) || '';
       const messages = json['messages'] as Object[];
-      if (!messages || !Array.isArray(messages)) {
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
         return null;
+      }
+      for (const message of messages) {
+        const envelope = message as Record<string, Object>;
+        if (envelope.version !== '1.0') {
+          console.error('[A2UIDemoAssetUtil] Explicit version 1.0 required for every message');
+          return null;
+        }
       }
       return {
         name: name,

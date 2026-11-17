@@ -3,40 +3,56 @@
   "description": "自定义函数 formatPhone 接收 phone 参数，返回格式化后的电话号码字符串（如 138-0000-1234）。",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "cf-str-2",
-"catalogId": "custom_functions_catalog.json"
+        "catalogId": "custom_functions_catalog_v1_0.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "cf-str-2",
         "components": [
-          { "id": "root", "component": "Card", "child": "col" },
-          { "id": "col", "component": "Column", "children": ["title", "phone"] },
-          { "id": "title", "component": "Text", "text": "formatPhone(phone) → String", "variant": "caption" },
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "phone"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "formatPhone(phone) → String",
+            "variant": "caption"
+          },
           {
             "id": "phone",
             "component": "Text",
             "text": {
-              "call": "formatPhone",
+              "@call": "formatString",
               "args": {
-                "phone": { "path": "/rawPhone" }
-              },
-              "returnType": "string"
-            },
-            "variant": "h4"
+                "value": "#### ${formatPhone(phone:${/rawPhone})}"
+              }
+            }
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "cf-str-2",
-        "value": { "rawPhone": "13800001234" }
+        "value": {
+          "rawPhone": "13800001234"
+        }
       }
     }
   ]

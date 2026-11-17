@@ -1,0 +1,34 @@
+{
+  "name": "Slider - negative min",
+  "description": "Slider with min=-20, max=40, value=22",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-sl-neg",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-sl-neg",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "s"
+          },
+          {
+            "id": "s",
+            "component": "Slider",
+            "label": "Temperature (°C)",
+            "min": -20,
+            "max": 40,
+            "value": 22
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 Third-Party Licenses for A2UI Demo Resources
 ==============================================
 
-This directory contains example JSON files derived from the
-A2UI project by Google LLC, used for demonstrating A2UI protocol rendering
-capabilities in the KuiklyUI project.
+This project contains example JSON files and derivative catalogs based on the
+A2UI project by Google LLC, used for demonstrating A2UI v0.9 and v1.0 protocol
+rendering capabilities in the KuiklyUI project.
+All paths below are relative to the KuiklyUI-A2UI project root.
 
 --------------------------------------------------------------------------------
 
@@ -13,10 +14,21 @@ License:    Apache License, Version 2.0
 Copyright:  Copyright Google LLC
 
 Files covered:
-  - androidAppForTest/src/main/assets/a2ui_examples/          (Example UI JSON files, Android)
-  - iosAppForTest/Resources/a2ui_examples/                    (Example UI JSON files, iOS)
-  - ohosAppForTest/entry/src/main/resources/rawfile/a2ui_examples/  (Example UI JSON files, HarmonyOS)
-  - catalogs/kuikly_a2ui_catalog.json                         (Derivative catalog: an explicit superset of the A2UI v0.9 basic catalog via `extends`)
+  A2UI example JSON resources (including adapted or migrated examples):
+  - androidAppForTest/src/main/assets/v0_9/a2ui_examples/         (Android, v0.9)
+  - androidAppForTest/src/main/assets/v1_0/a2ui_examples/         (Android, v1.0)
+  - iosAppForTest/Resources/v0_9/a2ui_examples/                   (iOS, v0.9)
+  - iosAppForTest/Resources/v1_0/a2ui_examples/                   (iOS, v1.0)
+  - ohosAppForTest/entry/src/main/resources/rawfile/v0_9/a2ui_examples/  (HarmonyOS, v0.9)
+  - ohosAppForTest/entry/src/main/resources/rawfile/v1_0/a2ui_examples/  (HarmonyOS, v1.0)
+
+  Derivative catalogs:
+  - catalogs/kuikly_a2ui_catalog.json                            (Explicit superset of the A2UI v0.9 basic catalog via `extends`)
+  - catalogs/custom_components_catalog_v1_0.json
+  - catalogs/custom_functions_catalog_v1_0.json
+  - catalogs/kuikly_a2ui_catalog_v1_0.json
+  The v1.0 catalogs include copied A2UI v1.0 basic catalog definitions and
+  explicit Kuikly extensions.
 
 Additional catalog files that reference the A2UI v0.9 JSON Schemas via
 `$ref` (structural references only, no content copied) — listed here for

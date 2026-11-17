@@ -21,7 +21,7 @@ import UIKit
 /// `Resources/a2ui_function_tests/<funcName>/`.
 class FunctionDemoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    private static let rootDir = "a2ui_function_tests"
+    private static let rootDir = "v0_9/a2ui_function_tests"
     private static let titleSuffix = "函数测试"
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)

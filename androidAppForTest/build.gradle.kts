@@ -14,6 +14,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         multiDexEnabled = true
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -43,4 +44,8 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     // Video playback for the A2UI v0.9 "Video" component (KRVideoView adapter)
     implementation("com.google.android.exoplayer:exoplayer:2.16.1")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
 }

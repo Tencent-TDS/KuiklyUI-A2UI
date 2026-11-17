@@ -208,18 +208,18 @@ final class CustomIconKuiklyDemoViewController: UIViewController {
     private func buildIconGridCase(name: String,
                                    description: String,
                                    iconNames: [String]) -> [String: Any] {
-        let surfaceId = "icon-case-\(abs(name.hashValue))"
+        let surfaceId = "icon_case_\(abs(name.hashValue))"
         var components: [[String: Any]] = []
         var iconChildren: [String] = []
 
         components.append([
             "id": "root",
             "component": "Card",
-            "children": ["row"]
+            "child": "row"
         ])
 
         for (index, iconName) in iconNames.enumerated() {
-            let id = "icon-\(index)"
+            let id = "icon_\(index)"
             iconChildren.append(id)
             components.append([
                 "id": id,
@@ -233,9 +233,8 @@ final class CustomIconKuiklyDemoViewController: UIViewController {
             "id": "row",
             "component": "Row",
             "children": iconChildren,
-            "justifyContent": "spaceAround",
-            "alignItems": "center",
-            "padding": 16
+            "justify": "spaceAround",
+            "align": "center"
         ])
 
         // Restore the {root, row, icons...} order to match Android's writer.
@@ -248,11 +247,11 @@ final class CustomIconKuiklyDemoViewController: UIViewController {
 
         let messages: [[String: Any]] = [
             [
-                "version": "v0.9",
-                "createSurface": ["surfaceId": surfaceId]
+                "version": "1.0",
+                "createSurface": ["surfaceId": surfaceId, "catalogId": "kuikly_a2ui_catalog_v1_0.json"]
             ],
             [
-                "version": "v0.9",
+                "version": "1.0",
                 "updateComponents": [
                     "surfaceId": surfaceId,
                     "components": ordered

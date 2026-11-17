@@ -1,56 +1,95 @@
 {
-  "name": "自定义函数返回 Boolean（Button checks 条件）",
-  "description": "自定义函数 isVip 接收 level 参数，返回 boolean。用于 Button 的 checks 条件控制按钮是否可点击。level >= 3 时返回 true，按钮可用；否则按钮禁用。",
+  "name": "自定义函数返回 Boolean 与标准 ValidationResult 校验",
+  "description": "isVip 返回 Boolean 并响应 userLevel 更新；按钮使用官方 numeric ValidationResult 校验同一 VIP 阈值，不将 Boolean 函数冒充 CheckFunctionCall。",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "cf-bool-1",
-"catalogId": "custom_functions_catalog.json"
+        "catalogId": "custom_functions_catalog_v1_0.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "cf-bool-1",
         "components": [
-          { "id": "root", "component": "Card", "child": "col" },
-          { "id": "col", "component": "Column", "children": ["title", "vip-btn", "info"] },
-          { "id": "title", "component": "Text", "text": "isVip(level) → Boolean (Button checks)", "variant": "caption" },
-          { "id": "vip-btn-label", "component": "Text", "text": "🌟 进入 VIP 专区" },
           {
-            "id": "vip-btn",
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "vip_btn",
+              "info"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "isVip(level) → Boolean；numeric → ValidationResult",
+            "variant": "caption"
+          },
+          {
+            "id": "vip_btn_label",
+            "component": "Text",
+            "text": "🌟 进入 VIP 专区"
+          },
+          {
+            "id": "vip_btn",
             "component": "Button",
-            "child": "vip-btn-label",
+            "child": "vip_btn_label",
             "variant": "primary",
             "action": {
               "event": {
                 "name": "enterVipZone",
-                "context": { "level": { "path": "/userLevel" } }
+                "context": {
+                  "level": {
+                    "@path": "/userLevel"
+                  }
+                }
               }
             },
-            "checks": [
+            "@checks": [
               {
                 "condition": {
-                  "call": "isVip",
+                  "@call": "numeric",
                   "args": {
-                    "level": { "path": "/userLevel" }
-                  },
-                  "returnType": "boolean"
+                    "value": {
+                      "@path": "/userLevel"
+                    },
+                    "min": 3
+                  }
                 },
                 "message": "仅 VIP 用户（level >= 3）可进入"
               }
             ]
           },
-          { "id": "info", "component": "Text", "text": "当前 userLevel = 5，isVip 返回 true → 按钮可点击", "variant": "body" }
+          {
+            "id": "info",
+            "component": "Text",
+            "text": {
+              "@call": "formatString",
+              "args": {
+                "value": "当前 userLevel = ${/userLevel}，isVip 返回 ${isVip(level:${/userLevel})}"
+              }
+            },
+            "variant": "body"
+          }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "cf-bool-1",
-        "value": { "userLevel": 5 }
+        "value": {
+          "userLevel": 5
+        }
       }
     }
   ]

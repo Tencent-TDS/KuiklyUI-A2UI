@@ -3,14 +3,14 @@
   "description": "Card composition: outer Card → Column → 2 inner Cards",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-card-nested",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-card-nested",
         "components": [
@@ -31,8 +31,7 @@
           {
             "id": "title",
             "component": "Text",
-            "text": "Outer Card",
-            "variant": "h4"
+            "text": "#### Outer Card"
           },
           {
             "id": "innerA",

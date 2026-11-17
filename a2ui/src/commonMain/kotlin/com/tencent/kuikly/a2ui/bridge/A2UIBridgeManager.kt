@@ -21,6 +21,10 @@ import com.tencent.kuikly.a2ui.dsl.A2UICustomViewRegistry
 import com.tencent.kuikly.a2ui.function.A2UICustomFunctionRegistry
 import com.tencent.kuikly.a2ui.function.A2UIFunctionInvokeMode
 import com.tencent.kuikly.a2ui.function.A2UIFunctionReturnType
+import com.tencent.kuikly.a2ui.rpc.A2UIRpcError
+import com.tencent.kuikly.a2ui.rpc.A2UIRpcJson
+import com.tencent.kuikly.a2ui.rpc.A2UIRpcRequest
+import com.tencent.kuikly.a2ui.rpc.A2UIRpcResponse
 import com.tencent.kuikly.core.manager.BridgeManager
 import com.tencent.kuikly.core.nvi.NativeBridge
 
@@ -46,6 +50,22 @@ object A2UIBridgeManager {
     private val surfaceSizeMap = mutableMapOf<String, Pair<Float, Float>>()
     private val deviceSizeMap = mutableMapOf<String, Pair<Float, Float>>()
     private var isDidInit = false
+
+    // -------------------------------------------------------------------
+    //  v1.0 bidirectional RPC wiring (PR-6a)
+    //
+    //  * [rendererFunctionHandlers] — one host-registered handler per
+    //    instance, invoked when the agent sends `callRendererFunction`.
+    //    The host must eventually call [respondToAgent] or
+    //    [failAgentRequest] on this manager to close the loop (or let
+    //    the dispatcher's timeout fire).
+    //  * [rpcWireEmitters] — per-instance outbound sink. Set internally
+    //    by [installRpcTransport] during [initInstance] /
+    //    [registerDslBridge] so the adapter's `emitWireMessage` lambda
+    //    always finds the right transport.
+    // -------------------------------------------------------------------
+    private val rendererFunctionHandlers =
+        mutableMapOf<String, (A2UIRpcRequest) -> Unit>()
 
     /**
      * Initialize the A2UIBridgeManager (called once on first use).
@@ -256,6 +276,7 @@ object A2UIBridgeManager {
      */
     fun registerDslBridge(instanceId: String, bridge: A2UIDSLBridge) {
         dslBridgeMap[instanceId] = bridge
+        installRpcTransport(instanceId, bridge)
     }
 
     /**
@@ -266,6 +287,7 @@ object A2UIBridgeManager {
      */
     fun unregisterDslBridge(instanceId: String) {
         dslBridgeMap.remove(instanceId)
+        rendererFunctionHandlers.remove(instanceId)
     }
 
     /**
@@ -495,13 +517,39 @@ object A2UIBridgeManager {
         // Parse real screen size from the config (used to size full-screen overlays like Modal).
         var deviceWidth = 0f
         var deviceHeight = 0f
+        // Protocol version / strict-mode knobs. These are optional: when the
+        // host omits them we fall back to the defaults declared in
+        // [com.tencent.kuikly.a2ui.protocol.A2UIProtocolDefaults]. The actual
+        // wire version of each stream is still auto-detected by the adapter
+        // from the first envelope's `"version"` field; `expectedProtocolVersion`
+        // (when non-null) is used as a floor so hosts that have fully migrated
+        // to v1.0 can reject stale v0.9 payloads without having to filter
+        // them themselves.
+        var expectedProtocolVersion: com.tencent.kuikly.a2ui.protocol.A2UIProtocolVersion? = null
+        var strictV10: Boolean =
+            com.tencent.kuikly.a2ui.protocol.A2UIProtocolDefaults.STRICT_V10_BY_DEFAULT
         if (!configJson.isNullOrEmpty()) {
             try {
                 val cfg = com.tencent.kuikly.core.nvi.serialization.json.JSONObject(configJson)
                 deviceWidth = cfg.optDouble("deviceWidth", 0.0).toFloat()
                 deviceHeight = cfg.optDouble("deviceHeight", 0.0).toFloat()
+                // `protocolVersion` is an optional string: "v0.9" / "v0.9.1" /
+                // "1.0" / "v1.0". Unknown values are treated as "unspecified"
+                // (left null) so the adapter keeps its "accept any version
+                // declared on the wire" default.
+                val rawVersion = cfg.optString("protocolVersion", "").takeIf { it.isNotBlank() }
+                if (rawVersion != null) {
+                    expectedProtocolVersion =
+                        com.tencent.kuikly.a2ui.protocol.A2UIProtocolVersion.fromWireString(rawVersion)
+                }
+                // `strictV10` is an optional boolean; when the key is absent
+                // we leave `strictV10` at its [A2UIProtocolDefaults] default.
+                if (cfg.has("strictV10")) {
+                    strictV10 = cfg.optBoolean("strictV10", strictV10)
+                }
             } catch (e: Exception) {
-                // Ignore malformed config; overlays fall back to heuristic sizing.
+                // Ignore malformed config; overlays fall back to heuristic sizing
+                // and version-related knobs keep their defaults.
             }
         }
 
@@ -613,6 +661,25 @@ object A2UIBridgeManager {
         } else {
             dslBridge.initialize(0f, effectiveDeviceWidth, effectiveDeviceHeight)
         }
+
+        // Propagate the parsed protocol-version knobs to the freshly-created
+        // adapter. We do this AFTER `initialize(...)` because the adapter is
+        // lazily created inside `initialize()`; attempting to set these fields
+        // before that call would no-op against a null adapter. The actual
+        // wire version is still auto-detected per stream; `expectedProtocolVersion`
+        // merely pre-seeds the adapter's pinned version so hosts that want to
+        // "declare and enforce" v1.0 can do so.
+        dslBridge.protocolAdapter?.let { adapter ->
+            adapter.strictV10 = strictV10
+            if (expectedProtocolVersion != null) {
+                adapter.setExpectedProtocolVersion(expectedProtocolVersion)
+            }
+        }
+
+        // Attach the v1.0 RPC transport (noop under v0.9 streams because
+        // the adapter only emits/consumes RPC envelopes when the current
+        // protocolVersion is V1_0).
+        installRpcTransport(instanceId, dslBridge)
     }
 
     private fun writeStream(instanceId: String, chunk: String) {
@@ -667,6 +734,7 @@ object A2UIBridgeManager {
         nativeBridge?.destroy()
         surfaceSizeMap.remove(instanceId)
         deviceSizeMap.remove(instanceId)
+        rendererFunctionHandlers.remove(instanceId)
     }
 
     /**
@@ -806,6 +874,367 @@ object A2UIBridgeManager {
         } catch (e: Exception) {
             return false
         }
+    }
+
+    // endregion
+
+    // region v1.0 Bidirectional RPC (PR-6a)
+
+    /**
+     * Install a host callback that receives inbound
+     * `callRendererFunction` RPCs for [instanceId].
+     *
+     * The handler is invoked on the same thread the adapter runs on
+     * (per PR-6 design spec §8-1); hosts that need to hop to a different
+     * thread must do so themselves. When the handler returns, it MUST
+     * eventually call either [respondToAgent] or [failAgentRequest] on
+     * this manager \u2014 synchronously or asynchronously \u2014 to close the
+     * RPC loop. The dispatcher's timeout machinery cleans up abandoned
+     * pending entries automatically.
+     *
+     * Passing `null` removes the previously-installed handler. When no
+     * handler is installed, the adapter immediately replies to the agent
+     * with [A2UIRpcError.Codes.UNKNOWN_FUNCTION] (see
+     * [com.tencent.kuikly.a2ui.adapter.A2UIProtocolAdapter.handleCallRendererFunction]).
+     */
+    fun setRendererFunctionHandler(
+        instanceId: String,
+        handler: ((A2UIRpcRequest) -> Unit)?,
+    ) {
+        if (handler == null) {
+            rendererFunctionHandlers.remove(instanceId)
+        } else {
+            rendererFunctionHandlers[instanceId] = handler
+        }
+        // Mirror the registration onto the adapter if the bridge is already
+        // wired up; otherwise [installRpcTransport] will pick it up when
+        // init / registerDslBridge runs.
+        dslBridgeMap[instanceId]?.protocolAdapter?.let { adapter ->
+            adapter.onIncomingAgentCall = handler
+        }
+    }
+
+    /**
+     * Host-side completion of an inbound agent-to-renderer RPC.
+     *
+     * Call this with the [requestId] that [setRendererFunctionHandler]
+     * handed you and the host-side result of the function call. No-op
+     * when the request has already timed out or been cancelled.
+     */
+    fun respondToAgent(instanceId: String, surfaceId: String, requestId: String, result: Any?) {
+        val adapter = dslBridgeMap[instanceId]?.protocolAdapter ?: run {
+            println(
+                "[A2UI] warn: respondToAgent called for unknown instanceId=" +
+                    "'$instanceId'; dropping."
+            )
+            return
+        }
+        adapter.respondToAgent(surfaceId, requestId, result)
+    }
+
+    /**
+     * Host-side failure of an inbound agent-to-renderer RPC. Same
+     * semantics as [respondToAgent] but routes to an error response.
+     *
+     * See [A2UIRpcError.Codes] for the canonical code vocabulary. Hosts
+     * may use custom codes with the `x-` prefix.
+     */
+    fun failAgentRequest(
+        instanceId: String,
+        surfaceId: String,
+        requestId: String,
+        code: String,
+        message: String?,
+        details: Map<String, Any?>? = null,
+    ) {
+        val adapter = dslBridgeMap[instanceId]?.protocolAdapter ?: run {
+            println(
+                "[A2UI] warn: failAgentRequest called for unknown instanceId=" +
+                    "'$instanceId'; dropping."
+            )
+            return
+        }
+        adapter.failAgentRequest(
+            surfaceId,
+            requestId,
+            A2UIRpcError(code, message, details),
+        )
+    }
+
+    /**
+     * Host-initiated renderer-to-agent RPC. Returns the minted
+     * requestId (opaque to the host, useful for logging / cancellation
+     * correlation). [onComplete] fires exactly once \u2014 on wire
+     * response, timeout, or surface close.
+     *
+     * Returns `null` and does NOT invoke [onComplete] when the instance
+     * is unknown or the stream has not reached v1.0 yet; this lets the
+     * caller distinguish \"we actually dispatched\" from \"never left the
+     * ground\".
+     */
+    fun invokeAgentFunction(
+        instanceId: String,
+        surfaceId: String,
+        name: String,
+        args: Map<String, Any?>,
+        timeoutMs: Long? = null,
+        onComplete: (A2UIRpcResponse) -> Unit,
+    ): String? {
+        val adapter = dslBridgeMap[instanceId]?.protocolAdapter ?: run {
+            println(
+                "[A2UI] warn: invokeAgentFunction called for unknown instanceId=" +
+                    "'$instanceId'; dropping."
+            )
+            return null
+        }
+        return adapter.invokeAgentFunction(surfaceId, name, args, timeoutMs, onComplete)
+    }
+
+    // -------------------------------------------------------------------
+    //  JSON-flavored RPC API (PR-6b) \u2014 for ObjC / Java / ArkTS callers
+    //
+    //  The typed variants above use commonMain data classes which are
+    //  awkward to consume from Objective-C and ArkTS bindings. The
+    //  methods below accept/produce String JSON instead so platform
+    //  hosts can bridge them without rebuilding `A2UIRpcRequest` on the
+    //  other side of the ObjC/NAPI boundary.
+    //
+    //  The JSON envelopes use the same keys as the on-wire protocol
+    //  (`surfaceId`, `requestId`, `name`, `args`, `timeoutMs`) so host
+    //  code that already parses the wire format can reuse its decoder.
+    // -------------------------------------------------------------------
+
+    /**
+     * JSON variant of [setRendererFunctionHandler].
+     *
+     * The handler receives a JSON object with keys:
+     * ```
+     *   { "surfaceId":"...", "requestId":"...", "name":"...",
+     *     "args":{...}, "timeoutMs":1234 }
+     * ```
+     * (`timeoutMs` is omitted when the agent did not specify one.)
+     *
+     * Passing `null` removes the previously-installed handler.
+     */
+    fun setRendererFunctionJsonHandler(
+        instanceId: String,
+        handler: ((requestJson: String) -> Unit)?,
+    ) {
+        if (handler == null) {
+            setRendererFunctionHandler(instanceId, null)
+            return
+        }
+        setRendererFunctionHandler(instanceId) { req ->
+            val payload = linkedMapOf<String, Any?>(
+                "surfaceId" to req.surfaceId,
+                "requestId" to req.requestId,
+                "name" to req.name,
+                "args" to req.args,
+            )
+            req.timeoutMs?.let { payload["timeoutMs"] = it }
+            val json = A2UIRpcJson.stringify(payload)
+                ?: "{\"surfaceId\":\"${req.surfaceId}\"," +
+                    "\"requestId\":\"${req.requestId}\"," +
+                    "\"name\":\"${req.name}\",\"args\":{}}"
+            try {
+                handler(json)
+            } catch (t: Throwable) {
+                println(
+                    "[A2UI] error: setRendererFunctionJsonHandler threw for " +
+                        "requestId='${req.requestId}': ${t.message}. Failing " +
+                        "RPC with INTERNAL_ERROR."
+                )
+                failAgentRequest(
+                    instanceId = instanceId,
+                    surfaceId = req.surfaceId,
+                    requestId = req.requestId,
+                    code = A2UIRpcError.Codes.INTERNAL_ERROR,
+                    message = t.message ?: "handler threw",
+                )
+            }
+        }
+    }
+
+    /**
+     * JSON variant of [respondToAgent].
+     *
+     * [resultJson] is an arbitrary JSON fragment (object / array /
+     * primitive / `null` / empty string). Passing an empty string is
+     * equivalent to `null` \u2014 the response carries no result value.
+     * Non-object / non-array JSON is forwarded as a parsed primitive
+     * so hosts can return strings/numbers/booleans directly without
+     * wrapping them.
+     */
+    fun respondToAgentJson(
+        instanceId: String,
+        surfaceId: String,
+        requestId: String,
+        resultJson: String?,
+    ) {
+        val parsed = if (resultJson.isNullOrEmpty()) {
+            null
+        } else {
+            // Try object first; fall back to array / primitive via a
+            // scalar-wrapper trick so we can reuse SimpleJsonParser.
+            A2UIRpcJson.parseObject(resultJson)
+                ?: A2UIRpcJson.parseObject("{\"__v\":$resultJson}")?.get("__v")
+        }
+        respondToAgent(instanceId, surfaceId, requestId, parsed)
+    }
+
+    /**
+     * JSON variant of [failAgentRequest]. [detailsJson] is optional
+     * and MUST be a JSON object when present (per RPC spec); malformed
+     * values are silently dropped so the error response still goes out.
+     */
+    fun failAgentRequestJson(
+        instanceId: String,
+        surfaceId: String,
+        requestId: String,
+        code: String,
+        message: String?,
+        detailsJson: String?,
+    ) {
+        val details = if (detailsJson.isNullOrEmpty()) null
+                      else A2UIRpcJson.parseObject(detailsJson)
+        failAgentRequest(instanceId, surfaceId, requestId, code, message, details)
+    }
+
+    /**
+     * JSON variant of [invokeAgentFunction]. [argsJson] MUST be a JSON
+     * object; a `null` / empty / malformed value is coerced to `"{}"`.
+     * [onCompleteJson] receives the agent's response serialised the
+     * same way as the on-wire payload:
+     * ```
+     *   {"surfaceId":"...","requestId":"...","result":...}
+     *   {"surfaceId":"...","requestId":"...","error":{"code":"...","message":"..."}}
+     * ```
+     * \u2014 exactly one of `result` / `error` is present.
+     */
+    fun invokeAgentFunctionJson(
+        instanceId: String,
+        surfaceId: String,
+        name: String,
+        argsJson: String?,
+        timeoutMs: Long? = null,
+        onCompleteJson: (responseJson: String) -> Unit,
+    ): String? {
+        val args = if (argsJson.isNullOrEmpty()) emptyMap()
+                   else A2UIRpcJson.parseObject(argsJson) ?: emptyMap()
+        return invokeAgentFunction(
+            instanceId = instanceId,
+            surfaceId = surfaceId,
+            name = name,
+            args = args,
+            timeoutMs = timeoutMs,
+        ) { resp ->
+            val payload = linkedMapOf<String, Any?>(
+                "surfaceId" to resp.surfaceId,
+                "requestId" to resp.requestId,
+            )
+            if (resp.isSuccess) {
+                payload["result"] = resp.result
+            } else {
+                val err = resp.error!!
+                val errMap = linkedMapOf<String, Any?>("code" to err.code)
+                err.message?.let { errMap["message"] = it }
+                err.details?.let { errMap["details"] = it }
+                payload["error"] = errMap
+            }
+            val json = A2UIRpcJson.stringify(payload) ?: "{}"
+            try {
+                onCompleteJson(json)
+            } catch (t: Throwable) {
+                println(
+                    "[A2UI] error: invokeAgentFunctionJson onComplete threw " +
+                        "for requestId='${resp.requestId}': ${t.message}"
+                )
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------
+    //  Internal plumbing (unchanged from PR-6a)
+    // -------------------------------------------------------------------
+
+    /**
+     * Wire the per-instance RPC transport onto the freshly-created
+     * adapter inside [bridge]. Idempotent: calling twice for the same
+     * instance just re-installs the lambdas, which is harmless.
+     *
+     * The outbound sink prefers the per-surface `NativeBridge` (native
+     * page mode) and falls back to the host `A2UIBridgeModule`
+     * (Kuikly-embedded mode), mirroring the dispatch strategy used by
+     * [executeFunctionCallIfNeeded].
+     */
+    private fun installRpcTransport(instanceId: String, bridge: A2UIDSLBridge) {
+        val adapter = bridge.protocolAdapter ?: return
+        adapter.onIncomingAgentCall = rendererFunctionHandlers[instanceId]
+        adapter.emitWireMessage = { envelopeJson ->
+            emitRpcWire(instanceId, envelopeJson)
+        }
+    }
+
+
+    /**
+     * Send a serialised RPC wire envelope outbound.
+     *
+     * The payload is a complete JSON object (version + single RPC key)
+     * produced by the adapter. Dispatch strategy mirrors the one used
+     * by [executeFunctionCallIfNeeded] / [invokeCustomFunctionIfNeeded]:
+     *
+     *   * Native-page hosts own a per-surface [NativeBridge] and expect
+     *     Kotlin-to-native traffic through [NativeBridge.toNative]. We send
+     *     the envelope on the dedicated [A2UINativeMethod.SEND_RPC_ENVELOPE]
+     *     methodId so the native A2UISurfaceView.callNative(...) switch
+     *     can dispatch it without pattern-matching on surfaceId strings.
+     *     A follow-up [A2UINativeMethod.FLUSH_UI_TASKS] is issued so the
+     *     envelope is promptly consumed on the native queue, matching how
+     *     the surrounding code treats one-shot Kotlin-to-native events.
+     *   * Kuikly-embedded hosts have no per-surface NativeBridge; the
+     *     whole A2UI stack sits behind the enclosing page module channel.
+     *     We dispatch through A2UIBridgeModule.rpcEnvelope with
+     *     syncCall = 0 because RPC traffic is inherently async and the
+     *     host returns immediately after enqueuing the envelope.
+     *
+     * If neither transport is wired up (instance destroyed mid-flight or
+     * surface not yet fully initialised), the envelope is logged and
+     * dropped. The dispatcher timeout machinery will eventually invoke
+     * the renderer-side onComplete with [A2UIRpcError.Codes.TIMEOUT]
+     * so callers are never left hanging.
+     */
+    private fun emitRpcWire(instanceId: String, envelopeJson: String) {
+        val nativeBridge = nativeBridgeMap[instanceId]
+        if (nativeBridge != null) {
+            nativeBridge.toNative(
+                A2UINativeMethod.SEND_RPC_ENVELOPE,
+                instanceId,
+                envelopeJson,
+                null,
+                null,
+                null,
+                null,
+            )
+            nativeBridge.toNative(
+                A2UINativeMethod.FLUSH_UI_TASKS,
+                instanceId, null, null, null, null, null,
+            )
+            return
+        }
+        val hostPagerId = dslBridgeMap[instanceId]?.getHostPagerId()
+        if (hostPagerId != null) {
+            dispatchToA2UIBridgeModule(
+                hostPagerId,
+                "rpcEnvelope",
+                envelopeJson,
+                0, // async: RPC traffic is inherently async
+            )
+            return
+        }
+        println(
+            "[A2UI] warn: RPC envelope for instanceId='$instanceId' had " +
+                "no outbound transport (no NativeBridge and no host pager); dropped."
+        )
     }
 
     // endregion

@@ -25,11 +25,18 @@ import com.tencent.kuikly.a2ui.protocol.A2UISurfaceConfig
  * Supports incremental parsing of chunked JSON data arriving over a stream.
  *
  * Supports two message formats:
- * 1. Standard A2UI v0.9 protocol: [{"version":"v0.9","createSurface":{...}}, {"version":"v0.9","updateComponents":{...}}, ...]
- * 2. Legacy internal format: [{"type":"createSurface",...}, {"type":"createComponent",...}, ...]
+ * 1. Standard A2UI protocol (v0.9, v0.9.1 and v1.0):
+ *    `[{"version":"v0.9","createSurface":{...}}, {"version":"v0.9","updateComponents":{...}}, ...]`
+ *    or, for v1.0:
+ *    `[{"version":"1.0","createSurface":{...}}, {"version":"1.0","callRendererFunction":{...}}, ...]`
+ * 2. Legacy internal format:
+ *    `[{"type":"createSurface",...}, {"type":"createComponent",...}, ...]`
  *
- * The format is auto-detected from the first message. Standard v0.9 messages
- * are converted to internal format via [A2UIProtocolAdapter].
+ * The format is auto-detected from the first message. Standard messages are
+ * converted to internal format via [A2UIProtocolAdapter]; the adapter in turn
+ * resolves the wire-protocol version (v0.9 vs v1.0) from the first envelope's
+ * `"version"` field and routes subsequent envelopes through the matching
+ * version-specific converter.
  *
  * Messages are emitted as soon as they are fully parsed, enabling
  * progressive/incremental rendering.
@@ -161,10 +168,25 @@ class A2UIStreamParser {
                 // Auto-detect format from first message
                 if (!formatDetected) {
                     formatDetected = true
+                    // Standard A2UI envelope keys recognised across v0.9 and v1.0.
+                    //   * v0.9:  createSurface, updateComponents, updateDataModel
+                    //   * v1.0:  all of the above PLUS the four bidirectional
+                    //            RPC envelopes (callRendererFunction /
+                    //            rendererFunctionResponse / callAgentFunction /
+                    //            agentFunctionResponse) and the explicit
+                    //            `version` field that v1.0 streams are REQUIRED
+                    //            to carry on the first envelope.
+                    // Any payload that is neither a standard envelope nor
+                    // carries a `type` field falls back to the legacy internal
+                    // parser path below.
                     isStandardFormat = map.containsKey("version") ||
                             map.containsKey("createSurface") ||
                             map.containsKey("updateComponents") ||
-                            map.containsKey("updateDataModel")
+                            map.containsKey("updateDataModel") ||
+                            map.containsKey("callRendererFunction") ||
+                            map.containsKey("rendererFunctionResponse") ||
+                            map.containsKey("callAgentFunction") ||
+                            map.containsKey("agentFunctionResponse")
                 }
 
                 if (isStandardFormat) {
@@ -247,7 +269,12 @@ class A2UIStreamParser {
             width = (map["width"] as? Number)?.toFloat() ?: 0f,
             height = (map["height"] as? Number)?.toFloat() ?: 0f,
             backgroundColor = map["backgroundColor"] as? String,
-            incrementalRender = map["incrementalRender"] as? Boolean ?: true
+            incrementalRender = map["incrementalRender"] as? Boolean ?: true,
+            // Per A2UI v1.0 spec (§createSurface), the surface-level catalog
+            // field is `catalogId`. No alias is read: the v1.0 property set
+            // is exact and this renderer has no shipped payloads to keep
+            // compatible with.
+            catalogId = map["catalogId"] as? String
         )
     }
 

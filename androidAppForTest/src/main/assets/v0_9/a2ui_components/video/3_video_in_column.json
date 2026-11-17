@@ -1,0 +1,52 @@
+{
+  "name": "Video - in Column",
+  "description": "Video as middle child in a Column with title and caption",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-video-column",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-video-column",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "v",
+              "caption"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Sample Video",
+            "variant": "h4"
+          },
+          {
+            "id": "v",
+            "component": "Video",
+            "url": "https://www.w3schools.com/html/mov_bbb.mp4"
+          },
+          {
+            "id": "caption",
+            "component": "Text",
+            "text": "Big Buck Bunny - test clip",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

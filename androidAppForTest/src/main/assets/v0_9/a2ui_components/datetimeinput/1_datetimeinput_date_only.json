@@ -1,0 +1,34 @@
+{
+  "name": "DateTimeInput - date only",
+  "description": "DateTimeInput with enableDate=true, enableTime=false",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-dt-date",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-dt-date",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "d"
+          },
+          {
+            "id": "d",
+            "component": "DateTimeInput",
+            "label": "Birthday",
+            "value": "1990-01-15",
+            "enableDate": true,
+            "enableTime": false
+          }
+        ]
+      }
+    }
+  ]
+}

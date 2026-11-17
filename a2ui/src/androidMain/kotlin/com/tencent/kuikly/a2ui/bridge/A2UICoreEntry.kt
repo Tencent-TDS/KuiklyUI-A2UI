@@ -119,3 +119,129 @@ class A2UICoreEntry {
         hadRegisterNativeBridge = false
     }
 }
+
+/**
+ * Java-friendly facade over the v1.0 bidirectional-RPC APIs exposed on
+ * [A2UIBridgeManager] (PR-6b).
+ *
+ * Why a separate class? `A2UIBridgeManager` is a Kotlin `object` whose
+ * JSON-flavored RPC methods accept Kotlin function types
+ * (`(String) -> Unit`) \u2014 these are callable from Java but awkward,
+ * requiring verbose `Function1<...>` lambdas. This facade re-exposes
+ * the four entry points through a pair of explicit SAM interfaces
+ * ([Handler], [Completion]) that Java callers can implement with
+ * ordinary `::methodRef` syntax or Java 8 lambdas.
+ *
+ * Idiomatic Java usage:
+ * ```java
+ * A2UIRpcBridge.get().setHandler(instanceId, envelopeJson -> {
+ *     MyHostFunctions.dispatch(envelopeJson);
+ * });
+ *
+ * String reqId = A2UIRpcBridge.get().invoke(
+ *     instanceId, surfaceId, "fetchUser", "{\"id\":42}", 5_000L,
+ *     responseJson -> MyHost.onAgentReply(responseJson)
+ * );
+ * ```
+ *
+ * All methods are thread-safe wrt. their delegate on the KMP side: the
+ * underlying `A2UIBridgeManager` is a stateful `object` that assumes
+ * the Kuikly context thread; callers are expected to invoke us on
+ * that thread (the same thread that drives
+ * [A2UICoreEntry.callKotlinMethod]). Hosts that run on a different
+ * thread must hop themselves before calling in.
+ */
+class A2UIRpcBridge private constructor() {
+
+    /** SAM interface for inbound agent-to-renderer RPC envelopes. */
+    fun interface Handler {
+        /** Called with the JSON envelope. Never `null`. */
+        fun onCall(requestJson: String)
+    }
+
+    /** SAM interface for the response of a renderer-to-agent RPC. */
+    fun interface Completion {
+        /** Called with the JSON response envelope exactly once. */
+        fun onComplete(responseJson: String)
+    }
+
+    fun setHandler(instanceId: String, handler: Handler) {
+        A2UIBridgeManager.setRendererFunctionJsonHandler(instanceId) { json ->
+            handler.onCall(json)
+        }
+    }
+
+    fun removeHandler(instanceId: String) {
+        A2UIBridgeManager.setRendererFunctionJsonHandler(instanceId, null)
+    }
+
+    /**
+     * Close an inbound RPC successfully. [resultJson] may be `null` or
+     * empty when the function has no return value (void).
+     */
+    fun respond(
+        instanceId: String,
+        surfaceId: String,
+        requestId: String,
+        resultJson: String?,
+    ) {
+        A2UIBridgeManager.respondToAgentJson(
+            instanceId = instanceId,
+            surfaceId = surfaceId,
+            requestId = requestId,
+            resultJson = resultJson,
+        )
+    }
+
+    /** Close an inbound RPC with an error. */
+    @JvmOverloads
+    fun fail(
+        instanceId: String,
+        surfaceId: String,
+        requestId: String,
+        code: String,
+        message: String? = null,
+        detailsJson: String? = null,
+    ) {
+        A2UIBridgeManager.failAgentRequestJson(
+            instanceId = instanceId,
+            surfaceId = surfaceId,
+            requestId = requestId,
+            code = code,
+            message = message,
+            detailsJson = detailsJson,
+        )
+    }
+
+    /**
+     * Fire a renderer-to-agent RPC. Returns the minted requestId (or
+     * `null` when the instance is unknown / not yet on v1.0). A
+     * non-positive [timeoutMs] means "use the dispatcher default".
+     */
+    @JvmOverloads
+    fun invoke(
+        instanceId: String,
+        surfaceId: String,
+        name: String,
+        argsJson: String?,
+        timeoutMs: Long = 0L,
+        onComplete: Completion,
+    ): String? {
+        return A2UIBridgeManager.invokeAgentFunctionJson(
+            instanceId = instanceId,
+            surfaceId = surfaceId,
+            name = name,
+            argsJson = argsJson,
+            timeoutMs = timeoutMs.takeIf { it > 0L },
+        ) { responseJson ->
+            onComplete.onComplete(responseJson)
+        }
+    }
+
+    companion object {
+        private val INSTANCE: A2UIRpcBridge = A2UIRpcBridge()
+
+        @JvmStatic
+        fun get(): A2UIRpcBridge = INSTANCE
+    }
+}

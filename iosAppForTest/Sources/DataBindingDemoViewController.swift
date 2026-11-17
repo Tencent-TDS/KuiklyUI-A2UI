@@ -22,7 +22,7 @@ import UIKit
 /// `Resources/a2ui_databinding_tests/<capabilityDir>/`.
 class DataBindingDemoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    private static let rootDir = "a2ui_databinding_tests"
+    private static let rootDir = "v0_9/a2ui_databinding_tests"
     private static let titleSuffix = "数据绑定"
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)

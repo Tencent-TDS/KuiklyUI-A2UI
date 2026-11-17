@@ -22,6 +22,7 @@
         <activity android:name=".CustomComponentDemoActivity" />
         <activity android:name=".CustomIconDemoActivity" />
         <activity android:name=".A2UISurfaceDSLDemoActivity" />
+        <activity android:name=".A2UIRpcDemoActivity" />
         <activity android:name=".ComposePageDemoActivity" />
     </application>
 

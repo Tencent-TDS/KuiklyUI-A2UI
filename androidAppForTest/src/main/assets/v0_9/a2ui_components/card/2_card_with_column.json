@@ -1,0 +1,53 @@
+{
+  "name": "Card - wrapping Column",
+  "description": "To show multiple elements, wrap them in a Column and pass that as Card.child",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-card-column",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-card-column",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "t2",
+              "t3"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": "Card title",
+            "variant": "h4"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": "Card body. Use Column to host multiple children.",
+            "variant": "body"
+          },
+          {
+            "id": "t3",
+            "component": "Text",
+            "text": "footer",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

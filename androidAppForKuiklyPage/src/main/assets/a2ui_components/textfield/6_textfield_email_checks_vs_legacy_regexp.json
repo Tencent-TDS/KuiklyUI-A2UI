@@ -1,17 +1,17 @@
 {
-  "name": "TextField - email validation (checks preferred, validationRegexp legacy)",
-  "description": "Demonstrates two approaches: 'checks' is the preferred validation mechanism in A2UI v0.9+; 'validationRegexp' is kept only for backward compatibility with older A2UI protocol versions.",
+  "name": "TextField - email and regex validation via @checks",
+  "description": "Both editable values use model bindings. The email function and regex function validate input through A2UI 1.0 @checks.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-tf-regexp",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-tf-regexp",
         "components": [
@@ -23,24 +23,28 @@
           {
             "id": "col",
             "component": "Column",
-            "children": ["tf_checks", "tf"]
+            "children": [
+              "tf_checks",
+              "tf"
+            ]
           },
           {
             "id": "tf_checks",
             "component": "TextField",
-            "label": "Email (checks - preferred)",
+            "label": "Email (email via @checks)",
             "value": {
-              "path": "/email"
+              "@path": "/email"
             },
             "variant": "shortText",
-            "checks": [
+            "@checks": [
               {
                 "condition": {
-                  "call": "email",
+                  "@call": "email",
                   "args": {
-                    "value": { "path": "/email" }
-                  },
-                  "returnType": "boolean"
+                    "value": {
+                      "@path": "/email"
+                    }
+                  }
                 },
                 "message": "Please enter a valid email address"
               }
@@ -49,20 +53,36 @@
           {
             "id": "tf",
             "component": "TextField",
-            "label": "Email (validationRegexp - legacy)",
-            "value": "",
+            "label": "Email (regex via @checks)",
+            "value": {
+              "@path": "/tf_validation_value"
+            },
             "variant": "shortText",
-            "validationRegexp": "^[^@]+@[^@]+\\.[^@]+$"
+            "@checks": [
+              {
+                "condition": {
+                  "@call": "regex",
+                  "args": {
+                    "value": {
+                      "@path": "/tf_validation_value"
+                    },
+                    "pattern": "^[^@]+@[^@]+\\.[^@]+$"
+                  }
+                },
+                "message": "Please enter a value matching the required pattern"
+              }
+            ]
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-tf-regexp",
         "value": {
-          "email": ""
+          "email": "",
+          "tf_validation_value": ""
         }
       }
     }

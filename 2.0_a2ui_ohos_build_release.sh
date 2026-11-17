@@ -12,6 +12,7 @@
 # kuikly's publish/2.0_ohos_build_release.sh.
 
 set -e
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Standalone A2UI project: the script lives at the project root itself.

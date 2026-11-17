@@ -101,42 +101,20 @@ struct Index {
 
       Scroll() {
         Column() {
-          // ===== Group 1: A2UI 协议测试 =====
-          this.SectionHeader('A2UI 协议测试')
-
+          this.SectionHeader('按协议版本运行')
           this.DemoEntry(new DemoEntryParams(
-            '函数测试',
-            '展示 A2UI v0.9 basic catalog 内建 14 个函数：required / regex / formatDate / pluralize / and / or 等',
-            'λ',
-            '#4CAF50',
-            () => { router.pushUrl({ url: 'pages/FunctionDemoPage' }); }
+            'A2UI 0.9',
+            '原样归档的组件、绑定、函数、主题和官方示例，包含预期非法样本',
+            '0.9',
+            '#607D8B',
+            () => { router.pushUrl({ url: 'pages/AssetBrowserPage', params: { directory: 'v0_9' } }); }
           ))
-
           this.DemoEntry(new DemoEntryParams(
-            '数据绑定测试',
-            '展示 A2UI v0.9 数据绑定 11 项能力：绝对/相对路径、ChildList 模板、双向绑定、formatString 插值、Action 上下文等',
-            '🔗',
-            '#2196F3',
-            () => { router.pushUrl({ url: 'pages/DataBindingDemoPage' }); }
-          ))
-
-          this.DemoEntry(new DemoEntryParams(
-            '主题测试',
-            '展示 A2UI v0.9 主题字段能力：createSurface.theme.primaryColor / iconUrl / agentDisplayName、非法值 fallback、默认主题等',
-            '🎨',
-            '#9C27B0',
-            () => { router.pushUrl({ url: 'pages/ThemeDemoPage' }); }
-          ))
-
-          // ===== Group 2: A2UI 协议官方示例 =====
-          this.SectionHeader('A2UI 协议官方示例')
-
-          this.DemoEntry(new DemoEntryParams(
-            'A2UI v0.9 协议官方示例',
-            '展示 A2UI v0.9 协议规范中的 36 个官方示例卡片（启动一次性加载了36个json文件渲染UI卡片，待优化）',
-            '📖',
-            '#FF9900',
-            () => { router.pushUrl({ url: 'pages/OfficialExamplePage' }); }
+            'A2UI 1.0',
+            '独立的 1.0 严格模式样本目录，不混入旧版语料',
+            '1.0',
+            '#F39C12',
+            () => { router.pushUrl({ url: 'pages/AssetBrowserPage', params: { directory: 'v1_0' } }); }
           ))
         }
         .padding({ left: 16, right: 16, top: 8, bottom: 16 })

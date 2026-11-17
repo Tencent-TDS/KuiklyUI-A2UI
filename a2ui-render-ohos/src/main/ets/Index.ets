@@ -50,7 +50,7 @@
  */
 
 export { A2UISurfaceView, A2UISurfaceViewController, A2UISurfaceViewListener } from './A2UISurfaceView';
-export { registerA2UICustomFunction, unregisterA2UICustomFunction } from './A2UISurfaceView';
+export { registerA2UICustomFunction, registerA2UICatalogFunction, unregisterA2UICustomFunction } from './A2UISurfaceView';
 export {
   registerA2UICustomRenderView,
   unregisterA2UICustomRenderView,

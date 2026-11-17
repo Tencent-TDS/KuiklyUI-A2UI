@@ -3,42 +3,71 @@
   "description": "自定义函数 calculateDiscount 接收 price 和 rate 参数，返回折后价格（number）。Demo 注册实现为 price * rate。",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "cf-num-1",
-"catalogId": "custom_functions_catalog.json"
+        "catalogId": "custom_functions_catalog_v1_0.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "cf-num-1",
         "components": [
-          { "id": "root", "component": "Card", "child": "col" },
-          { "id": "col", "component": "Column", "children": ["title", "row"] },
-          { "id": "title", "component": "Text", "text": "calculateDiscount(price, rate) → Number", "variant": "caption" },
-          { "id": "row", "component": "Row", "children": ["label", "price"] },
-          { "id": "label", "component": "Text", "text": "折后价: ¥", "variant": "body" },
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "row"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "calculateDiscount(price, rate) → Number",
+            "variant": "caption"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "label",
+              "price"
+            ]
+          },
+          {
+            "id": "label",
+            "component": "Text",
+            "text": "折后价: ¥",
+            "variant": "body"
+          },
           {
             "id": "price",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
-                "value": "${calculateDiscount(price:${/originalPrice}, rate:${/discountRate})}"
-              },
-              "returnType": "string"
-            },
-            "variant": "h3"
+                "value": "### ${calculateDiscount(price:${/originalPrice}, rate:${/discountRate})}"
+              }
+            }
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "cf-num-1",
-        "value": { "originalPrice": 199.0, "discountRate": 0.7 }
+        "value": {
+          "originalPrice": 199.0,
+          "discountRate": 0.7
+        }
       }
     }
   ]

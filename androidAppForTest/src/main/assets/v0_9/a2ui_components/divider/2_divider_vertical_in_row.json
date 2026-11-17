@@ -1,0 +1,53 @@
+{
+  "name": "Divider - vertical in Row",
+  "description": "Vertical divider separating two Text in a Row",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-divider-v",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-divider-v",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "row"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "a",
+              "d",
+              "b"
+            ],
+            "align": "center"
+          },
+          {
+            "id": "a",
+            "component": "Text",
+            "text": "Left",
+            "variant": "body"
+          },
+          {
+            "id": "d",
+            "component": "Divider",
+            "axis": "vertical"
+          },
+          {
+            "id": "b",
+            "component": "Text",
+            "text": "Right",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

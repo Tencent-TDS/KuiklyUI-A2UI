@@ -16,8 +16,14 @@
 package com.tencent.kuikly.a2ui.protocol
 
 /**
- * A2UI v0.9 protocol message types.
- * Defines all supported message operations in the A2UI protocol.
+ * A2UI protocol message types.
+ *
+ * Covers both v0.9 and v1.0 wire messages. The `*_FUNCTION*` entries below
+ * are v1.0-only additions that implement the bidirectional RPC channel
+ * (`callRendererFunction` / `rendererFunctionResponse` /
+ * `callAgentFunction` / `agentFunctionResponse`). The legacy v0.9
+ * [CALL_METHOD] value is kept for backwards compatibility with existing
+ * v0.9 payloads and MUST NOT be reused for v1.0 RPC.
  */
 enum class A2UIMessageType(val value: String) {
     // Surface lifecycle
@@ -52,6 +58,19 @@ enum class A2UIMessageType(val value: String) {
     // Stream control
     STREAM_BEGIN("streamBegin"),
     STREAM_END("streamEnd"),
+
+    // -------------------------------------------------------------------
+    // v1.0 bidirectional RPC (not valid on v0.9 streams).
+    //
+    // CALL_RENDERER_FUNCTION      : agent  -> renderer invocation
+    // RENDERER_FUNCTION_RESPONSE  : renderer -> agent  reply
+    // CALL_AGENT_FUNCTION         : renderer -> agent  invocation
+    // AGENT_FUNCTION_RESPONSE     : agent  -> renderer reply
+    // -------------------------------------------------------------------
+    CALL_RENDERER_FUNCTION("callRendererFunction"),
+    RENDERER_FUNCTION_RESPONSE("rendererFunctionResponse"),
+    CALL_AGENT_FUNCTION("callAgentFunction"),
+    AGENT_FUNCTION_RESPONSE("agentFunctionResponse"),
 
     // Unknown
     UNKNOWN("unknown");

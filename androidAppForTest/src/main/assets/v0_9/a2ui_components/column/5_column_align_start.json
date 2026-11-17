@@ -1,0 +1,47 @@
+{
+  "name": "Column - align=start",
+  "description": "Column align=start (cross-axis): children left-aligned",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-col-align-start",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-col-align-start",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "a",
+              "b"
+            ],
+            "align": "start"
+          },
+          {
+            "id": "a",
+            "component": "Text",
+            "text": "Short",
+            "variant": "body"
+          },
+          {
+            "id": "b",
+            "component": "Text",
+            "text": "Longer text in column",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

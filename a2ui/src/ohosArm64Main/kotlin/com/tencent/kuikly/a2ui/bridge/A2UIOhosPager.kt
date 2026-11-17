@@ -99,12 +99,11 @@ open class A2UIOhosPager : Pager() {
         // After this, all events go to A2UIPager.onReceivePagerEvent()
         // Pass device screen size from this Pager's pageData (set by KRNativeRenderController.createPageParams)
         // so that A2UIPager can size full-screen overlays (Modal) correctly.
-        val configJson = if (pageData.deviceWidth > 0f || pageData.deviceHeight > 0f) {
-            "{\"deviceWidth\":${pageData.deviceWidth},\"deviceHeight\":${pageData.deviceHeight}}"
-        } else {
-            null
-        }
-        A2UIBridgeManager.callKotlinMethod(A2UIKotlinMethod.INIT, pagerId, configJson, null)
+        val incomingConfig = pageData.params.optString("a2uiConfig", "")
+        val config = if (incomingConfig.isNotEmpty()) JSONObject(incomingConfig) else JSONObject()
+        if (pageData.deviceWidth > 0f) config.put("deviceWidth", pageData.deviceWidth)
+        if (pageData.deviceHeight > 0f) config.put("deviceHeight", pageData.deviceHeight)
+        A2UIBridgeManager.callKotlinMethod(A2UIKotlinMethod.INIT, pagerId, config.toString(), null)
     }
 
     companion object {
@@ -212,6 +211,36 @@ open class A2UIOhosPager : Pager() {
                             "$name\n$spec\n$argsJson",
                             null,
                             1
+                        )
+                    } catch (_: Throwable) {
+                        null
+                    }
+                }
+                A2UINativeMethod.SEND_RPC_ENVELOPE -> {
+                    // arg0 = instanceId, arg1 = envelopeJson.
+                    //
+                    // On OHOS we route this through the standard Kuikly
+                    // Module channel instead of letting it reach
+                    // `com_tencent_kuikly_CallNative` with no handler
+                    // (which would silently drop every renderer-to-agent
+                    // RPC). The ArkTS-side `A2UIBridgeModule.rpcEnvelope`
+                    // method is responsible for uploading the envelope to
+                    // the agent transport (WebSocket / SSE / \u2026).
+                    //
+                    // syncCall = 0 because RPC traffic is inherently async
+                    // and the agent response, when it arrives, is fed back
+                    // into the Kotlin core via the regular WRITE_STREAM
+                    // path \u2014 NOT via the return value of this call.
+                    val instanceId = arg0 as? String ?: return null
+                    val envelopeJson = arg1 as? String ?: return null
+                    return try {
+                        BridgeManager.callModuleMethod(
+                            instanceId,
+                            "A2UIBridgeModule",
+                            "rpcEnvelope",
+                            envelopeJson,
+                            null,
+                            0
                         )
                     } catch (_: Throwable) {
                         null

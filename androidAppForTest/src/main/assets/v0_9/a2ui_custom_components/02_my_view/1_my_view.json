@@ -1,0 +1,31 @@
+{
+  "name": "MyA2UIView 自定义组件",
+  "description": "自定义 MyA2UIView 组件，支持 text 和 textColor 属性。演示最简单的自定义组件注册和属性设置。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "cc-my-1",
+        "catalogId": "custom_components_catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "cc-my-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "main-column" },
+          { "id": "main-column", "component": "Column", "children": ["title", "desc", "myView"], "align": "stretch" },
+          { "id": "title", "component": "Text", "text": "MyA2UIView 组件", "variant": "h3" },
+          { "id": "desc", "component": "Text", "text": "自定义简单视图，支持 text 和 textColor 属性", "variant": "caption" },
+          {
+            "id": "myView",
+            "component": "MyA2UIView",
+            "text": "Hello from MyA2UIView! 🎉",
+            "textColor": "#6200EE"
+          }
+        ]
+      }
+    }
+  ]
+}

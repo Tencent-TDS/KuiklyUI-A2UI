@@ -23,7 +23,7 @@ import org.json.JSONObject
 /**
  * Demo-only helpers for feeding A2UI messages into [A2UISurfaceView].
  *
- * The A2UI v0.9 protocol defines the server-to-client channel as a stream of
+ * The A2UI protocol defines the server-to-client channel as a stream of
  * JSON *objects* (envelopes). Some demo assets in this project package multiple
  * envelopes as a single JSON *array* for convenience — that array wrapper is
  * NOT part of the protocol.
@@ -62,6 +62,10 @@ object A2UIDemoStreamUtil {
                     Log.e(TAG, "writeMessages: failed to parse JSON array: ${e.message}", e)
                     return
                 }
+                if ((0 until array.length()).any { array.optJSONObject(it)?.optString("version") != "1.0" }) {
+                    Log.e(TAG, "writeMessages: explicit version 1.0 required for every envelope")
+                    return
+                }
                 for (i in 0 until array.length()) {
                     val obj = array.optJSONObject(i)
                     if (obj == null) {
@@ -77,7 +81,11 @@ object A2UIDemoStreamUtil {
             '{' -> {
                 // Validate it parses as an object; still forward the original string on success
                 try {
-                    JSONObject(jsonArrayOrObject)
+                    val envelope = JSONObject(jsonArrayOrObject)
+                    if (envelope.optString("version") != "1.0") {
+                        Log.e(TAG, "writeMessages: explicit version 1.0 required")
+                        return
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "writeMessages: failed to parse JSON object: ${e.message}", e)
                     return

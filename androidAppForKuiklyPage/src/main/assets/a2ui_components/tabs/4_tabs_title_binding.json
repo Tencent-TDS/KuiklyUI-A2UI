@@ -3,15 +3,15 @@
   "description": "Tab titles bound to data model paths",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-tabs-binding",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-tabs-binding",
         "components": [
@@ -26,13 +26,13 @@
             "tabs": [
               {
                 "title": {
-                  "path": "/tab1"
+                  "@path": "/tab1"
                 },
                 "child": "c1"
               },
               {
                 "title": {
-                  "path": "/tab2"
+                  "@path": "/tab2"
                 },
                 "child": "c2"
               }
@@ -54,7 +54,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-tabs-binding",
         "value": {

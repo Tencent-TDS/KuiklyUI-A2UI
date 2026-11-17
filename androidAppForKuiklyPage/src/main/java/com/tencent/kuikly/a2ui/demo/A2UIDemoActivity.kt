@@ -39,7 +39,7 @@ import androidx.appcompat.app.AppCompatActivity
  *
  * Group 1 — Kuikly 页面接入示例：
  *   卡片场景接入示例 / 自定义函数示例 / 自定义组件示例 / 自定义 Icon 图片 / Compose 页面接入示例
- * Group 2 — 组件展示：v0.9 协议的 18 个语义化组件
+ * Group 2 — 组件展示：v1.0 协议的 18 个语义化组件
  */
 class A2UIDemoActivity : AppCompatActivity() {
 
@@ -134,6 +134,15 @@ class A2UIDemoActivity : AppCompatActivity() {
         })
 
         contentLayout.addView(createDemoEntry(
+            title = "RPC 回路 Demo",
+            description = "演示 A2UI v1.0 双向 RPC：Agent → Renderer 本地处理 openPage，Renderer → Agent 发起 fetchUser 并由 Mock Agent 应答",
+            iconText = "🔁",
+            color = "#1A73E8"
+        ) {
+            startActivity(Intent(this, A2UIRpcDemoActivity::class.java))
+        })
+
+        contentLayout.addView(createDemoEntry(
             title = "Compose 页面接入示例",
             description = "在 Kuikly Compose 页面（:compose 模块）里承载 A2UI，展示 Compose 世界的 A2UI 集成",
             iconText = "🧵",
@@ -147,7 +156,7 @@ class A2UIDemoActivity : AppCompatActivity() {
 
         contentLayout.addView(createDemoEntry(
             title = "组件展示",
-            description = "展示 A2UI v0.9 协议语义化组件：Text、Row、Column、Card 等 18 个组件",
+            description = "展示 A2UI v1.0 协议语义化组件：Text、Row、Column、Card 等 18 个组件",
             iconText = "🔧",
             color = "#F39C12"
         ) {

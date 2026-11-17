@@ -1,0 +1,33 @@
+{
+  "name": "TextField - variant=obscured",
+  "description": "Obscured text input (password)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tf-obscured",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tf-obscured",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "tf"
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "Password",
+            "value": "",
+            "variant": "obscured"
+          }
+        ]
+      }
+    }
+  ]
+}

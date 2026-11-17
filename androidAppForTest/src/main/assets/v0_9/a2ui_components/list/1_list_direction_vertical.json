@@ -1,0 +1,75 @@
+{
+  "name": "List - direction=vertical (default)",
+  "description": "Vertical scrollable list",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-list-vertical",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-list-vertical",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "list"
+          },
+          {
+            "id": "list",
+            "component": "List",
+            "children": [
+              "li1",
+              "li2",
+              "li3",
+              "li4",
+              "li5",
+              "li6"
+            ],
+            "direction": "vertical"
+          },
+          {
+            "id": "li1",
+            "component": "Text",
+            "text": "Vertical Item 1",
+            "variant": "body"
+          },
+          {
+            "id": "li2",
+            "component": "Text",
+            "text": "Vertical Item 2",
+            "variant": "body"
+          },
+          {
+            "id": "li3",
+            "component": "Text",
+            "text": "Vertical Item 3",
+            "variant": "body"
+          },
+          {
+            "id": "li4",
+            "component": "Text",
+            "text": "Vertical Item 4",
+            "variant": "body"
+          },
+          {
+            "id": "li5",
+            "component": "Text",
+            "text": "Vertical Item 5",
+            "variant": "body"
+          },
+          {
+            "id": "li6",
+            "component": "Text",
+            "text": "Vertical Item 6",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

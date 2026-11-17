@@ -1,0 +1,43 @@
+{
+  "name": "Button - variant=primary",
+  "description": "Primary call-to-action button",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-btn-primary",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-btn-primary",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "btn"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "lbl",
+            "action": {
+              "event": {
+                "name": "primaryClicked"
+              }
+            },
+            "variant": "primary"
+          },
+          {
+            "id": "lbl",
+            "component": "Text",
+            "text": "Primary Action",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

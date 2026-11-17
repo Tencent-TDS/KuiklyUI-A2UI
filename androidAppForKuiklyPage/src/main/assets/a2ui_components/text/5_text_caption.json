@@ -3,41 +3,44 @@
   "description": "Text component with variant=caption (13dp / muted color #666666)",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-text-caption",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-text-caption",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["t-label", "t-value", "t-caption"]
+            "children": [
+              "t_label",
+              "t_value",
+              "t_caption"
+            ]
           },
           {
-            "id": "t-label",
+            "id": "t_label",
             "component": "Text",
             "text": "POSTED",
             "variant": "caption"
           },
           {
-            "id": "t-value",
+            "id": "t_value",
             "component": "Text",
-            "text": "Article Title",
-            "variant": "h4"
+            "text": "#### Article Title"
           },
           {
-            "id": "t-caption",
+            "id": "t_caption",
             "component": "Text",
             "text": "by John Doe • 5 min read",
             "variant": "caption"

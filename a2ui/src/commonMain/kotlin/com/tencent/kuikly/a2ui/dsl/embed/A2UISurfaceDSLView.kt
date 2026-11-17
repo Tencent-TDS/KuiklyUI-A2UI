@@ -18,6 +18,7 @@ package com.tencent.kuikly.a2ui.dsl.embed
 import com.tencent.kuikly.a2ui.dsl.A2UIDSLBridge
 import com.tencent.kuikly.a2ui.dsl.A2UIHost
 import com.tencent.kuikly.a2ui.dsl.A2UIViewRegistry
+import com.tencent.kuikly.a2ui.protocol.A2UIProtocolVersion
 import com.tencent.kuikly.core.base.DeclarativeBaseView
 import com.tencent.kuikly.core.base.ViewContainer
 import com.tencent.kuikly.core.base.domChildren
@@ -253,6 +254,10 @@ class A2UISurfaceDSLView
         )
         wireBridgeCallbacks(bridge)
         bridge.initialize()
+        bridge.protocolAdapter?.let { adapter ->
+            getViewAttr().expectedProtocolVersion?.let { adapter.setExpectedProtocolVersion(it) }
+            getViewAttr().strictProtocol?.let { adapter.strictV10 = it }
+        }
         dslBridge = bridge
 
         // Register in A2UIBridgeManager so that platform callbacks (picker result,
@@ -436,6 +441,10 @@ class A2UISurfaceDSLView
         )
         wireBridgeCallbacks(bridge)
         bridge.initialize()
+        bridge.protocolAdapter?.let { adapter ->
+            getViewAttr().expectedProtocolVersion?.let { adapter.setExpectedProtocolVersion(it) }
+            getViewAttr().strictProtocol?.let { adapter.strictV10 = it }
+        }
         A2UIBridgeManagerAccessor.registerDslBridge(instanceId, bridge)
         dslBridge = bridge
     }
@@ -479,11 +488,18 @@ class A2UISurfaceDSLView
 
 /**
  * Attributes for [A2UISurfaceDSLView]. Inherits all layout / visual attrs
- * (width/height/flex/backgroundColor/…) from [DivAttr]. No A2UI-specific attrs
- * are needed for v1 — the surface content is driven via imperative
- * writeStream() / finishStream() calls on the view instance.
+ * (width/height/flex/backgroundColor/…) from [DivAttr]. Protocol configuration
+ * is optional; omitted settings retain the library's compatibility defaults.
  */
-class A2UISurfaceAttr : DivAttr()
+class A2UISurfaceAttr : DivAttr() {
+    internal var expectedProtocolVersion: A2UIProtocolVersion? = null
+    internal var strictProtocol: Boolean? = null
+
+    fun protocolConfig(expectedProtocolVersion: A2UIProtocolVersion? = null, strict: Boolean? = null) {
+        this.expectedProtocolVersion = expectedProtocolVersion
+        this.strictProtocol = strict
+    }
+}
 
 /**
  * Events for [A2UISurfaceDSLView].

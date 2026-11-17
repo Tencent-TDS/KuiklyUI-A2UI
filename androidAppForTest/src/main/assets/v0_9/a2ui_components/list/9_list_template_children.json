@@ -1,0 +1,102 @@
+{
+  "name": "List - template children",
+  "description": "List with dynamic rows generated from /people array",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-list-template",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-list-template",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "list"
+          },
+          {
+            "id": "list",
+            "component": "List",
+            "children": {
+              "componentId": "row",
+              "path": "/people"
+            },
+            "direction": "vertical"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "avatar",
+              "info"
+            ],
+            "align": "center"
+          },
+          {
+            "id": "avatar",
+            "component": "Image",
+            "url": {
+              "path": "/avatar"
+            },
+            "variant": "avatar"
+          },
+          {
+            "id": "info",
+            "component": "Column",
+            "children": [
+              "nm",
+              "sub"
+            ]
+          },
+          {
+            "id": "nm",
+            "component": "Text",
+            "text": {
+              "path": "/name"
+            },
+            "variant": "h5"
+          },
+          {
+            "id": "sub",
+            "component": "Text",
+            "text": {
+              "path": "/role"
+            },
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-list-template",
+        "value": {
+          "people": [
+            {
+              "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
+              "name": "Alice",
+              "role": "Engineer"
+            },
+            {
+              "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
+              "name": "Bob",
+              "role": "Designer"
+            },
+            {
+              "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
+              "name": "Carol",
+              "role": "Manager"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

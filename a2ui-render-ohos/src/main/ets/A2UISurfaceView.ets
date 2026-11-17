@@ -52,6 +52,19 @@ const a2uiActionCallbackRegistry = new Map<string, (tag: number, action: string)
 const a2uiPickerCallbackRegistry = new Map<string, (configJson: string) => void>();
 
 /**
+ * Global registry mapping instanceId → outbound RPC envelope callback.
+ *
+ * Populated by [A2UISurfaceViewController.setRpcEnvelopeOutboundHandler].
+ * Native-page hosts use this to forward A2UI v1.0 outbound envelopes
+ * (serialised `callAgentFunction` / error responses) onto their agent
+ * transport (WebSocket / SSE / …). When no callback is registered for
+ * an incoming envelope, it is logged and dropped; the KMP-side dispatcher
+ * timeout machinery will eventually fail any pending onComplete with
+ * `A2UIRpcError.Codes.TIMEOUT`.
+ */
+const a2uiRpcOutboundCallbackRegistry = new Map<string, (envelopeJson: string) => void>();
+
+/**
  * Handler type for a custom A2UI function.
  *
  * - `args`  : Resolved argument object from the A2UI stream.
@@ -310,6 +323,25 @@ export function registerA2UICustomFunction(
   a2uiNativeManager.registerA2UICustomFunctionInKmp(name, spec);
   for (const c of a2uiLiveControllers) {
     c.dispatchRegisterCustomFunction(name, spec);
+  }
+}
+
+export function registerA2UICatalogFunction(
+  name: string,
+  catalogId: string,
+  definitionJson: string,
+  handler: A2UICustomFunctionHandler | null = null
+): void {
+  if (name.length === 0 || catalogId.length === 0) return;
+  const definition = JSON.parse(definitionJson) as Record<string, Object>;
+  definition.catalogId = catalogId;
+  definition.name = name;
+  const spec = JSON.stringify(definition);
+  if (handler !== null) a2uiCustomFunctionHandlers.set(name, handler);
+  a2uiCustomFunctionDescriptors.set(`${catalogId}::${name}`, spec);
+  a2uiNativeManager.registerA2UICustomFunctionInKmp(name, spec);
+  for (const controller of a2uiLiveControllers) {
+    controller.dispatchRegisterCustomFunction(name, spec);
   }
 }
 
@@ -789,6 +821,7 @@ class A2UIEvent {
  */
 @Component
 export struct A2UISurfaceView {
+  @Prop configJson: string = '{}';
   /** Listener for surface events */
   listener?: A2UISurfaceViewListener;
   /** Callback when the surface view controller is ready */
@@ -817,6 +850,7 @@ export struct A2UISurfaceView {
         a2uiHeightCallbackRegistry.delete(instanceId);
         a2uiActionCallbackRegistry.delete(instanceId);
         a2uiPickerCallbackRegistry.delete(instanceId);
+        a2uiRpcOutboundCallbackRegistry.delete(instanceId);
       }
     }
     this.controller?.destroy();
@@ -829,7 +863,7 @@ export struct A2UISurfaceView {
       if (this.showKuikly && this.delegate) {
         Kuikly({
           pageName: 'a2ui',
-          pageData: {},
+          pageData: { a2uiConfig: this.configJson },
           nativeManager: a2uiNativeManager,
           delegate: this.delegate,
           onControllerReadyCallback: (renderController: KRNativeRenderController) => {
@@ -1046,6 +1080,194 @@ export class A2UISurfaceViewController {
   }
 
   /**
+   * Install an outbound sink for A2UI v1.0 RPC envelopes.
+   *
+   * The Kotlin core emits `A2UINativeMethod.SEND_RPC_ENVELOPE`
+   * (methodId=108) whenever a `callAgentFunction(…)` or an error
+   * response needs to leave the device; on OHOS, that envelope lands
+   * on the ArkTS `A2UIBridgeModule.rpcEnvelope` method (see
+   * `A2UIOhosPager.callNativeImpl`'s pre-dispatch), which then delegates
+   * to whatever sink was registered here for this surface's
+   * `instanceId`. Pass `null` to clear a previously-installed sink.
+   *
+   * Called on the ArkTS main event loop. The envelope is already a
+   * fully-formed wire JSON string — host apps typically just
+   * `webSocket.send(envelopeJson)` here. Inbound replies (from the
+   * agent) come back through the regular `writeStream(…)` API, which
+   * the KMP core splits by `instanceId` internally.
+   *
+   * Safe to call before the underlying render controller is ready;
+   * the sink is keyed by the controller's `instanceId`, and
+   * re-registered automatically on controller recreation.
+   */
+  setRpcEnvelopeOutboundHandler(
+    handler: ((envelopeJson: string) => void) | null
+  ): void {
+    this.rpcOutboundHandler = handler;
+    const id = this.getInstanceId();
+    if (id.length === 0) {
+      // Controller not ready yet; the handler will be flushed into the
+      // registry in `onRenderControllerReady` below.
+      return;
+    }
+    if (handler !== null) {
+      a2uiRpcOutboundCallbackRegistry.set(id, handler);
+    } else {
+      a2uiRpcOutboundCallbackRegistry.delete(id);
+    }
+  }
+
+  /**
+   * Deferred handler captured by [setRpcEnvelopeOutboundHandler] when the
+   * underlying render controller is not yet ready. Flushed into the
+   * module-scope registry inside `onRenderControllerReady`.
+   */
+  private rpcOutboundHandler: ((envelopeJson: string) => void) | null = null;
+
+  /**
+   * Install an inbound `callRendererFunction` handler for this surface.
+   *
+   * This is the OHOS parallel of Android's
+   * `A2UIBridgeManager.setRendererFunctionJsonHandler(instanceId, cb)`
+   * and iOS's `A2UIRpcBridge.setHandler(cb)`. The handler fires whenever
+   * the Kotlin dispatcher receives a `callRendererFunction` envelope for
+   * this surface, and the host is expected to ack with
+   * [respondToRpc] / [failRpc] (both are instance methods on this
+   * controller; see below).
+   *
+   * Pass `null` to clear a previously-installed handler. Safe to call
+   * before the underlying render controller is ready; the handler is
+   * cached locally and installed with the KMP side as soon as the
+   * controller's `instanceId` becomes available in
+   * [onRenderControllerReady]. On controller recreation the handler is
+   * automatically re-installed.
+   *
+   * ### Request-JSON shape
+   *
+   * The `requestJson` parameter is a stringified JSON object with the
+   * following shape (matches `A2UIBridgeManager.setRendererFunctionJsonHandler`):
+   *
+   * ```
+   *   { "surfaceId":"...", "requestId":"...", "name":"...",
+   *     "args":{...}, "timeoutMs":1234 }  // timeoutMs may be absent
+   * ```
+   *
+   * Hosts MUST echo `surfaceId` + `requestId` back into [respondToRpc]
+   * / [failRpc] so the Kotlin dispatcher can match the response to the
+   * originating call.
+   *
+   * ### Return value
+   *
+   * Returns `true` if the handler was accepted (either flushed right
+   * away to the NAPI shim, or buffered to flush on `onRenderControllerReady`).
+   * Returns `false` if the running `libkuikly_entry.so` is too old to
+   * expose the `a2uiSetRendererFunctionHandler` NAPI export — in that
+   * case the handler is NOT buffered and the host should surface a
+   * version-mismatch error.
+   */
+  setRendererFunctionHandler(
+    handler: ((requestJson: string) => void) | null
+  ): boolean {
+    // Probe the NAPI export up-front so we can give the host a reliable
+    // yes/no even when the controller is still booting. The probe is
+    // routed through [a2uiNativeManager] so this file does not need
+    // to import `libkuikly_entry.so` directly.
+    if (!a2uiNativeManager.isRendererFunctionHandlerSupportedInKmp()) {
+      return false;
+    }
+    this.rendererFunctionHandler = handler;
+    const id = this.getInstanceId();
+    if (id.length === 0) {
+      // Controller not ready yet; the handler will be flushed into the
+      // KMP side in `onRenderControllerReady` below.
+      return true;
+    }
+    if (handler !== null) {
+      a2uiNativeManager.setRendererFunctionHandlerInKmp(id, handler);
+    } else {
+      a2uiNativeManager.removeRendererFunctionHandlerInKmp(id);
+    }
+    return true;
+  }
+
+  /**
+   * Deferred inbound-RPC handler captured by [setRendererFunctionHandler]
+   * when the underlying render controller is not yet ready. Flushed into
+   * the KMP registry inside `onRenderControllerReady` (and again on every
+   * controller recreation).
+   */
+  private rendererFunctionHandler: ((requestJson: string) => void) | null = null;
+
+  /**
+   * Ack an inbound `callRendererFunction` with a success payload.
+   * `surfaceId` / `requestId` should come from the `requestJson` passed
+   * to the inbound handler installed via [setRendererFunctionHandler].
+   *
+   * Returns `true` on success; `false` if the controller is not ready or
+   * the NAPI export is missing (old `libkuikly_entry.so`).
+   */
+  respondToRpc(surfaceId: string, requestId: string, resultJson: string): boolean {
+    const id = this.getInstanceId();
+    if (id.length === 0) {
+      return false;
+    }
+    return a2uiNativeManager.respondToRpcInKmp(id, surfaceId, requestId, resultJson);
+  }
+
+  /**
+   * Fail an inbound `callRendererFunction` with an error code + message.
+   * Pass an empty string for `detailsJson` when no structured details
+   * are available.
+   *
+   * Returns `true` on success; `false` if the controller is not ready or
+   * the NAPI export is missing.
+   */
+  failRpc(
+    surfaceId: string, requestId: string,
+    code: string, message: string, detailsJson: string = ''
+  ): boolean {
+    const id = this.getInstanceId();
+    if (id.length === 0) {
+      return false;
+    }
+    return a2uiNativeManager.failRpcInKmp(id, surfaceId, requestId, code, message, detailsJson);
+  }
+
+  /**
+   * Issue an outbound `callAgentFunction` on this surface and resolve
+   * through `onComplete` when the agent replies (or times out). The
+   * payload passed to `onComplete` is the KMP dispatcher's completion
+   * JSON — either `{"ok":true, "result":{...}}` or
+   * `{"ok":false, "error":{"code":"...", "message":"...", "details":{...}?}}`
+   * — see `A2UIBridgeManager.invokeAgentFunctionJson` for the exact
+   * shape.
+   *
+   * `surfaceId` is the A2UI surface id to route the call to (must match
+   * the surface the host created via `createSurface`); passing an empty
+   * string yields an agent-wire envelope with no `surfaceId` field,
+   * which some agent implementations accept.
+   *
+   * Returns the minted requestId on success, or `null` if the controller
+   * is not ready, no outbound sink has been registered yet (no transport),
+   * or the NAPI export is missing.
+   */
+  invokeAgentFunction(
+    surfaceId: string,
+    name: string,
+    argsJson: string,
+    timeoutMs: number,
+    onComplete: (responseJson: string) => void
+  ): string | null {
+    const id = this.getInstanceId();
+    if (id.length === 0) {
+      return null;
+    }
+    return a2uiNativeManager.invokeAgentFunctionInKmp(
+      id, surfaceId, name, argsJson, timeoutMs, onComplete
+    );
+  }
+
+  /**
    * Called when the Kuikly render controller is ready.
    * At this point, the Kotlin A2UIOhosPager has been created and initialized.
    */
@@ -1098,6 +1320,25 @@ export class A2UISurfaceViewController {
     a2uiIconRegistry.forEach((uri: string, name: string) => {
       this.sendEvent(A2UIEvent.REGISTER_ICON, `${name}\n${uri}`);
     });
+
+    // If the host called `setRpcEnvelopeOutboundHandler(…)` before the
+    // controller was ready, flush the pending handler into the registry
+    // now that we finally have a real `instanceId`.
+    const resolvedId = this.getInstanceId();
+    if (this.rpcOutboundHandler !== null && resolvedId.length > 0) {
+      a2uiRpcOutboundCallbackRegistry.set(resolvedId, this.rpcOutboundHandler);
+    }
+
+    // Mirror the outbound-flush above for the inbound RPC handler:
+    // if the host pre-registered via `setRendererFunctionHandler(…)`
+    // before the controller came up, install it into the KMP side now.
+    // This also handles controller recreation — the handler reference
+    // is re-applied automatically.
+    if (this.rendererFunctionHandler !== null && resolvedId.length > 0) {
+      a2uiNativeManager.setRendererFunctionHandlerInKmp(
+        resolvedId, this.rendererFunctionHandler
+      );
+    }
 
     // Notify listener
     if (this.listener?.onSurfaceCreated) {
@@ -1278,6 +1519,20 @@ export class A2UISurfaceViewController {
     if (this.isReady) {
       this.sendEvent(A2UIEvent.DESTROY, '');
     }
+    // Clear the outbound RPC sink first so a late envelope from the
+    // core's teardown path doesn't fire into a nil host.
+    const id = this.getInstanceId();
+    if (id.length > 0) {
+      a2uiRpcOutboundCallbackRegistry.delete(id);
+      // Mirror the outbound-clear above: detach the inbound handler
+      // from the KMP side so the napi shim can release its reverse
+      // threadsafe-function.
+      if (this.rendererFunctionHandler !== null) {
+        a2uiNativeManager.removeRendererFunctionHandlerInKmp(id);
+      }
+    }
+    this.rpcOutboundHandler = null;
+    this.rendererFunctionHandler = null;
     this.renderController = null;
     this.isReady = false;
 
@@ -1491,6 +1746,30 @@ class A2UIBridgeModule extends KuiklyRenderBaseModule {
       } catch (e) {
         console.error(`[A2UIBridgeModule] custom view measurer '${viewName}' threw: ${e}`);
         return '';
+      }
+    } else if (method === 'rpcEnvelope') {
+      // v1.0 outbound RPC envelope from the Kotlin core. On OHOS the
+      // envelope arrives via `A2UIOhosPager.callNativeImpl`'s
+      // pre-dispatch (methodId=108 → A2UIBridgeModule.rpcEnvelope,
+      // syncCall=0), carrying a complete wire JSON string. Hand it to
+      // whichever outbound sink the native-page host registered for
+      // this instance; drop + log when no sink is wired. Inbound
+      // replies (from the agent) come back through the standard
+      // `writeStream(…)` path and are routed inside the KMP core.
+      const envelopeJson = params as string;
+      const rpcSink = a2uiRpcOutboundCallbackRegistry.get(this.instanceId);
+      if (rpcSink) {
+        try {
+          rpcSink(envelopeJson);
+        } catch (e) {
+          console.error(`[A2UIBridgeModule] rpcEnvelope outbound handler threw: ${e}`);
+        }
+      } else {
+        console.warn(
+          `[A2UIBridgeModule] Dropping outbound RPC envelope for instanceId='${this.instanceId}': ` +
+            `no rpcEnvelopeOutboundHandler is installed. Call ` +
+            `A2UISurfaceViewController.setRpcEnvelopeOutboundHandler(…) to wire the agent transport.`
+        );
       }
     } else if (method === 'debugLog') {
       // Debug log from Kotlin layer (println doesn't output to hilog on OHOS)

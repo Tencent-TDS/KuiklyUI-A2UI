@@ -1,0 +1,32 @@
+{
+  "name": "Image - variant icon",
+  "description": "Image with variant=icon (24dp small thumbnail)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-image-icon",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-image-icon",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "img"
+          },
+          {
+            "id": "img",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
+            "variant": "icon"
+          }
+        ]
+      }
+    }
+  ]
+}

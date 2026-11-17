@@ -1,0 +1,47 @@
+{
+  "name": "Button - action with context",
+  "description": "Button event carries a static context object {itemId, quantity}",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-btn-context",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-btn-context",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "btn"
+          },
+          {
+            "id": "btn",
+            "component": "Button",
+            "child": "lbl",
+            "action": {
+              "event": {
+                "name": "buyItem",
+                "context": {
+                  "itemId": "SKU-001",
+                  "quantity": 2
+                }
+              }
+            },
+            "variant": "primary"
+          },
+          {
+            "id": "lbl",
+            "component": "Text",
+            "text": "Buy Now",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

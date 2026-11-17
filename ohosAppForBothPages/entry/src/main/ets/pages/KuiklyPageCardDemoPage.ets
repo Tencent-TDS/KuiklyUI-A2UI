@@ -28,7 +28,7 @@ import {
  * Mirrors `androidAppForBothPages/KuiklyPageCardActivity`: boots a Kuikly
  * Pager with pageName `A2UISurfaceDemo` (declared as `@Page("A2UISurfaceDemo")`
  * on `A2UISurfaceDemoPager` in `:demo`). The Pager's own Flex tree
- * drops an `A2UISurface { ... }` DSL block that renders one A2UI v0.9
+ * drops an `A2UISurface { ... }` DSL block that renders one A2UI v1.0
  * weather card — same card body used by the Native path so users can
  * eyeball parity between the two integration modes.
  *

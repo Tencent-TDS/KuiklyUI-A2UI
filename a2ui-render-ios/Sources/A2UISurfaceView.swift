@@ -542,6 +542,28 @@ public class A2UISurfaceView: UIView {
         broadcastRegister(name: name, spec: spec)
     }
 
+    @objc(registerCatalogFunction:catalogId:definitionJson:handler:)
+    public static func registerCatalogFunction(
+        name: String,
+        catalogId: String,
+        definitionJson: String,
+        handler: Handler? = nil
+    ) {
+        guard !name.isEmpty, !catalogId.isEmpty,
+              let data = definitionJson.data(using: .utf8),
+              var definition = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return }
+        definition["catalogId"] = catalogId
+        definition["name"] = name
+        guard let specData = try? JSONSerialization.data(withJSONObject: definition),
+              let spec = String(data: specData, encoding: .utf8) else { return }
+        handlersLock.lock()
+        if let handler = handler { globalHandlers[name] = handler }
+        globalDescriptors["\(catalogId)::\(name)"] = spec
+        handlersLock.unlock()
+        A2UICustomFunctionRegistryBridge.shared?.register(name: name, spec: spec)
+        broadcastRegister(name: name, spec: spec)
+    }
+
     /// Reverse of `registerCustomFunction`. Safe to call for names that
     /// were never registered.
     @objc(unregisterCustomFunction:)
@@ -966,8 +988,28 @@ public class A2UISurfaceView: UIView {
 
     // MARK: - Properties
 
-    /// Unique instance ID for this A2UI surface
-    private let instanceId = "a2ui_\(UUID().uuidString)"
+    /// Unique instance ID for this A2UI surface.
+    ///
+    /// Public so native-page hosts can wire the KMP `A2UIBridgeManager`
+    /// RPC v1.0 three-piece set (`setRendererFunctionJsonHandler` /
+    /// `respondToAgentJson` / `invokeAgentFunctionJson`) to this specific
+    /// surface. The same id is used by the Kotlin core as the key into
+    /// `nativeBridgeMap` / `rendererFunctionHandlers`, so passing it back
+    /// through the commonMain API closes the loop with no extra routing.
+    public let instanceId = "a2ui_\(UUID().uuidString)"
+
+    /// Optional outbound sink for serialised A2UI v1.0 RPC envelopes.
+    ///
+    /// The Kotlin core issues `NativeMethod.sendRpcEnvelope` (methodId
+    /// = 108) whenever a `callAgentFunction(…)` or an error response
+    /// needs to leave the device. Native-page hosts that want to forward
+    /// these envelopes onto their agent transport (WebSocket, SSE, HTTP
+    /// long-poll …) install a handler here. Called on the Kuikly
+    /// Context Queue; keep the work brief or hop off before doing IO.
+    /// Safe to leave `nil` — the envelope is simply dropped and the
+    /// KMP-side dispatcher timeout machinery eventually fails any
+    /// pending onComplete callback with `A2UIRpcError.Codes.TIMEOUT`.
+    public var rpcEnvelopeOutboundHandler: ((String) -> Void)?
 
     /// The A2UI Core Entry (Kotlin/Native compiled class) resolved at
     /// runtime through `NSClassFromString("A2UICoreEntry")`; typed via the
@@ -1025,6 +1067,12 @@ public class A2UISurfaceView: UIView {
         /// Invoke a previously-registered custom A2UI function on the native (platform) side.
         /// See A2UINativeMethod.INVOKE_CUSTOM_FUNCTION for full semantics.
         static let invokeCustomFunction = 107
+        /// Outbound v1.0 RPC envelope (renderer → agent). See
+        /// A2UINativeMethod.SEND_RPC_ENVELOPE / `A2UIBridgeManager.emitRpcWire`
+        /// on the KMP side. arg1 = instanceId, arg2 = complete envelope
+        /// JSON. Hosts forward the envelope to their agent transport via
+        /// `rpcEnvelopeOutboundHandler`.
+        static let sendRpcEnvelope = 108
     }
 
     /// A2UI Kotlin Method IDs (must match A2UIKotlinMethod.kt)
@@ -1899,6 +1947,22 @@ extension A2UISurfaceView: A2UICoreEntryDelegateProtocol {
                   let spec = arg3 as? String else { return nil }
             let argsJson = arg2 as? String ?? "{}"
             return invokeCustomFunctionLocally(name: name, argsJson: argsJson, spec: spec)
+
+        case NativeMethod.sendRpcEnvelope:
+            // v1.0 outbound RPC envelope. arg1 = instanceId, arg2 = complete
+            // wire envelope JSON. The envelope is already fully formed by
+            // the Kotlin core; we just hand it to the registered sink.
+            // A2UI's inbound replies (from the agent) come back through
+            // the regular `writeStream(…)` API.
+            guard let envelopeJson = arg2 as? String else { return nil }
+            if let sink = rpcEnvelopeOutboundHandler {
+                sink(envelopeJson)
+            } else {
+                NSLog(
+                    "[A2UISurfaceView] Dropping outbound RPC envelope for instanceId='%@': no rpcEnvelopeOutboundHandler is installed. Set rpcEnvelopeOutboundHandler on this A2UISurfaceView to wire the agent transport.",
+                    instanceId
+                )
+            }
 
         default:
             break

@@ -20,12 +20,16 @@ import { KuiklyRenderAdapterManager } from '@kuikly-open/render';
 import { A2UIVideoViewAdapter } from '../a2ui/adapters/A2UIVideoViewAdapter';
 import { A2UIAudioViewAdapter } from '../a2ui/adapters/A2UIAudioViewAdapter';
 import { registerA2UIIcons, A2UI_ICON_FALLBACK_KEY } from '@kuikly-a2ui-open/render';
+import { installCustomComponentDemo } from '../pages/CustomComponentDemoPage';
+import { installCustomFunctionDemo } from '../pages/CustomFunctionDemoPage';
 
 const TAG = 'A2UIDemoAbility';
 
 export default class A2UIDemoAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, TAG, 'Ability onCreate');
+    installCustomComponentDemo();
+    installCustomFunctionDemo();
 
     // Register the video adapter so A2UI's "Video" component (KRVideoView) can
     // render an actual native video panel. Mirrors Android A2UIDemoApplication

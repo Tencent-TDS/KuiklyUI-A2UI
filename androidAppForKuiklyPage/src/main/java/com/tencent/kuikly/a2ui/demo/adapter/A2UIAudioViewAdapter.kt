@@ -32,7 +32,7 @@ import com.tencent.kuikly.core.render.android.adapter.IKRAudioViewListener
 import com.tencent.kuikly.core.render.android.expand.component.KRAudioPlayState
 
 /**
- * Audio player adapter for the A2UI demo, backing the A2UI v0.9 "AudioPlayer" component.
+ * Audio player adapter for the A2UI demo, backing the A2UI v1.0 "AudioPlayer" component.
  *
  * KRAudioView (created by A2UISurfaceView) delegates the actual playback + transport
  * controls to this adapter via [createAudioView]. The A2UI AudioPlayer catalog entry

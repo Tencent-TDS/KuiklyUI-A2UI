@@ -1,6 +1,7 @@
 {
   "src": [
     "pages/Index",
+    "pages/AssetBrowserPage",
     "pages/OfficialExamplePage",
     "pages/ComponentTestPage",
     "pages/FunctionDemoPage",

@@ -1,0 +1,65 @@
+{
+  "name": "Column - template children",
+  "description": "Column generates children dynamically from /items",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-col-template",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-col-template",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": {
+              "componentId": "li",
+              "path": "/items"
+            }
+          },
+          {
+            "id": "li",
+            "component": "Text",
+            "text": {
+              "path": "/text"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-col-template",
+        "value": {
+          "items": [
+            {
+              "text": "1. First item from /items"
+            },
+            {
+              "text": "2. Second item from /items"
+            },
+            {
+              "text": "3. Third item from /items"
+            },
+            {
+              "text": "4. Fourth item from /items"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -6,6 +6,7 @@
     "pages/CustomComponentDemoPage",
     "pages/CustomFunctionDemoPage",
     "pages/CustomIconDemoPage",
-    "pages/NativeCardDemoPage"
+    "pages/NativeCardDemoPage",
+    "pages/A2UIRpcDemoPage"
   ]
 }

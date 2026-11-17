@@ -24,20 +24,10 @@ targets:
       # A2UIComponentTestViewController, etc.).
       - path: ../iosShared/Sources
         type: group
-      # Test-only asset dirs — mirror androidAppForTest/assets. No component
-      # / custom_component / custom_function dirs shipped here because
-      # A2UIComponentTest in this app resolves via the test-only dirs
-      # (databinding_tests / theme_tests / function_tests etc.).
-      - path: Resources/a2ui_databinding_tests
+      - path: Resources/v0_9
         type: folder
         buildPhase: resources
-      - path: Resources/a2ui_examples
-        type: folder
-        buildPhase: resources
-      - path: Resources/a2ui_function_tests
-        type: folder
-        buildPhase: resources
-      - path: Resources/a2ui_theme_tests
+      - path: Resources/v1_0
         type: folder
         buildPhase: resources
     settings:

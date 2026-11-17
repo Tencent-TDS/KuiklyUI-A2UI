@@ -1,0 +1,77 @@
+{
+  "name": "Icon - communication",
+  "description": "Communication-related icons",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-icon-comm",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-icon-comm",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "lbl_comm",
+              "row"
+            ]
+          },
+          {
+            "id": "lbl_comm",
+            "component": "Text",
+            "text": "Icons: mail, phone, call, send, notifications",
+            "variant": "caption"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "i_mail",
+              "i_phone",
+              "i_call",
+              "i_send",
+              "i_notifications"
+            ],
+            "justify": "spaceBetween"
+          },
+          {
+            "id": "i_mail",
+            "component": "Icon",
+            "name": "mail"
+          },
+          {
+            "id": "i_phone",
+            "component": "Icon",
+            "name": "phone"
+          },
+          {
+            "id": "i_call",
+            "component": "Icon",
+            "name": "call"
+          },
+          {
+            "id": "i_send",
+            "component": "Icon",
+            "name": "send"
+          },
+          {
+            "id": "i_notifications",
+            "component": "Icon",
+            "name": "notifications"
+          }
+        ]
+      }
+    }
+  ]
+}

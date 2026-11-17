@@ -1,0 +1,32 @@
+{
+  "name": "Text - variant h2",
+  "description": "Text component with variant=h2 (32dp / bold)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-h2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-h2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "title"
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Heading 2 - Section Title",
+            "variant": "h2"
+          }
+        ]
+      }
+    }
+  ]
+}

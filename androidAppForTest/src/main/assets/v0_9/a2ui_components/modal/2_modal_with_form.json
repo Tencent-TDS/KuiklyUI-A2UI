@@ -1,0 +1,98 @@
+{
+  "name": "Modal - with form content",
+  "description": "Modal whose content is a form (TextField + CheckBox)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-modal-form",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-modal-form",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "hint",
+              "modal"
+            ]
+          },
+          {
+            "id": "hint",
+            "component": "Text",
+            "text": "Open settings modal",
+            "variant": "body"
+          },
+          {
+            "id": "modal",
+            "component": "Modal",
+            "trigger": "trigBtn",
+            "content": "form"
+          },
+          {
+            "id": "trigBtn",
+            "component": "Button",
+            "child": "trigTxt",
+            "action": {
+              "event": {
+                "name": "openSettings"
+              }
+            },
+            "variant": "default"
+          },
+          {
+            "id": "trigTxt",
+            "component": "Text",
+            "text": "Settings",
+            "variant": "body"
+          },
+          {
+            "id": "form",
+            "component": "Column",
+            "children": [
+              "formTitle",
+              "tf",
+              "tfLong",
+              "ckb"
+            ]
+          },
+          {
+            "id": "formTitle",
+            "component": "Text",
+            "text": "Settings",
+            "variant": "h4"
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "Username",
+            "value": ""
+          },
+          {
+            "id": "tfLong",
+            "component": "TextField",
+            "label": "Bio",
+            "variant": "longText",
+            "value": ""
+          },
+          {
+            "id": "ckb",
+            "component": "CheckBox",
+            "label": "Enable notifications",
+            "value": true
+          }
+        ]
+      }
+    }
+  ]
+}

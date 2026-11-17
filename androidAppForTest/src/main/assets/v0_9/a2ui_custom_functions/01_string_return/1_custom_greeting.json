@@ -1,0 +1,43 @@
+{
+  "name": "自定义函数返回 String",
+  "description": "自定义函数 getGreeting 返回字符串，绑定到 Text.text。Demo 注册了 getGreeting 函数，接收 name 参数，返回 'Hello, {name}!'。",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "cf-str-1",
+"catalogId": "custom_functions_catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "cf-str-1",
+        "components": [
+          { "id": "root", "component": "Card", "child": "col" },
+          { "id": "col", "component": "Column", "children": ["title", "result"] },
+          { "id": "title", "component": "Text", "text": "getGreeting(name) → String", "variant": "caption" },
+          {
+            "id": "result",
+            "component": "Text",
+            "text": {
+              "call": "getGreeting",
+              "args": {
+                "name": { "path": "/userName" }
+              },
+              "returnType": "string"
+            },
+            "variant": "h3"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "cf-str-1",
+        "value": { "userName": "Kuikly" }
+      }
+    }
+  ]
+}

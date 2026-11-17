@@ -65,6 +65,11 @@ data class A2UIMessage(
 
 /**
  * Surface configuration for createSurface message.
+ *
+ * Field names mirror the A2UI v1.0 `createSurface` schema one-to-one; the
+ * official property set is exactly `surfaceId, catalogId, sendDataModel,
+ * components, dataModel, metadata`. Nothing is renamed on the way in, and
+ * no non-schema field (such as a `catalogs` allow-list) is modelled here.
  */
 data class A2UISurfaceConfig(
     /** Surface width in dp */
@@ -74,5 +79,14 @@ data class A2UISurfaceConfig(
     /** Background color */
     val backgroundColor: String? = null,
     /** Whether the surface supports incremental rendering */
-    val incrementalRender: Boolean = true
+    val incrementalRender: Boolean = true,
+
+    /**
+     * v1.0 only: the default catalog for components that do not carry an
+     * explicit `@catalogId` override. A plain string identifier — the spec
+     * conventionally formats it as a URI but it is not required to resolve
+     * to any deployed resource. `null` under v0.9 streams and under v1.0
+     * streams that omit the field.
+     */
+    val catalogId: String? = null
 )

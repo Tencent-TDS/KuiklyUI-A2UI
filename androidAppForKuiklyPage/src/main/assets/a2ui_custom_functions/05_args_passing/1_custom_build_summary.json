@@ -3,31 +3,52 @@
   "description": "自定义函数 buildSummary 接收多个参数（name, count, status），返回拼接的摘要字符串。参数来自 dataModel 路径绑定。",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "cf-args-1",
-"catalogId": "custom_functions_catalog.json"
+        "catalogId": "custom_functions_catalog_v1_0.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "cf-args-1",
         "components": [
-          { "id": "root", "component": "Card", "child": "col" },
-          { "id": "col", "component": "Column", "children": ["title", "summary"] },
-          { "id": "title", "component": "Text", "text": "buildSummary(name, count, status) → String", "variant": "caption" },
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "title",
+              "summary"
+            ]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "buildSummary(name, count, status) → String",
+            "variant": "caption"
+          },
           {
             "id": "summary",
             "component": "Text",
             "text": {
-              "call": "buildSummary",
+              "@call": "buildSummary",
               "args": {
-                "name": { "path": "/project/name" },
-                "count": { "path": "/project/taskCount" },
-                "status": { "path": "/project/status" }
-              },
-              "returnType": "string"
+                "name": {
+                  "@path": "/project/name"
+                },
+                "count": {
+                  "@path": "/project/taskCount"
+                },
+                "status": {
+                  "@path": "/project/status"
+                }
+              }
             },
             "variant": "body"
           }
@@ -35,7 +56,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "cf-args-1",
         "value": {

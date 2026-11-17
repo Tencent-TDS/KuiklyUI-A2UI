@@ -54,7 +54,7 @@ Within a single A2UI Surface you can **freely mix** two kinds of components, eac
 | **A2UI protocol standard components (with the Kuikly `styles` extension)** | AI-generated, cross-platform standard protocol | `Text` / `Image` / `Button` / `Card` / `Column` / `Row` / `Tabs` / ... |
 | **Business custom components** | Platform-specific capabilities such as WebView / maps / charts | `A2UIWeb` / `A2UIChart` / `A2UIMap` |
 
-Standard components describe business semantics through the A2UI v0.9 spec (`component` / `text` / `align` / `justify` / `action`, …) and optionally expose Kuikly's native presentation layer via the `styles` field. Business custom components hold platform-native capabilities and participate in FlexBox layout through the Shadow mechanism — see the [custom component guide](docs/A2UI_CUSTOM_COMPONENT_GUIDE.md) for details.
+Standard components describe business semantics through the A2UI v0.9 / v1.0 spec (`component` / `text` / `align` / `justify` / `action`, …) and optionally expose Kuikly's native presentation layer via the `styles` field. Both protocol versions are supported concurrently inside a single stream; see the [v1.0 migration guide](docs/A2UI_V10_MIGRATION.md) for the agent-side payload differences. Business custom components hold platform-native capabilities and participate in FlexBox layout through the Shadow mechanism — see the [custom component guide](docs/A2UI_CUSTOM_COMPONENT_GUIDE.md) for details.
 
 ---
 
@@ -150,7 +150,7 @@ KuiklyUI-A2UI/                             # Project root (this repo)
 │   └── src/commonMain/kotlin/com/tencent/kuikly/a2ui/
 │       ├── adapter/                       # Protocol adapters
 │       │   ├── A2UIProtocolAdapter.kt        # Core protocol adaptation (data binding, component mapping)
-│       │   └── A2UIComponentMapper.kt        # A2UI v0.9 components + Kuikly `styles` mapping
+│       │   └── A2UIComponentMapper.kt        # A2UI v0.9 / v1.0 components + Kuikly `styles` mapping
 │       ├── bridge/                        # Native ↔ Kotlin bridge
 │       ├── dsl/                           # Kuikly DSL binding layer (core)
 │       │   ├── A2UIPager.kt                  # Kuikly Pager container (content-driven height)
@@ -352,7 +352,7 @@ Built-in demos are provided for Android / iOS / HarmonyOS:
   <img src="docs/a2ui_demo.gif" alt="Kuikly A2UI demo" width="200">
 </div>
 
-- **Component gallery**: full coverage of all 18 standard components defined by A2UI protocol v0.9 (Text / Image / Button / Card / Column / Row / List / Tabs / Slider / CheckBox / ChoicePicker / DateTimeInput / TextField / Video / AudioPlayer / Modal / Divider / Icon)
+- **Component gallery**: full coverage of all 18 standard components defined by A2UI protocol v0.9 / v1.0 (Text / Image / Button / Card / Column / Row / List / Tabs / Slider / CheckBox / ChoicePicker / DateTimeInput / TextField / Video / AudioPlayer / Modal / Divider / Icon). The protocol parser auto-dispatches messages by their top-level `version` field, so v0.9 and v1.0 payloads may interleave in the same stream — see the [v1.0 migration guide](docs/A2UI_V10_MIGRATION.md).
 
 <div style="display: inline-block; text-align: center; margin-left: 30px;">
   <img src="docs/a2ui_demo2.gif" alt="Kuikly A2UI component" width="200">
@@ -445,10 +445,10 @@ Extends Kuikly `Pager` and serves as the root container of the A2UI component tr
 
 ### A2UIProtocolAdapter (protocol adapter)
 
-Handles A2UI v0.9 + Kuikly `styles`-extended protocol:
+Handles A2UI v0.9 / v1.0 + Kuikly `styles`-extended protocol:
 
-- **Data binding**: resolves `{"path": "/xxx"}` references and re-evaluates on `updateDataModel`
-- **Component mapping**: maps v0.9 standard components (Text/Image/Button …) to Kuikly components
+- **Data binding**: resolves `{"path": "/xxx"}` (v0.9) and `{"@path": "/xxx"}` (v1.0 strict-mode mixin) references and re-evaluates on `updateDataModel`
+- **Component mapping**: maps v0.9 / v1.0 standard components (Text/Image/Button …) to Kuikly components
 - **`styles` application**: converts `KuiklyCommonStyles` / `KuiklyTextStyles` into native Kuikly attributes
 - **Action registration**: collects component `action` properties and builds a tag → action map
 

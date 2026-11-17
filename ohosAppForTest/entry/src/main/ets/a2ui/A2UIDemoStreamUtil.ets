@@ -43,35 +43,15 @@ export class A2UIDemoStreamUtil {
   ): TestCaseData[] {
     const results: TestCaseData[] = [];
 
-    let fileList: string[] = [];
-    if (rootDir === 'a2ui_components') {
-      const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'components');
-      fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, subDir);
-    } else if (rootDir === 'a2ui_function_tests') {
-      const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'function_tests');
-      fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, subDir);
-    } else if (rootDir === 'a2ui_databinding_tests') {
-      const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'databinding_tests');
-      fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, subDir);
-    } else if (rootDir === 'a2ui_theme_tests') {
-      const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'theme_tests');
-      fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, subDir);
-    } else if (rootDir === 'a2ui_custom_functions') {
-      const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'custom_functions');
-      fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, subDir);
-    } else if (rootDir === 'a2ui_custom_components') {
-      const sectionStr = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'custom_components');
-      fileList = A2UIDemoAssetUtil.getStringArrayByKey(sectionStr, subDir);
-    } else if (rootDir === 'a2ui_examples') {
-      fileList = A2UIDemoAssetUtil.getStringArrayByKey(manifestStr, 'examples');
-    }
+    const versionedRoot = rootDir.startsWith('v0_9/') || rootDir.startsWith('v1_0/') ? rootDir : `v0_9/${rootDir}`;
+    const directory = subDir.length > 0 ? `${versionedRoot}/${subDir}` : versionedRoot;
+    const filesSection = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'files');
+    const fileList = A2UIDemoAssetUtil.getStringArrayByKey(filesSection, directory);
 
     if (fileList.length === 0) return results;
 
     for (const fileName of fileList) {
-      const filePath = rootDir === 'a2ui_examples'
-        ? `${rootDir}/${fileName}`
-        : `${rootDir}/${subDir}/${fileName}`;
+      const filePath = `${directory}/${fileName}`;
       const testCase = A2UIDemoStreamUtil.loadTestCase(resMgr, filePath);
       if (testCase) {
         if (testCase.name.length === 0) {

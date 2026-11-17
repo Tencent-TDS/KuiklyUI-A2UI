@@ -31,6 +31,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // bridge (e.g. `A2UIDemoIconRegistration.register()` below).
         // This target links `pod 'a2ui'`, whose framework binary is A2UICore.
         A2UISurfaceView.frameworkName = "A2UICore"
+        CustomComponentDemoViewController.install()
+        CustomFunctionDemoViewController.install()
 
         window = UIWindow(frame: UIScreen.main.bounds)
         let nav = UINavigationController(rootViewController: A2UIDemoListViewController())

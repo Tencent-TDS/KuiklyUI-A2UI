@@ -211,6 +211,10 @@ final class A2UIComponentTestKuiklyPageViewController: UIViewController {
                 NSLog("[A2UIComponentTestKuiklyPage] Skip \(fileName): no messages array")
                 continue
             }
+            guard !messages.isEmpty, messages.allSatisfy({ $0["version"] as? String == "1.0" }) else {
+                NSLog("[A2UIComponentTestKuiklyPage] Skip \(fileName): explicit version 1.0 required")
+                continue
+            }
             let name = (json["name"] as? String) ?? fileName
             let desc = (json["description"] as? String) ?? ""
             cases.append([

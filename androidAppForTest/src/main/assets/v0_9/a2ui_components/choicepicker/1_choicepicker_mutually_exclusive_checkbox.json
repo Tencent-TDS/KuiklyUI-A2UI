@@ -1,0 +1,50 @@
+{
+  "name": "ChoicePicker - mutuallyExclusive + checkbox",
+  "description": "Single-selection radio-style picker (default variant + checkbox display)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-cp-mut-cb",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-cp-mut-cb",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "cp"
+          },
+          {
+            "id": "cp",
+            "component": "ChoicePicker",
+            "label": "Size",
+            "variant": "mutuallyExclusive",
+            "displayStyle": "checkbox",
+            "options": [
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              }
+            ],
+            "value": [
+              "M"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

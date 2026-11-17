@@ -36,6 +36,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.tencent.kuikly.a2ui.function.A2UICatalogDescriptorRegistry
+import com.tencent.kuikly.a2ui.function.A2UIComponentConstraint
 import com.tencent.kuikly.a2ui.render.android.A2UIAndroidCustomViewRegistry
 import com.tencent.kuikly.a2ui.render.android.A2UISurfaceView
 import com.tencent.kuikly.core.render.android.export.IKuiklyRenderViewExport
@@ -52,12 +54,6 @@ import com.tencent.kuikly.core.render.android.export.IKuiklyRenderViewExport
  *  - MyA2UIView: A simple custom view that supports "text" and "textColor" properties
  */
 class CustomComponentDemoActivity : AppCompatActivity() {
-
-    companion object {
-        private const val TAG = "CustomComponentDemo"
-        private const val ROOT_DIR = "a2ui_custom_components"
-        private const val TITLE_SUFFIX = "自定义组件"
-    }
 
     private data class ComponentEntry(
         val dir: String,
@@ -90,56 +86,40 @@ class CustomComponentDemoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Register custom components globally
-        registerCustomComponents()
+        install()
 
         setContentView(buildLayout())
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterCustomComponents()
-    }
+    companion object {
+        private const val TAG = "CustomComponentDemo"
+        private const val ROOT_DIR = "a2ui_custom_components"
+        private const val TITLE_SUFFIX = "自定义组件"
 
-    /**
-     * Register all demo custom components.
-     * This demonstrates the public API: [A2UISurfaceView.registerCustomRenderView].
-     */
-    private fun registerCustomComponents() {
-        // Both inputs and outputs of the measurer are in Kuikly's
-        // *logical* unit (dp on Android), matching what
-        // `A2UICustomComponentView.measure` receives and writes back to
-        // `measureOutput`. Do NOT multiply by `displayMetrics.density` here:
-        // the Kuikly native render handler converts dp → px on its own.
-        //
-        // 1. A2UIWeb: A WebView component with "source" property.
-        //    Measurer reports intrinsic height = 240dp. Width is driven by
-        //    the parent cross-axis constraint.
-        A2UISurfaceView.registerCustomRenderView(
-            viewName = "A2UIWeb",
-            creator = { context -> A2UIWebView(context) },
-            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
-                SizeF(cwDp, 240f)
-            }
-        )
-
-        // 2. MyA2UIView: A simple custom view with "text" and "textColor" properties.
-        //    Measurer reports intrinsic height = 200dp.
-        A2UISurfaceView.registerCustomRenderView(
-            viewName = "MyA2UIView",
-            creator = { context -> MyA2UIView(context) },
-            measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
-                SizeF(cwDp, 200f)
-            }
-        )
-
-        Log.i(TAG, "✅ All custom components registered: A2UIWeb, MyA2UIView")
-    }
-
-    private fun unregisterCustomComponents() {
-        A2UISurfaceView.unregisterCustomRenderView("A2UIWeb")
-        A2UISurfaceView.unregisterCustomRenderView("MyA2UIView")
-        Log.i(TAG, "🗑️ All custom components unregistered")
+        fun install() {
+            A2UICatalogDescriptorRegistry.register(
+                componentType = "A2UIWeb",
+                constraint = A2UIComponentConstraint(
+                    allowedParents = listOf("Surface", "Row", "Column", "Card", "Modal")
+                ),
+                catalogId = "custom_components_catalog_v1_0.json"
+            )
+            A2UISurfaceView.registerCustomRenderView(
+                viewName = "A2UIWeb",
+                creator = { context -> A2UIWebView(context) },
+                measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+                    SizeF(cwDp, 240f)
+                }
+            )
+            A2UISurfaceView.registerCustomRenderView(
+                viewName = "MyA2UIView",
+                creator = { context -> MyA2UIView(context) },
+                measurer = A2UIAndroidCustomViewRegistry.A2UICustomViewMeasurer { cwDp, _ ->
+                    SizeF(cwDp, 200f)
+                }
+            )
+            Log.i(TAG, "All custom components registered: A2UIWeb, MyA2UIView")
+        }
     }
 
     private fun buildLayout(): View {
@@ -425,11 +405,10 @@ class MyA2UIView(context: Context) : FrameLayout(context), IKuiklyRenderViewExpo
                 return true
             }
             "textColor" -> {
-                try {
-                    textView.setTextColor(Color.parseColor(propValue.toString()))
-                } catch (e: Exception) {
-                    // Ignore invalid color
-                }
+                val value = propValue.toString().trim()
+                val color = value.toLongOrNull()?.toInt()
+                    ?: runCatching { Color.parseColor(value) }.getOrNull()
+                if (color != null) textView.setTextColor(color)
                 return true
             }
         }
@@ -454,7 +433,7 @@ class MyA2UIView(context: Context) : FrameLayout(context), IKuiklyRenderViewExpo
 // ============================================================
 // Note:
 //   Intrinsic size for A2UI custom components is reported through the
-//   `measurer` registered alongside the creator in [registerCustomComponents]
+//   `measurer` registered alongside the creator in [CustomComponentDemoActivity.install]
 //   above — that path hits [com.tencent.kuikly.a2ui.render.android.A2UIBridgeModule]
 //   .calculateCustomViewSize on the Kuikly Context Thread. The old
 //   `IKuiklyRenderShadowExport`-based Shadow classes are no longer needed

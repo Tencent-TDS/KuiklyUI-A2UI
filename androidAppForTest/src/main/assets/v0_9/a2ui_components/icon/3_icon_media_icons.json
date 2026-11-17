@@ -1,0 +1,89 @@
+{
+  "name": "Icon - media controls",
+  "description": "Media playback icons",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-icon-media",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-icon-media",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "lbl_media",
+              "row"
+            ]
+          },
+          {
+            "id": "lbl_media",
+            "component": "Text",
+            "text": "Icons: play, pause, stop, skipNext, skipPrevious, volumeUp, volumeMute",
+            "variant": "caption"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "i_play",
+              "i_pause",
+              "i_stop",
+              "i_skipNext",
+              "i_skipPrevious",
+              "i_volumeUp",
+              "i_volumeMute"
+            ],
+            "justify": "spaceBetween"
+          },
+          {
+            "id": "i_play",
+            "component": "Icon",
+            "name": "play"
+          },
+          {
+            "id": "i_pause",
+            "component": "Icon",
+            "name": "pause"
+          },
+          {
+            "id": "i_stop",
+            "component": "Icon",
+            "name": "stop"
+          },
+          {
+            "id": "i_skipNext",
+            "component": "Icon",
+            "name": "skipNext"
+          },
+          {
+            "id": "i_skipPrevious",
+            "component": "Icon",
+            "name": "skipPrevious"
+          },
+          {
+            "id": "i_volumeUp",
+            "component": "Icon",
+            "name": "volumeUp"
+          },
+          {
+            "id": "i_volumeMute",
+            "component": "Icon",
+            "name": "volumeMute"
+          }
+        ]
+      }
+    }
+  ]
+}

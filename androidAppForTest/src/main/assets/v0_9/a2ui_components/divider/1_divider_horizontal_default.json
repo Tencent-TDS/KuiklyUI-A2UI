@@ -1,0 +1,52 @@
+{
+  "name": "Divider - horizontal (default)",
+  "description": "Default horizontal divider between two Text",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-divider-h",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-divider-h",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "t1",
+              "d",
+              "t2"
+            ]
+          },
+          {
+            "id": "t1",
+            "component": "Text",
+            "text": "Above the line",
+            "variant": "body"
+          },
+          {
+            "id": "d",
+            "component": "Divider",
+            "axis": "horizontal"
+          },
+          {
+            "id": "t2",
+            "component": "Text",
+            "text": "Below the line",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

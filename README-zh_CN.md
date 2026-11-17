@@ -54,7 +54,7 @@ Kuikly A2UI 核心 SDK 内部直接对接 Kuikly DSL 组件树，将服务端下
 | **A2UI 协议标准组件（含 Kuikly `styles` 扩展）** | AI 生成、跨平台标准协议 | `Text` / `Image` / `Button` / `Card` / `Column` / `Row` / `Tabs` / ... |
 | **业务自定义组件** | WebView / 地图 / 图表等平台特有能力 | `A2UIWeb` / `A2UIChart` / `A2UIMap` |
 
-标准组件用 A2UI v0.9 协议规范描述业务语义（`component` / `text` / `align` / `justify` / `action` 等），并通过可选的 `styles` 字段暴露 Kuikly 原生表现层能力。业务自定义组件用于承载平台原生能力，通过 Shadow 机制参与 FlexBox 布局，详见[自定义组件指南](docs/A2UI_CUSTOM_COMPONENT_GUIDE.md)。
+标准组件用 A2UI v0.9 / v1.0 协议规范描述业务语义（`component` / `text` / `align` / `justify` / `action` 等），并通过可选的 `styles` 字段暴露 Kuikly 原生表现层能力。两种协议版本可在同一消息流内共存，解析器按消息顶层 `version` 字段自动分流——Agent 下发侧的差异见 [v1.0 迁移指南](docs/A2UI_V10_MIGRATION.md)。业务自定义组件用于承载平台原生能力，通过 Shadow 机制参与 FlexBox 布局，详见[自定义组件指南](docs/A2UI_CUSTOM_COMPONENT_GUIDE.md)。
 
 ---
 
@@ -150,7 +150,7 @@ KuiklyUI-A2UI/                             # 工程根目录（本仓库）
 │   └── src/commonMain/kotlin/com/tencent/kuikly/a2ui/
 │       ├── adapter/                       # 协议适配器
 │       │   ├── A2UIProtocolAdapter.kt        # 核心协议适配（数据绑定、组件映射）
-│       │   └── A2UIComponentMapper.kt        # A2UI v0.9 组件 + Kuikly styles 映射
+│       │   └── A2UIComponentMapper.kt        # A2UI v0.9 / v1.0 组件 + Kuikly styles 映射
 │       ├── bridge/                        # Native ↔ Kotlin 桥接
 │       ├── dsl/                           # Kuikly DSL 对接层（核心）
 │       │   ├── A2UIPager.kt                  # Kuikly Pager 容器（内容自适应高度）
@@ -352,7 +352,7 @@ Android / iOS / HarmonyOS 三端 Demo 已内置：
   <img src="docs/a2ui_demo.gif" alt="Kuikly A2UI demo" width="200">
 </div>
 
-- **组件展示**：按照 A2UI 协议 v0.9 定义，18 个标准组件全覆盖（Text / Image / Button / Card / Column / Row / List / Tabs / Slider / CheckBox / ChoicePicker / DateTimeInput / TextField / Video / AudioPlayer / Modal / Divider / Icon）
+- **组件展示**：按照 A2UI 协议 v0.9 / v1.0 定义，18 个标准组件全覆盖（Text / Image / Button / Card / Column / Row / List / Tabs / Slider / CheckBox / ChoicePicker / DateTimeInput / TextField / Video / AudioPlayer / Modal / Divider / Icon）。解析器按消息顶层 `version` 字段自动分流，v0.9 和 v1.0 可在同一流内穿插——详见 [v1.0 迁移指南](docs/A2UI_V10_MIGRATION.md)。
 
 <div style="display: inline-block; text-align: center; margin-left: 30px;">
   <img src="docs/a2ui_demo2.gif" alt="Kuikly A2UI component" width="200">
@@ -444,10 +444,10 @@ Kotlin Common 层的统一入口，管理所有 A2UI 实例的生命周期：
 
 ### A2UIProtocolAdapter（协议适配器）
 
-处理 A2UI v0.9 + Kuikly `styles` 扩展协议：
+处理 A2UI v0.9 / v1.0 + Kuikly `styles` 扩展协议：
 
-- **数据绑定**：解析 `{"path": "/xxx"}` 引用，在 `updateDataModel` 时重新评估
-- **组件映射**：将 v0.9 标准组件（Text/Image/Button …）映射为 Kuikly 组件
+- **数据绑定**：解析 `{"path": "/xxx"}`（v0.9）和 `{"@path": "/xxx"}`（v1.0严格模式 mixin）引用，在 `updateDataModel` 时重新评估
+- **组件映射**：将 v0.9 / v1.0 标准组件（Text/Image/Button …）映射为 Kuikly 组件
 - **`styles` 应用**：将 `KuiklyCommonStyles` / `KuiklyTextStyles` 转换为 Kuikly 原生属性
 - **Action 注册**：收集组件的 action 属性，建立 tag → action 映射
 

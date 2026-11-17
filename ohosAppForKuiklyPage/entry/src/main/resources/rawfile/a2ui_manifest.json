@@ -10,8 +10,7 @@
       "2_button_variant_primary.json",
       "3_button_variant_borderless.json",
       "4_button_icon_only.json",
-      "5_button_action_with_context.json",
-      "6_button_action_function_call.json"
+      "5_button_action_with_context.json"
     ],
     "card": [
       "1_card_single_text_child.json",

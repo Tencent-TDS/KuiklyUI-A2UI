@@ -35,7 +35,7 @@ class ComponentTestParams {
 
 /**
  * Component Demo Page.
- * Displays a list of A2UI v0.9 protocol components.
+ * Displays a list of A2UI v1.0 protocol components.
  * Selecting a component navigates to ComponentTestPage.
  */
 @Entry
@@ -79,7 +79,7 @@ struct ComponentDemoPage {
         }
         .alignItems(VerticalAlign.Center)
 
-        Text('A2UI v0.9 标准协议支持的 18 个组件')
+        Text('A2UI v1.0 标准协议支持的 18 个组件')
           .fontSize(12)
           .fontColor('#DDDDFF')
           .margin({ top: 4 })

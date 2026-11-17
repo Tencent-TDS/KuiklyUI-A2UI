@@ -1,0 +1,48 @@
+{
+  "name": "Image - url & description data binding",
+  "description": "Image url/description bound to data model paths",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-image-binding",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-image-binding",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "img"
+          },
+          {
+            "id": "img",
+            "component": "Image",
+            "url": {
+              "path": "/photoUrl"
+            },
+            "description": {
+              "path": "/alt"
+            },
+            "variant": "mediumFeature"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-image-binding",
+        "value": {
+          "photoUrl": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+          "alt": "Bound image alt"
+        }
+      }
+    }
+  ]
+}

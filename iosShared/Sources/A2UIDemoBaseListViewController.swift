@@ -107,10 +107,12 @@ class A2UIDemoEntryCell: UITableViewCell {
         ])
     }
 
-    func configure(icon: String, title: String, description: String, color: UIColor) {
+    func configure(icon: String, title: String, description: String, color: UIColor, descriptionLines: Int = 2) {
         iconLabel.text = icon
         titleLabel.text = title
         descLabel.text = description
+        descLabel.numberOfLines = descriptionLines
+        descLabel.lineBreakMode = .byTruncatingTail
         iconBackground.backgroundColor = color.withAlphaComponent(0.15)
     }
 }
@@ -130,6 +132,8 @@ open class A2UIDemoBaseListViewController: UIViewController, UITableViewDataSour
     open var headerSubtitle: String { "" }
     /// Concrete subclasses override to customise the navigation bar title.
     open var listTitle: String { "A2UI Demo" }
+    open var listRowHeight: CGFloat { 92 }
+    open var cellDescriptionLines: Int { 2 }
 
     override open func viewDidLoad() {
         super.viewDidLoad()
@@ -176,7 +180,8 @@ open class A2UIDemoBaseListViewController: UIViewController, UITableViewDataSour
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "A2UIDemoEntryCell", for: indexPath) as! A2UIDemoEntryCell
         let entry = sections[indexPath.section].entries[indexPath.row]
-        cell.configure(icon: entry.icon, title: entry.title, description: entry.description, color: entry.color)
+        cell.configure(icon: entry.icon, title: entry.title, description: entry.description, color: entry.color,
+                       descriptionLines: cellDescriptionLines)
         return cell
     }
 
@@ -188,8 +193,5 @@ open class A2UIDemoBaseListViewController: UIViewController, UITableViewDataSour
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    // Give the two-line description enough breathing room so it never hugs the
-    // bottom edge of the cell. Title ~20pt + gap 4pt + 2 lines desc (~31pt) +
-    // top/bottom padding 16pt each ≈ 87pt, so 92pt leaves ~5pt of slack.
-    public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { 92 }
+    public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { listRowHeight }
 }

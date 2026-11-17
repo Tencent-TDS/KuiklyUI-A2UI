@@ -3,15 +3,15 @@
   "description": "AudioPlayer with bound url and description",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-audio-binding",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-audio-binding",
         "components": [
@@ -24,17 +24,17 @@
             "id": "a",
             "component": "AudioPlayer",
             "url": {
-              "path": "/audio"
+              "@path": "/audio"
             },
             "description": {
-              "path": "/title"
+              "@path": "/title"
             }
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-audio-binding",
         "value": {

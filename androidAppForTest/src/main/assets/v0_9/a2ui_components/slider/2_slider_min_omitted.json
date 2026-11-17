@@ -1,0 +1,33 @@
+{
+  "name": "Slider - min omitted (defaults to 0)",
+  "description": "Slider with only max set; min defaults to 0",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-sl-omit-min",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-sl-omit-min",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "s"
+          },
+          {
+            "id": "s",
+            "component": "Slider",
+            "label": "Brightness",
+            "max": 10,
+            "value": 7
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "List - align=stretch",
+  "description": "Vertical list with align=stretch",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-list-align-stretch",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-list-align-stretch",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "list"
+          },
+          {
+            "id": "list",
+            "component": "List",
+            "children": [
+              "a",
+              "b",
+              "c"
+            ],
+            "align": "stretch"
+          },
+          {
+            "id": "a",
+            "component": "Text",
+            "text": "Short",
+            "variant": "body"
+          },
+          {
+            "id": "b",
+            "component": "Text",
+            "text": "Longer item",
+            "variant": "body"
+          },
+          {
+            "id": "c",
+            "component": "Text",
+            "text": "Even longer item text",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

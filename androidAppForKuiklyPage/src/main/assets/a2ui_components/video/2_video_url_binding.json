@@ -3,15 +3,15 @@
   "description": "Video url bound to /videoUrl",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-video-binding",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-video-binding",
         "components": [
@@ -24,14 +24,14 @@
             "id": "v",
             "component": "Video",
             "url": {
-              "path": "/videoUrl"
+              "@path": "/videoUrl"
             }
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-video-binding",
         "value": {

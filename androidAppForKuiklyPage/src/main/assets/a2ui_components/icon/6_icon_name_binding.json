@@ -3,15 +3,15 @@
   "description": "Icon name property bound to data model paths",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-icon-binding",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-icon-binding",
         "components": [
@@ -34,28 +34,28 @@
             "id": "icon1",
             "component": "Icon",
             "name": {
-              "path": "/icon1"
+              "@path": "/icon1"
             }
           },
           {
             "id": "icon2",
             "component": "Icon",
             "name": {
-              "path": "/icon2"
+              "@path": "/icon2"
             }
           },
           {
             "id": "icon3",
             "component": "Icon",
             "name": {
-              "path": "/icon3"
+              "@path": "/icon3"
             }
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-icon-binding",
         "value": {

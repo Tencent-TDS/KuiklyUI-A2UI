@@ -47,39 +47,61 @@ struct A2UIVideoPanel {
   // `updateDataModel`). Without @State, the controller's plain field update is
   // invisible to the declarative UI and the video stays blank.
   @State src: string = '';
+  // PR-9 (v1.0) `posterUrl` support. When non-empty and the first video frame
+  // has not yet rendered, an ArkUI Image is stacked ABOVE the Video component.
+  // It is hidden by `firstFrameRendered` flipping to true in `.onPrepared`.
+  @State posterUrl: string = '';
+  @State firstFrameRendered: boolean = false;
   totalTime: number = 0;
 
   build() {
-    Video({
-      controller: this.videoViewController?.viewController,
-      src: this.src,
-      currentProgressRate: this.rate
-    })
-      .controls(true) // A2UI Basic Catalog: render with user controls + scrubbing enabled.
-      .muted(this.muted)
-      .objectFit(this.imageFit)
-      .onStart(() => {
-        this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.Playing);
+    Stack() {
+      Video({
+        controller: this.videoViewController?.viewController,
+        src: this.src,
+        currentProgressRate: this.rate
       })
-      .onPause(() => {
-        this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.Paused);
-      })
-      .onFinish(() => {
-        this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.PlayEnd);
-      })
-      .onStop(() => {
-        this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.PlayEnd);
-      })
-      .onError(() => {
-        this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.Failed);
-      })
-      .onPrepared((params) => {
-        this.videoViewController?.onFirstFrameDidDisplay();
-        this.totalTime = params.duration;
-      })
-      .onUpdate((params) => {
-        this.videoViewController?.onPlayTimeDidChanged(params.time, this.totalTime);
-      });
+        .controls(true) // A2UI Basic Catalog: render with user controls + scrubbing enabled.
+        .muted(this.muted)
+        .objectFit(this.imageFit)
+        .onStart(() => {
+          this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.Playing);
+        })
+        .onPause(() => {
+          this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.Paused);
+        })
+        .onFinish(() => {
+          this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.PlayEnd);
+        })
+        .onStop(() => {
+          this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.PlayEnd);
+        })
+        .onError(() => {
+          this.videoViewController?.onPlayStateDidChanged(KRVideoPlayState.Failed);
+        })
+        .onPrepared((params) => {
+          // First frame is about to render — hide the poster overlay.
+          this.firstFrameRendered = true;
+          this.videoViewController?.onFirstFrameDidDisplay();
+          this.totalTime = params.duration;
+        })
+        .onUpdate((params) => {
+          this.videoViewController?.onPlayTimeDidChanged(params.time, this.totalTime);
+        });
+
+      // PR-9: the poster overlay. Rendered as an ArkUI Image stacked on top
+      // of the Video via Stack's natural z-ordering. Visibility collapses to
+      // None once the first video frame renders so AVPlayer takes over the
+      // visible area without any alpha-blend cost. Hosts that don't carry a
+      // posterUrl (pre-v1.0 payloads) never materialise this overlay.
+      if (this.posterUrl.length > 0 && !this.firstFrameRendered) {
+        Image(this.posterUrl)
+          .width('100%')
+          .height('100%')
+          .objectFit(ImageFit.Cover)
+          .backgroundColor(Color.Black);
+      }
+    }
   }
 
   aboutToAppear(): void {
@@ -87,6 +109,7 @@ struct A2UIVideoPanel {
     // ArkUI @Component was built, e.g. literal-URL cases).
     if (this.videoViewController != null) {
       this.src = this.videoViewController.videoSrc;
+      this.posterUrl = this.videoViewController.videoPosterUrl;
     }
     this.videoViewController?.panelController.setSrcCallback((src: string) => {
       this.src = src;
@@ -99,6 +122,12 @@ struct A2UIVideoPanel {
     });
     this.videoViewController?.panelController.setResizeModeCallback((imageFit: ImageFit) => {
       this.imageFit = imageFit;
+    });
+    // PR-9: wire the poster-URL callback so late-arriving v1.0 `posterUrl`
+    // props (e.g. `posterUrl: {"path": "/cover"}` resolved from updateDataModel)
+    // actually reach the overlay.
+    this.videoViewController?.panelController.setPosterUrlCallback((url: string) => {
+      this.posterUrl = url;
     });
   }
 
@@ -126,6 +155,10 @@ class A2UIVideoPanelController {
   private rateCallback: Function | undefined = () => {
   };
   private imageFitCallback: Function | undefined = () => {
+  };
+  // PR-9: poster overlay callback (nullable because older demos may not
+  // register it before the first setPosterUrl arrives).
+  private posterUrlCallback: Function | undefined = () => {
   };
 
   setSrcCallback(callback: (src: string) => void): void {
@@ -168,11 +201,23 @@ class A2UIVideoPanelController {
     }
   }
 
+  // PR-9 poster overlay bridge.
+  setPosterUrlCallback(callback: (url: string) => void): void {
+    this.posterUrlCallback = callback;
+  }
+
+  setPosterUrl(url: string): void {
+    if (this.posterUrlCallback) {
+      this.posterUrlCallback(url);
+    }
+  }
+
   delete(): void {
     this.srcCallback = undefined;
     this.mutedCallback = undefined;
     this.rateCallback = undefined;
     this.imageFitCallback = undefined;
+    this.posterUrlCallback = undefined;
   }
 }
 
@@ -185,9 +230,26 @@ class A2UIVideoController implements IKRVideoViewController {
   viewController: VideoController = new VideoController();
   panelController: A2UIVideoPanelController = new A2UIVideoPanelController();
   videoSrc: string = '';
+  // PR-9: current resolved poster URL. Read by A2UIVideoPanel.aboutToAppear
+  // to restore state when the @Component is re-created, and written by
+  // setProp("posterUrl", ...).
+  videoPosterUrl: string = '';
   listeners = new Set<IKRVideoViewListener>();
 
   setProp(propKey: string, propValue: KRValue | KuiklyRenderCallback): boolean {
+    // PR-9 (v1.0) `posterUrl`: A2UIApplier forwards the resolved URL as a
+    // generic native prop. Store on the controller (so a late-mounted panel
+    // picks it up via aboutToAppear) and push through the panel controller
+    // callback so an already-mounted panel re-renders the overlay.
+    if (propKey === 'posterUrl') {
+      const url = typeof propValue === 'string' ? propValue : String(propValue);
+      if (url.length === 0 || url === this.videoPosterUrl) {
+        return true;
+      }
+      this.videoPosterUrl = url;
+      this.panelController.setPosterUrl(url);
+      return true;
+    }
     return false;
   }
 

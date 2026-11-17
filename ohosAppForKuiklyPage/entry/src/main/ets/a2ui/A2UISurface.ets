@@ -46,8 +46,19 @@ export struct A2UISurface {
   @Prop finished: boolean = false;
   listener?: A2UISurfaceViewListener;
 
+  private protocolConfig(): string {
+    let config: Record<string, Object> = {};
+    try {
+      config = JSON.parse(this.config) as Record<string, Object>;
+    } catch (_) {}
+    config.protocolVersion = '1.0';
+    config.strictV10 = true;
+    return JSON.stringify(config);
+  }
+
   build() {
     A2UISurfaceView({
+      configJson: this.protocolConfig(),
       listener: this.listener,
       onReady: (ctrl: A2UISurfaceViewController) => {
         this.feedMessages(ctrl);
@@ -67,11 +78,21 @@ export struct A2UISurface {
     try {
       const parsed = JSON.parse(this.messages) as Object;
       if (Array.isArray(parsed)) {
+        for (const message of parsed as Object[]) {
+          const envelope = message as Record<string, Object>;
+          if (envelope.version !== '1.0') {
+            throw new Error('Explicit version 1.0 required for every envelope');
+          }
+        }
         // JSON array of envelopes - feed each one individually
         for (const envelope of parsed as Object[]) {
           ctrl.writeStream(JSON.stringify(envelope));
         }
       } else {
+        const envelope = parsed as Record<string, Object>;
+        if (envelope.version !== '1.0') {
+          throw new Error('Explicit version 1.0 required');
+        }
         // Single envelope object
         ctrl.writeStream(this.messages);
       }

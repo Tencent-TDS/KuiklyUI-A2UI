@@ -16,6 +16,7 @@
 package com.tencent.kuikly.a2ui.demo.pages
 
 import com.tencent.kuikly.a2ui.dsl.embed.A2UISurface
+import com.tencent.kuikly.a2ui.protocol.A2UIProtocolVersion
 import com.tencent.kuikly.core.annotations.Page
 import com.tencent.kuikly.core.base.Color
 import com.tencent.kuikly.core.base.ViewBuilder
@@ -177,6 +178,7 @@ class A2UISurfaceDemoPager : Pager() {
                     // didInit() writes internally (see A2UISurfaceDSLView).
                     A2UISurface {
                         attr {
+                            protocolConfig(A2UIProtocolVersion.V1_0, strict = true)
                             marginBottom(12f)
                             // Give each card a bit of visible bounds while
                             // A2UI-generated content lays itself out.

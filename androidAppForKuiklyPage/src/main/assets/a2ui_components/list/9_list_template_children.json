@@ -3,15 +3,15 @@
   "description": "List with dynamic rows generated from /people array",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-list-template",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-list-template",
         "components": [
@@ -42,7 +42,7 @@
             "id": "avatar",
             "component": "Image",
             "url": {
-              "path": "/avatar"
+              "@path": "avatar"
             },
             "variant": "avatar"
           },
@@ -58,15 +58,17 @@
             "id": "nm",
             "component": "Text",
             "text": {
-              "path": "/name"
-            },
-            "variant": "h5"
+              "@call": "formatString",
+              "args": {
+                "value": "##### ${name}"
+              }
+            }
           },
           {
             "id": "sub",
             "component": "Text",
             "text": {
-              "path": "/role"
+              "@path": "role"
             },
             "variant": "caption"
           }
@@ -74,7 +76,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-list-template",
         "value": {

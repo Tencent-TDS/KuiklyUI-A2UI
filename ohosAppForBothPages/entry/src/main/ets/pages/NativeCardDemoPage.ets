@@ -23,75 +23,20 @@ import { A2UISurface } from '../a2ui/A2UISurface';
  *
  * Mirrors `androidAppForBothPages/NativePageCardActivity`: a plain ArkUI
  * page hosts one `A2UISurfaceView` (wrapped by the `A2UISurface { }`
- * convenience component) which renders one hand-crafted A2UI v0.9
+ * convenience component) which renders one hand-crafted A2UI 1.0
  * weather card. Intentionally identical (in intent) to the weather card
  * built by `A2UISurfaceDemoPager` on the Kuikly-page path so users can
  * eyeball parity between the two integration modes without any prop
  * juggling.
  */
 
-// Hand-crafted A2UI v0.9 weather-card envelopes. Two envelopes:
+// Hand-crafted A2UI 1.0 weather-card envelopes. Two envelopes:
 //   1. createSurface — declares the surface id.
 //   2. updateComponents — declares the DSL component tree.
 // Wrapped in a JSON array so `A2UISurface` unpacks and feeds them one by
 // one via `writeStream()`. `finished:true` closes the stream after the
 // last envelope so no further updates are expected.
-const WEATHER_CARD_MESSAGES = '[' +
-  '{"version":"v0.9","createSurface":{"surfaceId":"both-native-weather"}},' +
-  '{"version":"v0.9","updateComponents":{"surfaceId":"both-native-weather","components":[' +
-    '{"id":"root","component":"Card","child":"outer",' +
-      '"styles":{"padding":10,' +
-        '"backgroundLinearGradient":{"direction":"to-bottom","colorStops":[' +
-          '{"color":"#3A6DF0","stop":0.0},' +
-          '{"color":"#5B4BE1","stop":0.55},' +
-          '{"color":"#7A3FD8","stop":1.0}' +
-        ']}}},' +
-    '{"id":"outer","component":"Column","align":"stretch","children":["title","subtitle","hero","detail"]},' +
-    '{"id":"title","component":"Text","text":"深圳 · 今日天气","variant":"h3",' +
-      '"styles":{"color":"#FFFFFF","fontSize":15,"fontWeight":"medium","letterSpacing":1,' +
-        '"opacity":0.85,"textAlign":"center","marginTop":8,"marginBottom":0}},' +
-    '{"id":"subtitle","component":"Text","text":"周一 · 9月8日 · 体感 29°","variant":"caption",' +
-      '"styles":{"color":"#FFFFFF","fontSize":11,"fontWeight":"normal","letterSpacing":0.5,' +
-        '"opacity":0.6,"textAlign":"center","marginTop":0,"marginBottom":2,' +
-        '"textShadow":{"offsetX":0,"offsetY":1,"radius":2,"color":"#40000000"}}},' +
-    '{"id":"hero","component":"Row","align":"center","children":["temp","cond"],' +
-      '"styles":{"marginTop":0,"marginBottom":4,"paddingLeft":4,"paddingRight":4}},' +
-    '{"id":"temp","component":"Text","text":"27°","variant":"h1",' +
-      '"styles":{"color":"#FFFFFF","fontSize":84,"fontWeight":"light","letterSpacing":-2,"flexGrow":1,' +
-        '"marginTop":0,"marginBottom":0,' +
-        '"transform":{"scale":1.02,"translate":[0,-0.02],"anchor":[0,0.5]},' +
-        '"textShadow":{"offsetX":0,"offsetY":2,"radius":12,"color":"#66000000"}}},' +
-    '{"id":"cond","component":"Text","text":"多云转晴","variant":"body",' +
-      '"styles":{"color":"#FFFFFF","fontSize":17,"fontWeight":"medium","opacity":0.9,' +
-        '"textAlign":"right","flexGrow":1,"marginTop":0,"marginBottom":0,' +
-        '"textShadow":{"offsetX":0,"offsetY":1,"radius":4,"color":"#4D000000"}}},' +
-    '{"id":"detail","component":"Row","justify":"spaceBetween","children":["hum","wind","aqi"],' +
-      '"styles":{"marginTop":4,"paddingTop":0}},' +
-    '{"id":"hum","component":"Row","align":"center","children":["humText"],' +
-      '"styles":{"backgroundColor":"#22FFFFFF","borderRadius":8,' +
-        '"paddingLeft":10,"paddingRight":10,"paddingTop":3,"paddingBottom":3,' +
-        '"marginLeft":8,"marginTop":0,"marginBottom":8,' +
-        '"boxShadow":{"offsetX":0,"offsetY":2,"radius":6,"color":"#33000000","fill":false}}},' +
-    '{"id":"humText","component":"Text","text":"湿度 68%","variant":"caption",' +
-      '"styles":{"color":"#FFFFFF","fontSize":12,"fontWeight":"medium","opacity":0.9,' +
-        '"marginTop":0,"marginBottom":0}},' +
-    '{"id":"wind","component":"Row","align":"center","children":["windText"],' +
-      '"styles":{"backgroundColor":"#22FFFFFF","borderRadius":8,' +
-        '"paddingLeft":10,"paddingRight":10,"paddingTop":3,"paddingBottom":3,' +
-        '"marginTop":0,"marginBottom":8,' +
-        '"boxShadow":{"offsetX":0,"offsetY":2,"radius":6,"color":"#33000000","fill":false}}},' +
-    '{"id":"windText","component":"Text","text":"东南风 3 级","variant":"caption",' +
-      '"styles":{"color":"#FFFFFF","fontSize":12,"fontWeight":"medium","opacity":0.9,' +
-        '"marginTop":0,"marginBottom":0}},' +
-    '{"id":"aqi","component":"Row","align":"center","children":["aqiText"],' +
-      '"styles":{"backgroundColor":"#22FFFFFF","borderRadius":8,' +
-        '"paddingLeft":10,"paddingRight":10,"paddingTop":3,"paddingBottom":3,' +
-        '"marginRight":8,"marginTop":0,"marginBottom":8,' +
-        '"boxShadow":{"offsetX":0,"offsetY":2,"radius":6,"color":"#33000000","fill":false}}},' +
-    '{"id":"aqiText","component":"Text","text":"空气 良 · 58","variant":"caption",' +
-      '"styles":{"color":"#FFFFFF","fontSize":12,"fontWeight":"medium","opacity":0.9,' +
-        '"marginTop":0,"marginBottom":0}}' +
-  ']}}]';
+const WEATHER_CARD_MESSAGES = '[{"version":"1.0","createSurface":{"surfaceId":"both-native-weather","catalogId":"kuikly_a2ui_catalog_v1_0.json"}},{"version":"1.0","updateComponents":{"surfaceId":"both-native-weather","components":[{"id":"root","component":"Card","child":"outer","styles":{"padding":10,"backgroundLinearGradient":{"direction":"to-bottom","colorStops":[{"color":"#3A6DF0","stop":0.0},{"color":"#5B4BE1","stop":0.55},{"color":"#7A3FD8","stop":1.0}]}}},{"id":"outer","component":"Column","align":"stretch","children":["title","subtitle","hero","detail"]},{"id":"title","component":"Text","text":"### 深圳 · 今日天气","styles":{"color":"#FFFFFF","fontSize":15,"fontWeight":"medium","letterSpacing":1,"opacity":0.85,"textAlign":"center","marginTop":8,"marginBottom":0}},{"id":"subtitle","component":"Text","text":"周一 · 9月8日 · 体感 29°","variant":"caption","styles":{"color":"#FFFFFF","fontSize":11,"fontWeight":"normal","letterSpacing":0.5,"opacity":0.6,"textAlign":"center","marginTop":0,"marginBottom":2,"textShadow":{"offsetX":0,"offsetY":1,"radius":2,"color":"#40000000"}}},{"id":"hero","component":"Row","align":"center","children":["temp","cond"],"styles":{"marginTop":0,"marginBottom":4,"paddingLeft":4,"paddingRight":4}},{"id":"temp","component":"Text","text":"# 27°","styles":{"color":"#FFFFFF","fontSize":84,"fontWeight":"light","letterSpacing":-2,"flexGrow":1,"marginTop":0,"marginBottom":0,"transform":{"scale":1.02,"translate":[0,-0.02],"anchor":[0,0.5]},"textShadow":{"offsetX":0,"offsetY":2,"radius":12,"color":"#66000000"}}},{"id":"cond","component":"Text","text":"多云转晴","variant":"body","styles":{"color":"#FFFFFF","fontSize":17,"fontWeight":"medium","opacity":0.9,"textAlign":"right","flexGrow":1,"marginTop":0,"marginBottom":0,"textShadow":{"offsetX":0,"offsetY":1,"radius":4,"color":"#4D000000"}}},{"id":"detail","component":"Row","justify":"spaceBetween","children":["hum","wind","aqi"],"styles":{"marginTop":4,"paddingTop":0}},{"id":"hum","component":"Row","align":"center","children":["humText"],"styles":{"backgroundColor":"#22FFFFFF","borderRadius":8,"paddingLeft":10,"paddingRight":10,"paddingTop":3,"paddingBottom":3,"marginLeft":8,"marginTop":0,"marginBottom":8,"boxShadow":{"offsetX":0,"offsetY":2,"radius":6,"color":"#33000000","fill":false}}},{"id":"humText","component":"Text","text":"湿度 68%","variant":"caption","styles":{"color":"#FFFFFF","fontSize":12,"fontWeight":"medium","opacity":0.9,"marginTop":0,"marginBottom":0}},{"id":"wind","component":"Row","align":"center","children":["windText"],"styles":{"backgroundColor":"#22FFFFFF","borderRadius":8,"paddingLeft":10,"paddingRight":10,"paddingTop":3,"paddingBottom":3,"marginTop":0,"marginBottom":8,"boxShadow":{"offsetX":0,"offsetY":2,"radius":6,"color":"#33000000","fill":false}}},{"id":"windText","component":"Text","text":"东南风 3 级","variant":"caption","styles":{"color":"#FFFFFF","fontSize":12,"fontWeight":"medium","opacity":0.9,"marginTop":0,"marginBottom":0}},{"id":"aqi","component":"Row","align":"center","children":["aqiText"],"styles":{"backgroundColor":"#22FFFFFF","borderRadius":8,"paddingLeft":10,"paddingRight":10,"paddingTop":3,"paddingBottom":3,"marginRight":8,"marginTop":0,"marginBottom":8,"boxShadow":{"offsetX":0,"offsetY":2,"radius":6,"color":"#33000000","fill":false}}},{"id":"aqiText","component":"Text","text":"空气 良 · 58","variant":"caption","styles":{"color":"#FFFFFF","fontSize":12,"fontWeight":"medium","opacity":0.9,"marginTop":0,"marginBottom":0}}]}}]';
 
 @Entry
 @Component
@@ -160,6 +105,7 @@ struct NativeCardDemoPage {
       Column() {
         Column() {
           A2UISurface({
+            config: '{"protocolVersion":"1.0","strictV10":true}',
             messages: WEATHER_CARD_MESSAGES,
             finished: true
           })

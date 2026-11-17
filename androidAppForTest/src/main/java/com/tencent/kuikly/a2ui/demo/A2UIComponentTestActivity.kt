@@ -52,7 +52,7 @@ class A2UIComponentTestActivity : AppCompatActivity() {
         const val EXTRA_ROOT_DIR = "extra_root_dir"
         /** Optional. Title suffix. Defaults to "组件测试" (component test). */
         const val EXTRA_TITLE_SUFFIX = "extra_title_suffix"
-        private const val DEFAULT_ROOT_DIR = "a2ui_function_tests"
+        private const val DEFAULT_ROOT_DIR = "v0_9/a2ui_function_tests"
         private const val DEFAULT_TITLE_SUFFIX = "组件测试"
         private const val TAG = "A2UIComponentTest"
     }
@@ -62,6 +62,8 @@ class A2UIComponentTestActivity : AppCompatActivity() {
     private lateinit var componentName: String
     private lateinit var rootDir: String
     private lateinit var titleSuffix: String
+    private val directoryPath: String
+        get() = A2UIDemoAssetPath.join(rootDir, componentDir)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,7 +116,7 @@ class A2UIComponentTestActivity : AppCompatActivity() {
         header.addView(headerRow)
 
         val headerSubtitle = TextView(this).apply {
-            text = "测试用例目录：$rootDir/$componentDir/"
+            text = "测试用例目录：$directoryPath"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             setTextColor(Color.parseColor("#DDDDFF"))
             setPadding(0, dp(4), 0, 0)
@@ -135,7 +137,7 @@ class A2UIComponentTestActivity : AppCompatActivity() {
             setPadding(dp(12), dp(8), dp(12), dp(16))
         }
 
-        val dirPath = "$rootDir/$componentDir"
+        val dirPath = directoryPath
         val files = try {
             assets.list(dirPath)?.filter { it.endsWith(".json") }?.sorted() ?: emptyList()
         } catch (e: Exception) {
@@ -170,25 +172,38 @@ class A2UIComponentTestActivity : AppCompatActivity() {
         var index = 0
         for (fileName in files) {
             index++
+            val assetPath = A2UIDemoAssetPath.join(dirPath, fileName)
             val jsonStr = try {
-                assets.open("$dirPath/$fileName").bufferedReader().use { it.readText() }
+                assets.open(assetPath).bufferedReader().use { it.readText() }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to read $dirPath/$fileName: ${e.message}")
+                Log.e(TAG, "Failed to read $assetPath: ${e.message}")
+                showCaseError(container, fileName, "资源读取失败：${e.message}")
                 continue
             }
             val jsonObj = try {
                 JSONObject(jsonStr)
             } catch (e: Exception) {
                 Log.e(TAG, "Invalid JSON in $fileName: ${e.message}")
+                showCaseError(container, fileName, "JSON 解析失败：${e.message}")
                 continue
             }
             val name = jsonObj.optString("name", fileName)
             val description = jsonObj.optString("description", "")
-            val messages = jsonObj.optJSONArray("messages")?.toString().orEmpty()
-            if (messages.isEmpty()) {
+            val envelopes = jsonObj.optJSONArray("messages")
+            if (envelopes == null) {
                 Log.w(TAG, "$fileName has no 'messages' field, skip")
+                showCaseError(container, fileName, "缺少 messages 字段")
                 continue
             }
+            try {
+                A2UIDemoAssetVersion.validate((0 until envelopes.length()).map {
+                    envelopes.optJSONObject(it)?.optString("version")
+                }, rootDir)
+            } catch (e: IllegalArgumentException) {
+                showCaseError(container, fileName, e.message ?: "协议版本校验失败")
+                continue
+            }
+            val messages = envelopes.toString()
 
             // Title row: index + name + filename badge
             val titleRow = LinearLayout(this).apply {
@@ -249,7 +264,7 @@ class A2UIComponentTestActivity : AppCompatActivity() {
             cardContainer.addView(surfaceView)
             container.addView(cardContainer)
 
-            surfaceView.init("{\"debug\": true}")
+            surfaceView.init(A2UIDemoAssetVersion.config(rootDir))
             surfaceView.setListener(object : A2UISurfaceViewListener {
                 override fun onAction(surfaceId: String, tag: Int, action: String, params: String?) {
                     Log.d(TAG, "[$name] Action: surfaceId=$surfaceId, tag=$tag, action=$action, params=$params")
@@ -267,6 +282,13 @@ class A2UIComponentTestActivity : AppCompatActivity() {
             surfaceView.finishStream()
             surfaceViews.add(surfaceView)
         }
+    }
+
+    private fun showCaseError(container: LinearLayout, fileName: String, reason: String) {
+        container.addView(TextView(this).apply {
+            text = "$fileName：$reason"
+            setTextColor(Color.RED)
+        })
     }
 
     override fun onDestroy() {

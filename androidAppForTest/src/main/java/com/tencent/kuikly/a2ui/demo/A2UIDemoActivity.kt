@@ -36,6 +36,7 @@ import androidx.appcompat.app.AppCompatActivity
  * on purpose — those apps only ship polished integration examples):
  *  1. 函数测试 / 数据绑定测试 / 主题测试
  *  2. A2UI v0.9 协议官方示例
+ *  3. A2UI v1.0 回归样本 (PR-10)
  */
 class A2UIDemoActivity : AppCompatActivity() {
 
@@ -91,57 +92,28 @@ class A2UIDemoActivity : AppCompatActivity() {
             )
         }
 
-        // ===== Group 1: 函数 / 数据绑定 / 主题测试 =====
-        contentLayout.addView(createSectionHeader("函数 / 数据绑定 / 主题测试"))
-
+        contentLayout.addView(createSectionHeader("按协议版本运行"))
         contentLayout.addView(createDemoEntry(
-            title = "函数测试",
-            description = "展示 A2UI v0.9 basic catalog 内建 14 个函数：required / regex / formatDate / pluralize / and / or 等",
-            iconText = "ƒ",
-            color = "#00B894"
+            title = "A2UI 0.9",
+            description = "原样归档的组件、绑定、函数、主题和官方示例；包含兼容与预期非法样本，不作为 1.0 正式展示",
+            iconText = "0.9",
+            color = "#607D8B"
         ) {
-            startActivity(Intent(this, FunctionDemoActivity::class.java))
+            startActivity(Intent(this, A2UIAssetBrowserActivity::class.java).apply {
+                putExtra(A2UIAssetBrowserActivity.EXTRA_DIRECTORY, "v0_9")
+            })
         })
 
         contentLayout.addView(createDemoEntry(
-            title = "数据绑定测试",
-            description = "展示 A2UI v0.9 数据绑定 11 项能力：绝对/相对路径、ChildList 模板、双向绑定、formatString 插值、Action 上下文等",
-            iconText = "🔗",
+            title = "A2UI 1.0",
+            description = "正文、动态 Markdown 标题、TextField checks、List、ChildList 和天气卡；按目录查看全部新版语料",
+            iconText = "1.0",
             color = "#0984E3"
         ) {
-            startActivity(Intent(this, DataBindingDemoActivity::class.java))
+            startActivity(Intent(this, A2UIAssetBrowserActivity::class.java).apply {
+                putExtra(A2UIAssetBrowserActivity.EXTRA_DIRECTORY, "v1_0")
+            })
         })
-
-        contentLayout.addView(createDemoEntry(
-            title = "主题测试",
-            description = "展示 A2UI v0.9 主题字段能力：createSurface.theme.primaryColor / iconUrl / agentDisplayName、非法值 fallback、默认主题等",
-            iconText = "🎨",
-            color = "#E91E63"
-        ) {
-            startActivity(Intent(this, ThemeDemoActivity::class.java))
-        })
-
-        contentLayout.addView(createDemoEntry(
-            title = "流式渲染测试",
-            description = "分段推送 A2UI v0.9 envelope（createSurface / updateComponents / updateDataModel），模拟 LLM 边生成边渲染，观察 UI 是否有抖动",
-            iconText = "⚡",
-            color = "#FF6F3C"
-        ) {
-            startActivity(Intent(this, StreamingRenderDemoActivity::class.java))
-        })
-
-        // ===== Group 2: A2UI v0.9 协议官方示例 =====
-        contentLayout.addView(createSectionHeader("A2UI v0.9 协议官方示例"))
-
-        contentLayout.addView(createDemoEntry(
-            title = "A2UI v0.9 协议官方示例",
-            description = "展示 A2UI v0.9 协议规范中的 36 个官方示例卡片（启动一次性加载了36个json文件渲染UI卡片，待优化）",
-            iconText = "📋",
-            color = "#9B59B6"
-        ) {
-            startActivity(Intent(this, OfficialExampleActivity::class.java))
-        })
-
         scrollView.addView(contentLayout)
         rootLayout.addView(scrollView)
 

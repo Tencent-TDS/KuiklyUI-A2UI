@@ -1,0 +1,77 @@
+{
+  "name": "Icon - common set 2",
+  "description": "Standard icons: add / close / check / menu / share",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-icon-set2",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-icon-set2",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "lbl_set2",
+              "row"
+            ]
+          },
+          {
+            "id": "lbl_set2",
+            "component": "Text",
+            "text": "Icons: add, close, check, menu, share",
+            "variant": "caption"
+          },
+          {
+            "id": "row",
+            "component": "Row",
+            "children": [
+              "i_add",
+              "i_close",
+              "i_check",
+              "i_menu",
+              "i_share"
+            ],
+            "justify": "spaceBetween"
+          },
+          {
+            "id": "i_add",
+            "component": "Icon",
+            "name": "add"
+          },
+          {
+            "id": "i_close",
+            "component": "Icon",
+            "name": "close"
+          },
+          {
+            "id": "i_check",
+            "component": "Icon",
+            "name": "check"
+          },
+          {
+            "id": "i_menu",
+            "component": "Icon",
+            "name": "menu"
+          },
+          {
+            "id": "i_share",
+            "component": "Icon",
+            "name": "share"
+          }
+        ]
+      }
+    }
+  ]
+}

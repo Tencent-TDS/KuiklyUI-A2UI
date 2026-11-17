@@ -69,7 +69,7 @@ class OfficialExampleViewController: UIViewController, A2UISurfaceViewDelegate {
 
     private func loadExamples() {
         guard let resourcePath = Bundle.main.resourcePath else { return }
-        let examplesPath = (resourcePath as NSString).appendingPathComponent("a2ui_examples")
+        let examplesPath = (resourcePath as NSString).appendingPathComponent("v0_9/a2ui_examples")
         let fileManager = FileManager.default
 
         guard let files = try? fileManager.contentsOfDirectory(atPath: examplesPath) else { return }

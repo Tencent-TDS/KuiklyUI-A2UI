@@ -20,11 +20,11 @@ class A2UIDemoApplication : Application() {
         if (KuiklyRenderAdapterManager.krImageAdapter == null) {
             KuiklyRenderAdapterManager.krImageAdapter = A2UIImageAdapter(this)
         }
-        // Register video adapter so the A2UI v0.9 "Video" component (KRVideoView) can play.
+        // Register video adapter so the A2UI v1.0 "Video" component (KRVideoView) can play.
         if (KuiklyRenderAdapterManager.krVideoViewAdapter == null) {
             KuiklyRenderAdapterManager.krVideoViewAdapter = A2UIVideoViewAdapter()
         }
-        // Register audio adapter so the A2UI v0.9 "AudioPlayer" component (KRAudioView) can play.
+        // Register audio adapter so the A2UI v1.0 "AudioPlayer" component (KRAudioView) can play.
         if (KuiklyRenderAdapterManager.krAudioViewAdapter == null) {
             KuiklyRenderAdapterManager.krAudioViewAdapter = A2UIAudioViewAdapter()
         }

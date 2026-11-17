@@ -1,0 +1,47 @@
+{
+  "name": "AudioPlayer - URL data binding",
+  "description": "AudioPlayer with bound url and description",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-audio-binding",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-audio-binding",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "a"
+          },
+          {
+            "id": "a",
+            "component": "AudioPlayer",
+            "url": {
+              "path": "/audio"
+            },
+            "description": {
+              "path": "/title"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-audio-binding",
+        "value": {
+          "audio": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+          "title": "Bound Track"
+        }
+      }
+    }
+  ]
+}

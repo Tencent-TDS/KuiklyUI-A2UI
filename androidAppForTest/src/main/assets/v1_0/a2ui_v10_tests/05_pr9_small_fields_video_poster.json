@@ -1,0 +1,91 @@
+{
+  "name": "PR-9 Small Fields (Video.posterUrl, TextField.placeholder, Slider.steps, action.userMessage)",
+  "description": "A2UI v1.0 small-field showcase: Video renders with a cover image via posterUrl (replaced by the first video frame on playback); TextField shows a placeholder when empty; Slider snaps to discrete stops via steps; Button's action.userMessage sends a human-readable synthetic prompt back to the agent, with the current slider value interpolated via @path.",
+  "messages": [
+    {
+      "version": "1.0",
+      "createSurface": {
+        "surfaceId": "pr9-small-fields-surface",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
+        "dataModel": {
+          "videoUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+          "coverUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+          "volume": 50,
+          "searchQuery": ""
+        }
+      }
+    },
+    {
+      "version": "1.0",
+      "updateComponents": {
+        "surfaceId": "pr9-small-fields-surface",
+        "components": [
+          {
+            "id": "root",
+            "component": "Column",
+            "children": ["title", "video", "query", "vol", "send-btn"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "variant": "body",
+            "text": "PR-9 small fields"
+          },
+          {
+            "id": "video",
+            "component": "Video",
+            "url": {
+              "@path": "/videoUrl"
+            },
+            "posterUrl": {
+              "@path": "/coverUrl"
+            }
+          },
+          {
+            "id": "query",
+            "component": "TextField",
+            "placeholder": "Type something to search…",
+            "label": "Search",
+            "value": {"@path":"/searchQuery"}
+          },
+          {
+            "id": "vol",
+            "component": "Slider",
+            "value": {
+              "@path": "/volume"
+            },
+            "min": 0,
+            "max": 100,
+            "steps": 4
+          },
+          {
+            "id": "send-btn-text",
+            "component": "Text",
+            "text": "Send to agent"
+          },
+          {
+            "id": "send-btn",
+            "component": "Button",
+            "child": "send-btn-text",
+            "action": {
+              "event": {
+                "name": "submitSearchEvent",
+                "context": {
+                  "query": {
+                    "@path": "/searchQuery"
+                  },
+                  "volume": {
+                    "@path": "/volume"
+                  }
+                },
+                "userMessage": {
+                  "@path": "/searchQuery"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

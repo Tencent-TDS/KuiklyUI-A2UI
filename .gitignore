@@ -87,6 +87,8 @@ iosAppForTest/Resources/a2ui_databinding_tests/
 iosAppForTest/Resources/a2ui_examples/
 iosAppForTest/Resources/a2ui_function_tests/
 iosAppForTest/Resources/a2ui_theme_tests/
+iosAppForTest/Resources/v0_9/
+iosAppForTest/Resources/v1_0/
 iosAppForTest/Resources/app/
 iosAppForTest/Resources/compose/
 iosAppForTest/Resources/demo/
@@ -113,6 +115,8 @@ ohosAppForTest/entry/src/main/resources/rawfile/a2ui_databinding_tests/
 ohosAppForTest/entry/src/main/resources/rawfile/a2ui_examples/
 ohosAppForTest/entry/src/main/resources/rawfile/a2ui_function_tests/
 ohosAppForTest/entry/src/main/resources/rawfile/a2ui_theme_tests/
+ohosAppForTest/entry/src/main/resources/rawfile/v0_9/
+ohosAppForTest/entry/src/main/resources/rawfile/v1_0/
 ohosAppForTest/entry/src/main/resources/rawfile/app/
 ohosAppForTest/entry/src/main/resources/rawfile/compose/
 ohosAppForTest/entry/src/main/resources/rawfile/demo/
@@ -136,3 +140,5 @@ ohosAppForTest/entry/src/main/cpp/thirdparty/biz_entry/libshared_api.h
 # androidAppForNativePage/build.gradle.kts) before every build.
 androidAppForNativePage/src/main/assets/
 
+AGENTS.md
+.codebuddy/

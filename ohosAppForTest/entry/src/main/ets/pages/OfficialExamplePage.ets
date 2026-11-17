@@ -34,12 +34,12 @@ struct OfficialExamplePage {
   private loadExamples(): void {
     try {
       const manifestStr = A2UIDemoAssetUtil.readRawFileSync(this.resMgr, 'a2ui_manifest.json');
-      const manifest = JSON.parse(manifestStr) as Record<string, Object>;
-      const exampleFiles = manifest['examples'] as string[];
+      const filesSection = A2UIDemoAssetUtil.getObjectByKey(manifestStr, 'files');
+      const exampleFiles = A2UIDemoAssetUtil.getStringArrayByKey(filesSection, 'v0_9/a2ui_examples');
       if (!exampleFiles) return;
 
       for (const fileName of exampleFiles) {
-        const jsonStr = A2UIDemoAssetUtil.readRawFileSync(this.resMgr, `a2ui_examples/${fileName}`);
+        const jsonStr = A2UIDemoAssetUtil.readRawFileSync(this.resMgr, `v0_9/a2ui_examples/${fileName}`);
         if (jsonStr.length === 0) continue;
         const testCase = A2UIDemoAssetUtil.parseTestCase(jsonStr);
         if (testCase) {

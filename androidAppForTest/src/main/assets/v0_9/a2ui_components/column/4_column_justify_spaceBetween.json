@@ -1,0 +1,55 @@
+{
+  "name": "Column - justify=spaceBetween",
+  "description": "Column header at top, footer at bottom",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-col-just-between",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-col-just-between",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "a",
+              "b",
+              "c"
+            ],
+            "justify": "spaceBetween",
+            "align": "stretch"
+          },
+          {
+            "id": "a",
+            "component": "Text",
+            "text": "A — first item",
+            "variant": "body"
+          },
+          {
+            "id": "b",
+            "component": "Text",
+            "text": "B — second item",
+            "variant": "body"
+          },
+          {
+            "id": "c",
+            "component": "Text",
+            "text": "C — third item",
+            "variant": "body"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -175,6 +175,12 @@ class A2UIComponentTestActivity : AppCompatActivity() {
                 continue
             }
             val messages = obj.optJSONArray("messages") ?: continue
+            if (messages.length() == 0 || (0 until messages.length()).any {
+                    messages.optJSONObject(it)?.optString("version") != "1.0"
+                }) {
+                Log.e(TAG, "$fileName requires explicit version 1.0 on every message")
+                continue
+            }
             val caseObj = JSONObject().apply {
                 put("name", obj.optString("name", fileName))
                 put("description", obj.optString("description", ""))

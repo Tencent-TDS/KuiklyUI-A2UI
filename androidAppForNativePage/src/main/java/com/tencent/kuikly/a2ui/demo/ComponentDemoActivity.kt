@@ -83,7 +83,7 @@ class ComponentDemoActivity : AppCompatActivity() {
         header.addView(headerRow)
 
         val headerSubtitle = TextView(this).apply {
-            text = "A2UI v0.9 标准协议支持的 18 个组件"
+            text = "A2UI v1.0 标准协议支持的 18 个组件"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             setTextColor(Color.parseColor("#DDDDFF"))
             setPadding(0, dp(4), 0, 0)

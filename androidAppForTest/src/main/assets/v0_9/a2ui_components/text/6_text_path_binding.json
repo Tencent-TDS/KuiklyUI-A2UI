@@ -1,0 +1,57 @@
+{
+  "name": "Text - data binding (path)",
+  "description": "Text whose content is bound to a data model path. Verifies updateDataModel reflects into the view.",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-text-path",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-text-path",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "main-column"
+          },
+          {
+            "id": "main-column",
+            "component": "Column",
+            "children": ["title", "subtitle"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": {
+              "path": "/title"
+            },
+            "variant": "h3"
+          },
+          {
+            "id": "subtitle",
+            "component": "Text",
+            "text": {
+              "path": "/subtitle"
+            },
+            "variant": "caption"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-text-path",
+        "value": {
+          "title": "Bound Title from Data Model",
+          "subtitle": "This caption text is also bound via /subtitle"
+        }
+      }
+    }
+  ]
+}

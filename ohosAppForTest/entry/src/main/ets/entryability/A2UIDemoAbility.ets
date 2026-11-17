@@ -19,17 +19,9 @@ import { window } from '@kit.ArkUI';
 import { KuiklyRenderAdapterManager } from '@kuikly-open/render';
 import { A2UIVideoViewAdapter } from '../a2ui/adapters/A2UIVideoViewAdapter';
 import { A2UIAudioViewAdapter } from '../a2ui/adapters/A2UIAudioViewAdapter';
+import { installA2UIDemoCustomRegistry } from '../a2ui/A2UIDemoCustomRegistry';
 
 const TAG = 'A2UIDemoAbility';
-
-/**
- * Ability for `ohosAppForKuiklyPage`.
- *
- * Registers the video / audio KuiklyRender adapters (identical across the 4
- * demo apps) but intentionally does NOT register any A2UI icons — the
- * KuiklyPage variant only ships the Kuikly-Page card demo which does not
- * exercise icon protocol samples.
- */
 export default class A2UIDemoAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, TAG, 'Ability onCreate');
@@ -40,6 +32,7 @@ export default class A2UIDemoAbility extends UIAbility {
     if (KuiklyRenderAdapterManager.krAudioViewAdapter == null) {
       KuiklyRenderAdapterManager.krAudioViewAdapter = new A2UIAudioViewAdapter();
     }
+    installA2UIDemoCustomRegistry();
   }
 
   onDestroy(): void {

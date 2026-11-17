@@ -106,6 +106,18 @@ object A2UIAndroidCustomFunctionRegistry {
         for (l in snapshot) l.onRegister(name, spec)
     }
 
+    fun registerCatalog(name: String, catalogId: String, definitionJson: String, handler: Handler? = null) {
+        require(name.isNotBlank() && catalogId.isNotBlank())
+        val definition = org.json.JSONObject(definitionJson)
+        definition.put("catalogId", catalogId)
+        definition.put("name", name)
+        val spec = definition.toString()
+        if (handler != null) handlers[name] = handler
+        descriptors["$catalogId::$name"] = spec
+        val snapshot = synchronized(listeners) { listeners.toList() }
+        for (listener in snapshot) listener.onRegister(name, spec)
+    }
+
     fun unregister(name: String) {
         if (name.isEmpty()) return
         handlers.remove(name)

@@ -3,15 +3,15 @@
   "description": "ChoicePicker value bound to /picked array",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-cp-binding",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-cp-binding",
         "components": [
@@ -53,18 +53,17 @@
               }
             ],
             "value": {
-              "path": "/picked"
+              "@path": "/picked"
             }
           },
           {
             "id": "echo",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "Selected: ${/picked}"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           }
@@ -72,7 +71,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "test-cp-binding",
         "value": {

@@ -89,6 +89,28 @@ object A2UINativeMethod {
      */
     const val INVOKE_CUSTOM_FUNCTION = 107
 
+    /**
+     * Emit an outbound v1.0 bidirectional-RPC envelope from the Kotlin
+     * core to the native host. The payload is a complete protocol JSON
+     * object carrying exactly one of `rendererFunctionResponse` or
+     * `callAgentFunction` (both with a top-level `"version":"1.0"`).
+     *
+     * Args: instanceId, envelopeJson.
+     *
+     * Dispatch semantics:
+     *   - Native-page mode: the native `A2UISurfaceView.callNative(...)`
+     *     intercepts this methodId and forwards `envelopeJson` back up
+     *     to the agent-facing transport (WebSocket, HTTP SSE, etc.).
+     *   - Kuikly-embedded mode: this methodId is routed through the
+     *     `A2UIBridgeModule.rpcEnvelope` module channel instead (see
+     *     [com.tencent.kuikly.a2ui.bridge.A2UIBridgeManager.emitRpcWire]).
+     *
+     * No return value (fire-and-forget). The native side MUST NOT block
+     * on the result \u2014 any agent-side response arrives asynchronously
+     * through the standard `WRITE_STREAM` / `FINISH_STREAM` path.
+     */
+    const val SEND_RPC_ENVELOPE = 108
+
     // Convenience aliases
     /** Sync flush UI tasks (alias for readability). args: instanceId */
     const val FLUSH_UI_TASKS = SYNC_FLUSH_UI

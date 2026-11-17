@@ -1,0 +1,32 @@
+{
+  "name": "Image - variant smallFeature",
+  "description": "Image with variant=smallFeature (100dp height)",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-image-small",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-image-small",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "img"
+          },
+          {
+            "id": "img",
+            "component": "Image",
+            "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+            "variant": "smallFeature"
+          }
+        ]
+      }
+    }
+  ]
+}

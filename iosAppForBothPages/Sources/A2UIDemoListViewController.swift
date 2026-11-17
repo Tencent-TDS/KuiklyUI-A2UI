@@ -18,7 +18,7 @@ import UIKit
 /// Main list view controller for **iosAppForBothPages**.
 ///
 /// Mirrors `androidAppForBothPages/A2UIDemoActivity` — two entries side by
-/// side that render the SAME A2UI v0.9 weather-card DSL through two
+/// side that render the SAME A2UI v1.0 weather-card DSL through two
 /// different integration paths, so users can eyeball that both produce
 /// identical output.
 class A2UIDemoListViewController: A2UIDemoBaseListViewController {
@@ -31,14 +31,14 @@ class A2UIDemoListViewController: A2UIDemoBaseListViewController {
             A2UIDemoSection(title: "A2UI 集成路径对比", entries: [
                 A2UIDemoEntry(
                     title: "Kuikly 页面接入示例",
-                    description: "Kuikly Page（KuiklyBaseView + @Page）承载一张 A2UI v0.9 天气卡片",
+                    description: "Kuikly Page（KuiklyBaseView + @Page）承载一张 A2UI v1.0 天气卡片",
                     icon: "🌐",
                     color: UIColor(red: 0.13, green: 0.59, blue: 0.95, alpha: 1.0),
                     build: { KuiklyPageCardViewController() }
                 ),
                 A2UIDemoEntry(
                     title: "Native 页面接入示例",
-                    description: "Native Activity + A2UISurfaceView 直接承载一张 A2UI v0.9 天气卡片",
+                    description: "Native Activity + A2UISurfaceView 直接承载一张 A2UI v1.0 天气卡片",
                     icon: "📱",
                     color: UIColor(red: 0.27, green: 0.35, blue: 0.39, alpha: 1.0),
                     build: { NativePageCardViewController() }

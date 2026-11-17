@@ -32,7 +32,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 const AUDIO_TAG = 'A2UIAudioAdapter';
 
 /**
- * A2UI HarmonyOS AudioPlayer adapter, backing the A2UI v0.9 "AudioPlayer" component (KRAudioView).
+ * A2UI HarmonyOS AudioPlayer adapter, backing the A2UI v1.0 "AudioPlayer" component (KRAudioView).
  *
  * Mirrors the Android `A2UIAudioViewAdapter` (ExoPlayer + PlayerControlView) and
  * iOS `A2UIAudioViewHandler` (AVPlayer + UIKit transport bar) roles: KRAudioView

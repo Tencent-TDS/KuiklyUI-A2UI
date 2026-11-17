@@ -1,0 +1,64 @@
+{
+  "name": "TextField - value binding",
+  "description": "TextField value bound to /name; greeting Text reflects changes",
+  "messages": [
+    {
+      "version": "v0.9",
+      "createSurface": {
+        "surfaceId": "test-tf-binding",
+        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+        "sendDataModel": true
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateComponents": {
+        "surfaceId": "test-tf-binding",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": [
+              "tf",
+              "echo"
+            ]
+          },
+          {
+            "id": "tf",
+            "component": "TextField",
+            "label": "Your name",
+            "value": {
+              "path": "/name"
+            }
+          },
+          {
+            "id": "echo",
+            "component": "Text",
+            "text": {
+              "call": "formatString",
+              "args": {
+                "value": "Hello, ${/name}!"
+              },
+              "returnType": "string"
+            },
+            "variant": "body"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v0.9",
+      "updateDataModel": {
+        "surfaceId": "test-tf-binding",
+        "value": {
+          "name": "World"
+        }
+      }
+    }
+  ]
+}

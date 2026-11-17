@@ -3,14 +3,14 @@
   "description": "A typical preferences group with multiple checkboxes",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "test-cb-multi",
-        "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+        "catalogId": "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "test-cb-multi",
         "components": [
@@ -32,8 +32,7 @@
           {
             "id": "t",
             "component": "Text",
-            "text": "Preferences",
-            "variant": "h5"
+            "text": "##### Preferences"
           },
           {
             "id": "cb1",

@@ -154,7 +154,7 @@ struct Index {
 
           this.DemoEntry(new DemoEntryParams(
             '组件展示',
-            '展示 A2UI v0.9 协议语义化组件：Text、Row、Column、Card 等 18 个组件',
+            '展示 A2UI v1.0 协议语义化组件：Text、Row、Column、Card 等 18 个组件',
             '🔧',
             '#F39C12',
             () => { router.pushUrl({ url: 'pages/KuiklyPageComponentDemoPage' }); }

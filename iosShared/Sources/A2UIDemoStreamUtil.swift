@@ -18,7 +18,7 @@ import OpenKuiklyA2UIIOSRender
 
 /// Demo-only helpers for feeding A2UI messages into `A2UISurfaceView`.
 ///
-/// The A2UI v0.9 protocol defines the server-to-client channel as a stream of
+/// The A2UI protocol defines the server-to-client channel as a stream of
 /// JSON *objects* (envelopes). Some demo assets in this project package multiple
 /// envelopes as a single JSON *array* for convenience — that array wrapper is
 /// NOT part of the protocol.

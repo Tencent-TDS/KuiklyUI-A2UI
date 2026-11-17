@@ -16,12 +16,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".A2UIAssetBrowserActivity" android:exported="false" />
         <activity android:name=".A2UIComponentTestActivity" />
         <activity android:name=".OfficialExampleActivity" />
         <activity android:name=".FunctionDemoActivity" />
         <activity android:name=".DataBindingDemoActivity" />
         <activity android:name=".ThemeDemoActivity" />
         <activity android:name=".StreamingRenderDemoActivity" />
+        <activity android:name=".A2UIV10SamplesActivity" />
     </application>
 
 </manifest>

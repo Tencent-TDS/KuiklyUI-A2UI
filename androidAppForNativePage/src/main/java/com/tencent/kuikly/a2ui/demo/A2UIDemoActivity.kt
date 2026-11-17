@@ -39,7 +39,7 @@ import androidx.appcompat.app.AppCompatActivity
  *
  * Group 1 — Native 页面接入示例：
  *   卡片场景接入示例 / 自定义函数示例 / 自定义组件示例 / 自定义 Icon 图片
- * Group 2 — 组件展示：v0.9 协议的 18 个语义化组件
+ * Group 2 — 组件展示：v1.0 协议的 18 个语义化组件
  */
 class A2UIDemoActivity : AppCompatActivity() {
 
@@ -132,12 +132,21 @@ class A2UIDemoActivity : AppCompatActivity() {
             startActivity(Intent(this, CustomIconDemoActivity::class.java))
         })
 
+        contentLayout.addView(createDemoEntry(
+            title = "RPC 回路 Demo (Native)",
+            description = "用 A2UISurfaceView.rpcEnvelopeOutboundHandler + instanceId 跑一遍 callAgentFunction / callRendererFunction 双向回路，验证 PR-6d native-page RPC 通道",
+            iconText = "🔁",
+            color = "#1A73E8"
+        ) {
+            startActivity(Intent(this, NativeRpcDemoActivity::class.java))
+        })
+
         // ===== Group 2: 组件展示 =====
         contentLayout.addView(createSectionHeader("组件展示"))
 
         contentLayout.addView(createDemoEntry(
             title = "组件展示",
-            description = "展示 A2UI v0.9 协议语义化组件：Text、Row、Column、Card 等 18 个组件",
+            description = "展示 A2UI v1.0 协议语义化组件：Text、Row、Column、Card 等 18 个组件",
             iconText = "🔧",
             color = "#F39C12"
         ) {
