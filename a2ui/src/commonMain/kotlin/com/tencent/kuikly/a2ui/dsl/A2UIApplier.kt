@@ -169,6 +169,21 @@ class A2UIApplier(private val host: A2UIHost) {
      */
     private val rowTextWidthAppliedTags = mutableSetOf<Int>()
 
+    /**
+     * Tags of Row-hosted Texts that are CURRENTLY rendered with opacity=0
+     * by the first-attach flicker suppression. We need this because the
+     * `shouldEverApplyRowTextMaxWidth` predicate is optimistic when the
+     * Text hasn't been attached to its parent Row yet (view.flexNode.parent
+     * == null) — it still votes HIDE so that review-row bodies get hidden
+     * on their very first applyTextProps call (which happens before attach).
+     * Later, when the one-shot post-layout callback fires and
+     * `computeRowTextMaxWidth` still returns null (meaning the optimistic
+     * guess was wrong — e.g. parent Row is nested-Row width-dependent),
+     * applyRowTextWidth consults this set and restores opacity so the Text
+     * never gets stuck invisible.
+     */
+    private val rowTextHiddenTags = mutableSetOf<Int>()
+
     /** Slider binding info: stores the data key and min/max for denormalization */
     private data class SliderBindingInfo(val dataKey: String, val min: Float, val max: Float)
 
@@ -364,6 +379,7 @@ class A2UIApplier(private val host: A2UIHost) {
         // applyMarkdownText (opacity=0 while parent Row isn't laid out)
         // re-engages for the fresh instance.
         rowTextWidthAppliedTags.remove(tag)
+        rowTextHiddenTags.remove(tag)
         imageAutoSizeRegistered.remove(tag)
     }
 
@@ -874,17 +890,33 @@ class A2UIApplier(private val host: A2UIHost) {
         val rowMaxW = computeRowTextMaxWidth(view, props)
         val isRowText = props["__textInRowPostLayout"] != null
         val tag = if (isRowText) host.registry.getTag(view) else null
-        // First-attach flicker suppression: if this is a Row-hosted Text that
-        // has never yet been given a real width (not in `rowTextWidthAppliedTags`),
-        // and the parent Row isn't laid out yet (rowMaxW == null), draw this
+        // Flicker suppression: whenever this is a Row-hosted Text and the
+        // parent Row isn't currently laid out (rowMaxW == null), draw this
         // frame with opacity=0 so the inevitable "no-width single-line
         // overflow" intermediate state is never visible. The one-shot
         // post-layout callback registered by applyProps will later invoke
         // applyRowTextWidth which both applies the real width AND restores
         // opacity to 1 atomically, so the user only ever sees the final
         // wrapped state.
+        //
+        // NOTE: we intentionally DO NOT gate on `tag !in
+        // rowTextWidthAppliedTags`. In streaming scenarios the same Text may
+        // be re-applied many times; if a later re-apply happens while the
+        // parent Row is momentarily unlaid-out (e.g. its subtree was just
+        // rebuilt), rowMaxW is again null. Without this guard we would
+        // render a single "wide single-line" frame before the next layout
+        // pass, which the user perceives as a flicker between wrapped and
+        // unwrapped states. applyProps registers a fresh one-shot post-
+        // layout callback on every pass, so re-hiding is always safe.
+        //
+        // Gated by shouldEverApplyRowTextMaxWidth: we must only hide a Text
+        // when we are sure that applyRowTextWidth WILL later restore its
+        // opacity. For Texts whose parent Row width is NOT independent of
+        // the Text's own natural width (e.g. nested Row, "OS 87" inside
+        // header-left → header-row), applyRowTextWidth will permanently
+        // return early and the opacity would stay at 0 forever.
         val needsFirstAttachHide = isRowText && rowMaxW == null &&
-            tag != null && tag !in rowTextWidthAppliedTags
+            shouldEverApplyRowTextMaxWidth(view, props)
         if (rowMaxW != null) {
             // Invalidate TextShadow's size cache BEFORE the attr block so the
             // single re-measure triggered by the batched attr-flush uses the
@@ -960,7 +992,16 @@ class A2UIApplier(private val host: A2UIHost) {
             host.performLayoutAndReportHeight()
             view.setFrameToRenderView(view.flexNode.layoutFrame)
             view.updateShadow()
-            if (tag != null) rowTextWidthAppliedTags.add(tag)
+            if (tag != null) {
+                rowTextWidthAppliedTags.add(tag)
+                rowTextHiddenTags.remove(tag)
+            }
+        } else if (needsFirstAttachHide && tag != null) {
+            // Record that this tag is now hiding, so the post-layout
+            // callback (applyRowTextWidth) can restore opacity even when
+            // its own maxW is still null (e.g. parent Row turned out to be
+            // nested-Row width-dependent).
+            rowTextHiddenTags.add(tag)
         }
     }
 
@@ -978,7 +1019,7 @@ class A2UIApplier(private val host: A2UIHost) {
      * horizontally at their natural widths.
      */
     private fun computeRowTextMaxWidth(view: RichTextView, props: Map<String, Any?>): Float? {
-        if (props["__textInRowPostLayout"] == null) return null
+        if (!shouldEverApplyRowTextMaxWidth(view, props)) return null
         val parentNode = view.flexNode.parent ?: return null
         val parentWidth = parentNode.layoutFrame.width
         if (parentWidth <= 0f || parentWidth.isNaN()) return null
@@ -993,6 +1034,69 @@ class A2UIApplier(private val host: A2UIHost) {
             (if (marginRight.isNaN()) 0f else marginRight)
         val maxW = (if (contentWidth > 0f) contentWidth else parentWidth) - textMargin
         return if (maxW > 0f) maxW else null
+    }
+
+    /**
+     * Whether a Row-hosted Text is ever going to receive a maxWidth bound
+     * from this applier. This is distinct from [computeRowTextMaxWidth]
+     * returning non-null: the width may not be computable YET (parent Row
+     * not laid out), but it eventually will. This predicate controls the
+     * first-attach opacity-hide optimization — we only dare hide a Text
+     * when we know a post-layout callback will later restore its opacity.
+     * For a nested-Row Text (parent Row's width depends on this Text's
+     * natural width), no maxWidth will ever be applied, so we must NOT
+     * hide it or it would stay invisible forever.
+     */
+    private fun shouldEverApplyRowTextMaxWidth(view: RichTextView, props: Map<String, Any?>): Boolean {
+        if (props["__textInRowPostLayout"] == null) return false
+        // Optimistic path: when the Text hasn't been attached to its parent
+        // Row yet (typical for a freshly-instantiated row-template subtree
+        // whose children are pre-applied before being attached), we have no
+        // way to judge whether the parent Row's width is self-determined.
+        // Returning `true` here lets applyTextProps / applyMarkdownText go
+        // ahead and set opacity=0 for this first frame, suppressing the
+        // single-line flicker. If the optimistic guess turns out to be wrong
+        // (parent Row is actually nested-Row width-dependent), the post-
+        // layout callback in applyRowTextWidth consults `rowTextHiddenTags`
+        // and restores opacity=1 on its maxW==null short-circuit — so the
+        // Text never gets stuck invisible.
+        val parentNode = view.flexNode.parent ?: return true
+        return isParentRowWidthIndependent(parentNode)
+    }
+
+    /**
+     * Decide whether [parentRow]'s width can be used safely as a maxWidth
+     * bound for a Text child, i.e. whether that width is determined by
+     * something OTHER than the Text's own natural width.
+     *
+     * Rules (walking up the flex tree):
+     * - Explicit `styleWidth` set on the Row → independent ✓
+     * - `alignSelf = STRETCH` and the grandparent is a Column → the Row is
+     *   stretched to the column's cross-axis extent, independent ✓
+     * - Grandparent is a Column (vertical container) → the Row is stretched
+     *   by default (Column's default alignItems is stretch unless the Row
+     *   explicitly opts out with FLEX_START/CENTER/FLEX_END), independent ✓
+     * - Grandparent is a Row (nested horizontal Row) without any of the
+     *   above → wrap-content, NOT independent ✗
+     * - No grandparent (root) → independent ✓
+     */
+    private fun isParentRowWidthIndependent(parentRow: com.tencent.kuikly.core.layout.FlexNode): Boolean {
+        // Explicit width on the Row itself → always safe.
+        if (!parentRow.styleWidth.isNaN()) return true
+        val grandparent = parentRow.parent ?: return true
+        // Grandparent is a horizontal container → the Row is wrap-content
+        // along the main axis unless its own alignSelf stretches it, which
+        // doesn't apply on the main axis anyway. Treat as not independent.
+        if (grandparent.flexDirection == FlexDirection.ROW ||
+            grandparent.flexDirection == FlexDirection.ROW_REVERSE) {
+            return false
+        }
+        // Grandparent is vertical (Column/Card). By default its cross-axis
+        // alignItems is STRETCH, which pulls the Row to the column's width.
+        // The Row stays stretched unless it explicitly opts out.
+        return parentRow.alignSelf != FlexAlign.FLEX_START &&
+            parentRow.alignSelf != FlexAlign.CENTER &&
+            parentRow.alignSelf != FlexAlign.FLEX_END
     }
 
     /**
@@ -1012,7 +1116,22 @@ class A2UIApplier(private val host: A2UIHost) {
      * state.
      */
     private fun applyRowTextWidth(view: RichTextView, props: Map<String, Any?>) {
-        val maxW = computeRowTextMaxWidth(view, props) ?: return
+        val maxW = computeRowTextMaxWidth(view, props)
+        if (maxW == null) {
+            // If the Text was optimistically hidden by applyTextProps /
+            // applyMarkdownText (because `view.flexNode.parent` was null and
+            // `shouldEverApplyRowTextMaxWidth` returned the optimistic
+            // `true`), we now know no maxWidth will ever be applied — the
+            // parent Row is actually nested-Row width-dependent. We MUST
+            // restore opacity here, otherwise the Text would stay invisible
+            // forever.
+            val tag = host.registry.getTag(view)
+            if (tag != null && tag in rowTextHiddenTags) {
+                view.attr { opacity(1f) }
+                rowTextHiddenTags.remove(tag)
+            }
+            return
+        }
         // Invalidate TextShadow's size cache so the next calculateRenderViewSize
         // performs a real native multi-line layout instead of returning the
         // cached single-line result.
@@ -1101,13 +1220,21 @@ class A2UIApplier(private val host: A2UIHost) {
         val rowMaxW = computeRowTextMaxWidth(view, props)
         val isRowText = props["__textInRowPostLayout"] != null
         val tag = if (isRowText) host.registry.getTag(view) else null
-        // Same first-attach flicker suppression as applyTextProps: when a
-        // Row-hosted markdown Text is first attached and the parent Row isn't
-        // laid out yet, draw it invisible for this frame; the post-layout
-        // callback (via applyRowTextWidth) will restore opacity atomically
-        // when it applies the real width.
+        // Same flicker suppression as applyTextProps: whenever a Row-hosted
+        // markdown Text has no computable maxWidth yet (parent Row not laid
+        // out), draw it invisible for this frame; the post-layout callback
+        // (via applyRowTextWidth) will restore opacity atomically when it
+        // applies the real width. See applyTextProps for why we do NOT gate
+        // on `tag !in rowTextWidthAppliedTags` — streaming re-applies can
+        // observe a transient null-maxW state after the first apply and
+        // would otherwise flash a wide single-line frame.
+        //
+        // Gated by shouldEverApplyRowTextMaxWidth (see applyTextProps for
+        // the rationale): never hide a Text whose parent Row width is NOT
+        // independent of this Text's natural width, because applyRowTextWidth
+        // will never run for it and the opacity would stay at 0 forever.
         val needsFirstAttachHide = isRowText && rowMaxW == null &&
-            tag != null && tag !in rowTextWidthAppliedTags
+            shouldEverApplyRowTextMaxWidth(view, props)
         if (rowMaxW != null) {
             // Invalidate TextShadow's size cache so the single re-measure
             // triggered by the batched attr-flush uses the new spans + width
@@ -1140,7 +1267,13 @@ class A2UIApplier(private val host: A2UIHost) {
             host.performLayoutAndReportHeight()
             view.setFrameToRenderView(view.flexNode.layoutFrame)
             view.updateShadow()
-            if (tag != null) rowTextWidthAppliedTags.add(tag)
+            if (tag != null) {
+                rowTextWidthAppliedTags.add(tag)
+                rowTextHiddenTags.remove(tag)
+            }
+        } else if (needsFirstAttachHide && tag != null) {
+            // See applyTextProps for why we record this in rowTextHiddenTags.
+            rowTextHiddenTags.add(tag)
         }
     }
 
